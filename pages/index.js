@@ -254,6 +254,28 @@ export default function Home() {
           min-height: 100vh;
         }
 
+        /* Theme Toggle Styles */
+        .theme-toggle {
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 1.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          margin-right: 16px;
+        }
+
+        .theme-toggle:hover {
+          background: var(--border-color);
+          transform: scale(1.05);
+        }
+
         .sidebar {
           width: 280px;
           background: ${isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'};
