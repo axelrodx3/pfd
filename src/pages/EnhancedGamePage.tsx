@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { DiceRoller } from '../components/DiceRoller'
@@ -78,32 +78,9 @@ export const EnhancedGamePage: React.FC = () => {
   const [showAdvancedStats, setShowAdvancedStats] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [autorollDelay, setAutorollDelay] = useState(false)
   
   const { success, error, warning, info } = useToast()
-
-  // Auto-roll logic
-  useEffect(() => {
-    if (autoRollEnabled && !isRolling && selectedSide && currentBet <= hiloTokens) {
-      const timer = setTimeout(() => {
-        rollDice()
-      }, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [autoRollEnabled, isRolling, selectedSide, currentBet, hiloTokens, rollDice])
-
-  // Handle auto-roll stop conditions
-  useEffect(() => {
-    if (lastWin !== null && autoRollEnabled) {
-      const shouldStop = 
-        (autoRollStopOnWin && lastWin) ||
-        (autoRollStopOnLoss && !lastWin) ||
-        (autoRollCount >= autoRollMax)
-      
-      if (shouldStop) {
-        toggleAutoRoll()
-      }
-    }
-  }, [lastWin, autoRollEnabled, autoRollStopOnWin, autoRollStopOnLoss, autoRollCount, autoRollMax, toggleAutoRoll])
 
   const handleBetChange = (amount: number) => {
     setBet(Math.max(1, Math.min(amount, hiloTokens)))
@@ -113,11 +90,65 @@ export const EnhancedGamePage: React.FC = () => {
     selectSide(side)
   }
 
+  // Enhanced roll dice with loading and feedback
+  const handleRollDice = useCallback(async () => {
+    if (isRolling || !selectedSide || currentBet > hiloTokens) {
+      if (currentBet > hiloTokens) {
+        error('Insufficient Funds', 'You need more HILO tokens to place this bet')
+      }
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await rollDice()
+      if (lastWin) {
+        success('You Won!', `+${(currentBet * 1.98).toLocaleString()} HILO`)
+      } else if (lastWin === false) {
+        warning('You Lost', `-${currentBet.toLocaleString()} HILO`)
+      }
+    } catch (err) {
+      error('Roll Failed', 'Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isRolling, selectedSide, currentBet, hiloTokens, rollDice, lastWin, success, error, warning])
+
   const handleRoll = () => {
     if (!isRolling && selectedSide && currentBet <= hiloTokens) {
-      rollDice()
+      handleRollDice()
     }
   }
+
+  // Auto-roll logic - Continue automatically regardless of win/loss
+  useEffect(() => {
+    if (autoRollEnabled && !isRolling && selectedSide && currentBet <= hiloTokens && autoRollCount < autoRollMax) {
+      // Determine delay based on last result
+      const delay = lastWin === true ? 2000 : 500 // 2 seconds for wins, 0.5 seconds for losses
+      
+      // Show delay indicator
+      setAutorollDelay(true)
+      
+      const timer = setTimeout(() => {
+        setAutorollDelay(false)
+        handleRollDice()
+      }, delay)
+      
+      return () => {
+        clearTimeout(timer)
+        setAutorollDelay(false)
+      }
+    } else {
+      setAutorollDelay(false)
+    }
+  }, [autoRollEnabled, isRolling, selectedSide, currentBet, hiloTokens, handleRollDice, autoRollCount, autoRollMax, lastWin])
+
+  // Stop autoroll when max count reached
+  useEffect(() => {
+    if (autoRollEnabled && autoRollCount >= autoRollMax) {
+      toggleAutoRoll()
+    }
+  }, [autoRollEnabled, autoRollCount, autoRollMax, toggleAutoRoll])
 
   const handleDailyWheel = async () => {
     setWheelSpinning(true)
@@ -163,29 +194,6 @@ export const EnhancedGamePage: React.FC = () => {
     onShowHistory: () => setShowAdvancedStats(true)
   })
 
-  // Enhanced roll dice with loading and feedback
-  const handleRollDice = async () => {
-    if (isRolling || !selectedSide || currentBet > hiloTokens) {
-      if (currentBet > hiloTokens) {
-        error('Insufficient Funds', 'You need more HILO tokens to place this bet')
-      }
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      await rollDice()
-      if (lastWin) {
-        success('You Won!', `+${(currentBet * 1.98).toLocaleString()} HILO`)
-      } else if (lastWin === false) {
-        warning('You Lost', `-${currentBet.toLocaleString()} HILO`)
-      }
-    } catch (err) {
-      error('Roll Failed', 'Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-hilo-black text-white p-6">
@@ -239,10 +247,9 @@ export const EnhancedGamePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-12">
+        <div className="max-w-6xl mx-auto">
           {/* Game Area */}
-          <div className="xl:col-span-3">
-            <div className="bg-gray-900 rounded-lg p-12 mb-8">
+          <div className="bg-gray-900 rounded-lg p-12 mb-8">
               {/* Balance & Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
                 <div className="text-center">
@@ -268,11 +275,12 @@ export const EnhancedGamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="flex justify-center items-center mb-12 px-4">
-                <div className="relative w-full max-w-md">
+              <div className="flex justify-center items-center mb-8 px-4">
+                <div className="relative w-full max-w-lg">
                   <DiceRoller />
                 </div>
               </div>
+
 
               {/* Bet Controls */}
               <div className="space-y-10 max-w-4xl mx-auto">
@@ -334,106 +342,82 @@ export const EnhancedGamePage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Roll Button */}
-                <div className="flex justify-center pt-8">
+                {/* Roll Button and Auto-Roll Toggle */}
+                <div className="flex justify-center items-center gap-6 pt-8">
                   <button
                     onClick={handleRoll}
                     disabled={isRolling || !selectedSide || currentBet > hiloTokens}
-                    className="w-full max-w-2xl py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
+                    className="flex-1 max-w-2xl py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
                   >
                     {isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
                   </button>
+                  
+                  {/* Apple-style Auto-Roll Toggle */}
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="text-sm text-gray-300 font-medium">Auto-Roll</div>
+                    <button
+                      onClick={toggleAutoRoll}
+                      disabled={isRolling}
+                      className={`relative w-16 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
+                        autoRollEnabled 
+                          ? 'bg-green-500 focus:ring-green-500 hover:bg-green-600' 
+                          : 'bg-gray-600 focus:ring-gray-500 hover:bg-gray-500'
+                      } ${(isRolling || !selectedSide || currentBet > hiloTokens) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-lg transition-transform duration-300 ${
+                        autoRollEnabled ? 'translate-x-8' : 'translate-x-0'
+                      }`} />
+                    </button>
+                    {autoRollEnabled && (
+                      <div className="text-xs text-green-400 font-medium text-center">
+                        <div>{autoRollCount}/{autoRollMax}</div>
+                        <div className="text-gray-400">
+                          {autorollDelay ? 'Next roll...' : 'Auto-continues'}
+                        </div>
+                        {autorollDelay && (
+                          <div className="w-4 h-4 mx-auto mt-1">
+                            <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+            </div>
+        </div>
+
+        {/* Game Statistics - Underneath the game */}
+        <div className="bg-gray-800/50 rounded-xl p-6 mb-8 max-w-6xl mx-auto">
+          <h3 className="text-xl font-bold text-hilo-gold mb-4 text-center">Game Statistics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-hilo-green">{currentWinStreak}</div>
+              <div className="text-sm text-gray-400">Win Streak</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-hilo-red">{currentLossStreak}</div>
+              <div className="text-sm text-gray-400">Loss Streak</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-hilo-gold">{totalGames}</div>
+              <div className="text-sm text-gray-400">Total Games</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-emerald-400">{totalWon.toLocaleString()}</div>
+              <div className="text-sm text-gray-400">Total Won</div>
             </div>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8 flex flex-col">
-            {/* Auto-Roll Controls */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-hilo-gold mb-6 text-center">Auto-Roll</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">Enable Auto-Roll</span>
-                  <button
-                    onClick={toggleAutoRoll}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      autoRollEnabled ? 'bg-hilo-green' : 'bg-gray-600'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      autoRollEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                    }`} />
-                  </button>
-                </div>
-                
-                {autoRollEnabled && (
-                  <>
-                    <div>
-                      <label className="block text-sm text-gray-300 mb-1">Max Rolls</label>
-                      <input
-                        type="number"
-                        value={autoRollMax}
-                        onChange={(e) => setAutoRollSettings({ autoRollMax: Number(e.target.value) })}
-                        className="w-full px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm"
-                        min="1"
-                        max="100"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={autoRollStopOnWin}
-                          onChange={(e) => setAutoRollSettings({ autoRollStopOnWin: e.target.checked })}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-300">Stop on Win</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={autoRollStopOnLoss}
-                          onChange={(e) => setAutoRollSettings({ autoRollStopOnLoss: e.target.checked })}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-300">Stop on Loss</span>
-                      </label>
-                    </div>
-                  </>
-                )}
-              </div>
+          <div className="grid grid-cols-2 gap-6 mt-4 pt-4 border-t border-gray-700">
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-400">{totalWagered.toLocaleString()} HILO</div>
+              <div className="text-sm text-gray-400">Total Wagered</div>
             </div>
-
-            {/* Game Stats */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-hilo-gold mb-6 text-center">Game Stats</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Total Wagered:</span>
-                  <span className="text-white">{totalWagered.toLocaleString()} HILO</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Total Won:</span>
-                  <span className="text-hilo-green">{totalWon.toLocaleString()} HILO</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Max Win Streak:</span>
-                  <span className="text-hilo-green">{maxWinStreak}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Max Loss Streak:</span>
-                  <span className="text-hilo-red">{maxLossStreak}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Win Rate:</span>
-                  <span className="text-hilo-gold">
-                    {totalGames > 0 ? ((totalWon / totalWagered) * 100).toFixed(1) : 0}%
-                  </span>
-                </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-purple-400">
+                {totalGames > 0 ? ((totalWon / totalWagered) * 100).toFixed(1) : 0}%
               </div>
+              <div className="text-sm text-gray-400">Win Rate</div>
             </div>
           </div>
         </div>

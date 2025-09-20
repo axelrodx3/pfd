@@ -300,7 +300,7 @@ export const useGameStore = create<GameState & GameActions>()(
         set({ isRolling: true })
         
         // Generate the roll result immediately (for 3D dice target)
-        const roll = rollDice()
+        const roll = Math.floor(Math.random() * 6) + 1
         const result = getDiceResult(roll)
         
         // Player wins if their selected side matches the dice result
@@ -337,6 +337,7 @@ export const useGameStore = create<GameState & GameActions>()(
           totalWagered: prevState.totalWagered + state.currentBet,
           totalWon: prevState.totalWon + winnings,
           totalGames: prevState.totalGames + 1,
+          autoRollCount: prevState.autoRollEnabled ? prevState.autoRollCount + 1 : 0,
         }))
         
         // Add XP
@@ -400,7 +401,7 @@ export const useGameStore = create<GameState & GameActions>()(
       toggleAutoRoll: () => {
         set((state) => ({
           autoRollEnabled: !state.autoRollEnabled,
-          autoRollCount: 0,
+          autoRollCount: !state.autoRollEnabled ? 0 : state.autoRollCount, // Only reset when turning ON
         }))
       },
       

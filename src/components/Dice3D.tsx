@@ -87,15 +87,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     }
   }
 
-  // Dice faces with proper rotations for each number
-  const diceFaces = {
-    1: { rotateX: 0, rotateY: 0 },
-    2: { rotateX: 0, rotateY: 90 },
-    3: { rotateX: 0, rotateY: 180 },
-    4: { rotateX: 0, rotateY: 270 },
-    5: { rotateX: 90, rotateY: 0 },
-    6: { rotateX: -90, rotateY: 0 }
-  }
+  // Simple dice face display
 
   // Update currentFace when targetNumber changes (when not rolling)
   useEffect(() => {
@@ -176,260 +168,82 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     }
   }, [isRolling, targetNumber, won, onWin, onLoss, onRollEnd])
 
-  // Get the rotation for the current face (with fallback)
-  const currentRotation = diceFaces[currentFace as keyof typeof diceFaces] || diceFaces[1]
+  // Simple dice display
 
   return (
     <div className={`relative ${className}`}>
 
-      {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-40 h-40 mx-auto mb-6">
-        {/* Table Surface with Enhanced Glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
-          
-          {/* Floating Grid Pattern */}
-          <div className="absolute inset-3 rounded-2xl">
-            <div className="grid grid-cols-4 grid-rows-4 h-full gap-1 p-3">
-              {[...Array(16)].map((_, i) => (
-                <motion.div 
-                  key={i} 
-                  className="border border-gray-600/30 rounded-sm"
-                  animate={{
-                    opacity: [0.1, 0.4, 0.1],
-                    scale: [1, 1.05, 1],
-                  }}
-                  transition={{
-                    duration: 3 + Math.random() * 2,
-                    repeat: Infinity,
-                    delay: Math.random() * 3,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+      {/* Simple Dice Container */}
+      <div className="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
 
-          {/* Corner Accents with Enhanced Glow */}
-          <motion.div 
-            className="absolute top-3 left-3 w-4 h-4 bg-hilo-gold/80 rounded-full blur-sm"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div 
-            className="absolute top-3 right-3 w-4 h-4 bg-hilo-red/80 rounded-full blur-sm"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5
-            }}
-          />
-          <motion.div 
-            className="absolute bottom-3 left-3 w-4 h-4 bg-hilo-green/80 rounded-full blur-sm"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 2.2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-          />
-          <motion.div 
-            className="absolute bottom-3 right-3 w-4 h-4 bg-hilo-gold/80 rounded-full blur-sm"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.6, 1, 0.6]
-            }}
-            transition={{
-              duration: 1.8,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1.5
-            }}
-          />
-
-          {/* Center Glow Effect */}
-          <motion.div 
-            className="absolute inset-8 rounded-2xl bg-gradient-to-br from-hilo-gold/10 via-transparent to-hilo-gold/10"
-            animate={{
-              opacity: [0.2, 0.5, 0.2],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        </div>
-
-        {/* 3D Dice */}
-        <motion.div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{
-            perspective: '1200px',
-            transformStyle: 'preserve-3d'
-          }}
-        >
+        {/* Simple Dice */}
+        <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
-            className="relative w-16 h-16"
+            className="relative w-20 h-20"
             animate={isRolling ? {
-              rotateX: [0, 180, 360, 540, 720, 900, 1080, 1260, 1440],
-              rotateY: [0, 90, 180, 270, 360, 450, 540, 630, 720],
-              rotateZ: [0, 45, 90, 135, 180, 225, 270, 315, 360],
-              scale: [1, 1.15, 0.85, 1.1, 0.9, 1.05, 0.95, 1.02, 1],
-              y: [0, -12, 6, -9, 3, -6, 4, -3, 0],
-              x: [0, 6, -9, 4, -6, 3, -4, 2, 0]
-            } : isLanding ? {
-              rotateX: currentRotation.rotateX + 5,
-              rotateY: currentRotation.rotateY + 5,
-              rotateZ: 2,
-              scale: [1.1, 1],
-              y: [0, 0],
-              x: [0, 0]
+              rotate: [0, 180, 360, 540, 720],
+              scale: [1, 1.1, 0.9, 1.05, 1],
+              y: [0, -8, 4, -6, 0],
             } : {
-              rotateX: currentRotation.rotateX + 3,
-              rotateY: currentRotation.rotateY + 3,
-              rotateZ: 1,
+              rotate: 0,
               scale: 1,
               y: 0,
-              x: 0
             }}
             transition={isRolling ? {
-              duration: 1.8,
-              ease: [0.23, 1, 0.32, 1],
-              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
-            } : isLanding ? {
-              duration: 0.5,
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 400,
-              damping: 30
+              duration: 1.5,
+              ease: "easeInOut"
             } : {
               duration: 0.3,
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 600,
-              damping: 40
-            }}
-            style={{
-              transformStyle: 'preserve-3d',
-              opacity: 1
+              ease: "easeOut"
             }}
           >
-            {/* Modern Dice Cube */}
-    <div
-      className={`absolute inset-0 rounded-2xl shadow-2xl transition-all duration-400 ${
-        showResult && won === true
-          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-emerald-500/50' 
-          : showResult && won === false
-          ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 shadow-red-500/50'
-          : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 shadow-slate-400/30'
-      }`}
-      style={{
-        transform: 'translateZ(12px)',
-        opacity: 1
-      }}
-    >
-              {/* Modern Dice Dots */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="grid grid-cols-3 grid-rows-3 gap-2 w-16 h-16">
-                  {getDiceDots(currentFace || 1).map((dot, index) => (
-                    <div
-                      key={index}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                        dot 
-                          ? showResult && won === true
-                            ? 'bg-white shadow-lg drop-shadow-sm'
-                            : showResult && won === false
-                            ? 'bg-white shadow-md'
-                            : 'bg-slate-700 shadow-sm'
-                          : 'bg-transparent'
-                      }`}
-                    />
-                  ))}
-                </div>
+            {/* Simple Dice */}
+            <div
+              className={`w-full h-full rounded-lg shadow-lg border-2 transition-all duration-300 flex items-center justify-center ${
+                showResult && won === true
+                  ? 'bg-green-500 border-green-600 shadow-green-500/30' 
+                  : showResult && won === false
+                  ? 'bg-red-500 border-red-600 shadow-red-500/30'
+                  : 'bg-white border-gray-300 shadow-gray-400/20'
+              }`}
+            >
+              {/* Dice Dots */}
+              <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
+                {getDiceDots(currentFace || 1).map((dot, index) => (
+                  <div
+                    key={index}
+                    className={`w-3 h-3 rounded-full ${
+                      dot ? 'bg-black' : 'bg-transparent'
+                    }`}
+                  />
+                ))}
               </div>
-
-              {/* Modern Glow Effect */}
-              {showResult && won !== null && (
-                <motion.div
-                  className={`absolute inset-0 rounded-2xl ${
-                    won 
-                      ? 'bg-gradient-to-br from-emerald-300/30 to-green-400/20' 
-                      : 'bg-gradient-to-br from-red-300/30 to-red-400/20'
-                  }`}
-                  animate={{
-                    opacity: [0, 0.8, 0.4, 0.8, 0],
-                    scale: [1, 1.05, 1.02, 1.05, 1]
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: won ? 3 : 1,
-                    repeatType: 'reverse'
-                  }}
-                />
-              )}
-
-              {/* Shine Effect */}
-              <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
             </div>
 
-            {/* Win/Loss Glow Effect */}
-            <AnimatePresence>
-              {showResult && (
-                <motion.div
-                  className={`absolute inset-0 rounded-lg ${
-                    won 
-                      ? 'bg-gradient-to-br from-hilo-green/30 to-hilo-gold/30' 
-                      : 'bg-gradient-to-br from-hilo-red/30 to-gray-800/30'
-                  }`}
-                  initial={{ opacity: 0, scale: 1 }}
-                  animate={{ 
-                    opacity: [0, 1, 0.8, 1],
-                    scale: [1, 1.2, 1.1, 1]
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 1,
-                    repeat: won ? 2 : 1,
-                    repeatType: 'reverse'
-                  }}
-                />
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
+            {/* Simple Result Glow */}
+            {showResult && won !== null && (
+              <motion.div
+                className={`absolute inset-0 rounded-lg ${
+                  won ? 'bg-green-400/20' : 'bg-red-400/20'
+                }`}
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{ 
+                  opacity: [0, 0.4, 0],
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{
+                  duration: 0.8,
+                  repeat: 1,
+                  repeatType: 'reverse'
+                }}
+              />
+            )}
 
-        {/* Bouncing Shadow */}
-        <motion.div
-          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-5 bg-black/20 rounded-full blur-sm"
-          animate={isRolling ? {
-            scale: [1, 1.5, 0.8, 1.2, 1],
-            opacity: [0.2, 0.4, 0.1, 0.3, 0.2]
-          } : {
-            scale: 1,
-            opacity: 1
-          }}
-          transition={{
-            duration: 2,
-            ease: "easeInOut"
-          }}
-        />
+          </motion.div>
+        </div>
+
+        {/* Simple Shadow */}
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-2 bg-black/20 rounded-full" />
 
         {/* Floating Result Display */}
         <FloatingResult
@@ -492,152 +306,19 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         )}
       </div>
 
-      {/* Enhanced Win Effects */}
+      {/* Simple Win/Loss Effects - No Emojis */}
       <AnimatePresence>
-        {showResult && won && (
+        {showResult && (
           <motion.div
-            className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.3 }}
           >
-            {/* Confetti Burst */}
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={`confetti-${i}`}
-                className={`absolute w-3 h-3 rounded-full ${
-                  i % 4 === 0 ? 'bg-hilo-gold' :
-                  i % 4 === 1 ? 'bg-hilo-green' :
-                  i % 4 === 2 ? 'bg-hilo-red' : 'bg-white'
-                }`}
-                style={{
-                  left: '50%',
-                  top: '50%',
-                }}
-                animate={{
-                  x: [0, (Math.random() - 0.5) * 300],
-                  y: [0, -Math.random() * 150 - 100],
-                  rotate: [0, 360, 720],
-                  scale: [1, 1.2, 0],
-                  opacity: [1, 0.8, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  delay: i * 0.05,
-                  ease: "easeOut"
-                }}
-              />
-            ))}
-            
-            {/* Coin Burst */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={`coin-${i}`}
-                className="absolute w-4 h-4 bg-hilo-gold rounded-full shadow-lg"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                }}
-                animate={{
-                  x: [0, (Math.random() - 0.5) * 250],
-                  y: [0, -Math.random() * 120 - 80],
-                  rotate: [0, 180, 360],
-                  scale: [1, 1.3, 0.8, 0],
-                  opacity: [1, 0.9, 0.6, 0]
-                }}
-                transition={{
-                  duration: 2.5,
-                  delay: i * 0.08,
-                  ease: "easeOut"
-                }}
-              />
-            ))}
-            
-            {/* Sparkle Effects */}
-            {[...Array(15)].map((_, i) => (
-              <motion.div
-                key={`sparkle-${i}`}
-                className="absolute w-1 h-1 bg-white rounded-full"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                }}
-                animate={{
-                  x: [0, (Math.random() - 0.5) * 200],
-                  y: [0, -Math.random() * 100 - 50],
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0]
-                }}
-                transition={{
-                  duration: 1.5,
-                  delay: i * 0.06,
-                  ease: "easeOut"
-                }}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Enhanced Loss Effects */}
-      <AnimatePresence>
-        {showResult && !won && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Shake Effect */}
-            <motion.div
-              className="absolute inset-0 bg-hilo-red/20 rounded-2xl"
-              animate={{
-                x: [-3, 3, -3, 3, -2, 2, 0],
-                y: [-2, 2, -2, 2, -1, 1, 0],
-                scale: [1, 1.02, 1, 1.01, 1],
-                opacity: [0.4, 0.1, 0.4, 0.1, 0.3, 0.1, 0]
-              }}
-              transition={{
-                duration: 1,
-                ease: "easeInOut"
-              }}
-            />
-            
-            {/* Loss Particles */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={`loss-particle-${i}`}
-                className="absolute w-2 h-2 bg-hilo-red/70 rounded-full"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                }}
-                animate={{
-                  x: [0, (Math.random() - 0.5) * 100],
-                  y: [0, Math.random() * 80 + 40],
-                  scale: [1, 0.5, 0],
-                  opacity: [1, 0.6, 0]
-                }}
-                transition={{
-                  duration: 1.2,
-                  delay: i * 0.1,
-                  ease: "easeOut"
-                }}
-              />
-            ))}
-            
-            {/* Crack Effect */}
-            <motion.div
-              className="absolute inset-0 border-2 border-hilo-red/30 rounded-2xl"
-              animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.5, 0.8, 0.3, 0]
-              }}
-              transition={{
-                duration: 1.5,
-                ease: "easeOut"
-              }}
-            />
+            <div className={`text-4xl font-bold ${won ? 'text-green-500' : 'text-red-500'}`}>
+              {won ? 'WIN!' : 'LOSE'}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
