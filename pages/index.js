@@ -5,33 +5,16 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState('landing')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [accountDropdown, setAccountDropdown] = useState(false)
-  // ADD THIS LINE:
   const [isDarkMode, setIsDarkMode] = useState(true) // Start in dark mode
 
   return (
     <>
-    
       <Head>
-  <title>HILO - Premium Gaming Platform</title>
-  <meta name="description" content="HILO - Premium gaming platform with dice, slots, and more" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  
-  <style dangerouslySetInnerHTML={{
-    __html: `
-      * {
-        background: #0f0f0f !important;
-        color: #ffffff !important;
-      }
-      html, body {
-        background: #0f0f0f !important;
-        color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    `
-  }} />
-</Head>
+        <title>HILO - Premium Gaming Platform</title>
+        <meta name="description" content="HILO - Premium gaming platform with dice, slots, and more" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      </Head>
       
       <div className="app">
         {/* Sidebar */}
@@ -172,7 +155,7 @@ export default function Home() {
               </div>
             </div>
 
-              <div className="header-right">
+            <div className="header-right">
               <div className="balance-display">
                 <span className="balance-label">Balance</span>
                 <span className="balance-amount">$<span id="balance">1000</span></span>
@@ -232,467 +215,456 @@ export default function Home() {
 
           {/* Page Content */}
           <div className="page-content">
-            {currentPage === 'landing' && <LandingPage setCurrentPage={setCurrentPage} />}
-            {currentPage === 'dice' && <DiceGame />}
+            {currentPage === 'landing' && <LandingPage setCurrentPage={setCurrentPage} isDarkMode={isDarkMode} />}
+            {currentPage === 'dice' && <DiceGame isDarkMode={isDarkMode} />}
           </div>
         </div>
       </div>
 
       <style jsx>{`
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: ${isDarkMode ? 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)'} !important;
-    color: ${isDarkMode ? '#ffffff' : '#000000'} !important;
-    overflow-x: hidden;
-    transition: all 0.3s ease;
-    min-height: 100vh;
-  }
-
-  .app {
-    display: flex;
-    min-height: 100vh;
-  }
-
-  /* Theme Toggle Button */
-  .theme-toggle {
-    background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
-    border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
-    color: ${isDarkMode ? '#ffffff' : '#000000'};
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    margin-right: 16px;
-  }
-
-  .theme-toggle:hover {
-    background: ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
-    transform: scale(1.05);
-  }
-
-  /* CSS Variables for Theme */
-  :root {
-    --bg-primary: ${isDarkMode ? '#0f0f0f' : '#ffffff'};
-    --bg-secondary: ${isDarkMode ? '#1a1a1a' : '#f8f9fa'};
-    --bg-tertiary: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
-    --text-primary: ${isDarkMode ? '#ffffff' : '#000000'};
-    --text-secondary: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
-    --text-muted: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
-    --border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
-    --shadow-color: ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
-  }
-
-  /* Sidebar Styles */
-  .sidebar {
-    width: 280px;
-    background: ${isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'};
-    backdrop-filter: blur(20px);
-    border-right: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    position: fixed;
-    height: 100vh;
-    z-index: 1000;
-    overflow-y: auto;
-  }
-
-  .sidebar.closed {
-    width: 60px;
-  }
-
-  .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    font-size: 1.5rem;
-    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
-  }
-
-  .logo-text {
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .sidebar.closed .logo-text {
-    display: none;
-  }
-
-  .sidebar-toggle {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-  }
-
-  .sidebar-toggle:hover {
-    background: var(--border-color);
-  }
-
-  .sidebar-content {
-    padding: 20px;
-  }
-
-  .sidebar-section {
-    margin-bottom: 32px;
-  }
-
-  .sidebar-section h3 {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    padding-left: 4px;
-  }
-
-  .sidebar.closed .sidebar-section h3 {
-    display: none;
-  }
-
-  .sidebar-items {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    color: var(--text-primary);
-  }
-
-  .sidebar.closed .sidebar-item {
-    justify-content: center;
-    padding: 12px;
-  }
-
-  .sidebar.closed .item-text {
-    display: none;
-  }
-
-  .sidebar-item:hover {
-    background: var(--bg-tertiary);
-  }
-
-  .sidebar-item.active {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.2) 100%);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-  }
-
-  .sidebar-item.challenge {
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    background: rgba(34, 197, 94, 0.05);
-  }
-
-  .sidebar-item.new {
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    background: rgba(239, 68, 68, 0.05);
-  }
-
-  .item-icon {
-    font-size: 1.2rem;
-    flex-shrink: 0;
-  }
-
-  .item-text {
-    font-size: 0.9rem;
-    font-weight: 500;
-    flex: 1;
-  }
-
-  .challenge-badge {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
-
-  .recent-game {
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    margin-bottom: 8px;
-    color: var(--text-primary);
-  }
-
-  .recent-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-  }
-
-  .recent-name {
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
-
-  .recent-amount {
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-
-  .recent-amount.win {
-    color: #22c55e;
-  }
-
-  .recent-amount.lose {
-    color: #ef4444;
-  }
-
-  .recent-time {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-  }
-
-  /* Main Content Styles */
-  .main-content {
-    flex: 1;
-    margin-left: 280px;
-    transition: margin-left 0.3s ease;
-  }
-
-  .sidebar.closed + .main-content {
-    margin-left: 60px;
-  }
-
-  .header {
-    background: ${isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.95)'};
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border-color);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .mobile-menu-btn {
-    display: none;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1.2rem;
-  }
-
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-  }
-
-  .separator {
-    color: var(--text-muted);
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .balance-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-
-  .balance-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 2px;
-  }
-
-  .balance-amount {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #d4af37;
-  }
-
-  .account-dropdown {
-    position: relative;
-  }
-
-  .account-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 12px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .account-btn:hover {
-    background: var(--border-color);
-  }
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-  }
-
-  .dropdown-arrow {
-    font-size: 0.8rem;
-    transition: transform 0.3s ease;
-  }
-
-  .account-dropdown.open .dropdown-arrow {
-    transform: rotate(180deg);
-  }
-
-  .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: ${isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.95)'};
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 8px;
-    min-width: 200px;
-    box-shadow: 0 20px 40px var(--shadow-color);
-    z-index: 1000;
-  }
-
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    color: var(--text-primary);
-  }
-
-  .dropdown-item:hover {
-    background: var(--bg-tertiary);
-  }
-
-  .dropdown-item.logout {
-    color: #ef4444;
-  }
-
-  .dropdown-item.logout:hover {
-    background: rgba(239, 68, 68, 0.1);
-  }
-
-  .dropdown-icon {
-    font-size: 1rem;
-    width: 16px;
-    text-align: center;
-  }
-
-  .dropdown-divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: 8px 0;
-  }
-
-  .page-content {
-    padding: 32px;
-    min-height: calc(100vh - 80px);
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .sidebar {
-      transform: translateX(-100%);
-      width: 280px;
-    }
-
-    .sidebar.open {
-      transform: translateX(0);
-    }
-
-    .main-content {
-      margin-left: 0;
-    }
-
-    .mobile-menu-btn {
-      display: block;
-    }
-
-    .header {
-      padding: 16px 20px;
-    }
-
-    .page-content {
-      padding: 20px;
-    }
-
-    .balance-display {
-      display: none;
-    }
-  }
-`}</style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          background: ${isDarkMode ? 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)'};
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+          overflow-x: hidden;
+          transition: all 0.3s ease;
+          min-height: 100vh;
+        }
+
+        .app {
+          display: flex;
+          min-height: 100vh;
+          background: inherit;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 1.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          margin-right: 16px;
+        }
+
+        .theme-toggle:hover {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+          transform: scale(1.05);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+          width: 280px;
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'};
+          backdrop-filter: blur(20px);
+          border-right: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          transition: all 0.3s ease;
+          position: fixed;
+          height: 100vh;
+          z-index: 1000;
+          overflow-y: auto;
+        }
+
+        .sidebar.closed {
+          width: 60px;
+        }
+
+        .sidebar-header {
+          padding: 20px;
+          border-bottom: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .logo-icon {
+          font-size: 1.5rem;
+          filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
+        }
+
+        .logo-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .sidebar.closed .logo-text {
+          display: none;
+        }
+
+        .sidebar-toggle {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+        }
+
+        .sidebar-content {
+          padding: 20px;
+        }
+
+        .sidebar-section {
+          margin-bottom: 32px;
+        }
+
+        .sidebar-section h3 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 12px;
+          padding-left: 4px;
+        }
+
+        .sidebar.closed .sidebar-section h3 {
+          display: none;
+        }
+
+        .sidebar-items {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .sidebar-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+        }
+
+        .sidebar.closed .sidebar-item {
+          justify-content: center;
+          padding: 12px;
+        }
+
+        .sidebar.closed .item-text {
+          display: none;
+        }
+
+        .sidebar-item:hover {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+        }
+
+        .sidebar-item.active {
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.2) 100%);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .sidebar-item.challenge {
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          background: rgba(34, 197, 94, 0.05);
+        }
+
+        .sidebar-item.new {
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.05);
+        }
+
+        .item-icon {
+          font-size: 1.2rem;
+          flex-shrink: 0;
+        }
+
+        .item-text {
+          font-size: 0.9rem;
+          font-weight: 500;
+          flex: 1;
+        }
+
+        .challenge-badge {
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          color: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 0.7rem;
+          font-weight: 600;
+        }
+
+        .recent-game {
+          padding: 8px 16px;
+          border-radius: 8px;
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          margin-bottom: 8px;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+        }
+
+        .recent-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 4px;
+        }
+
+        .recent-name {
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+
+        .recent-amount {
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .recent-amount.win {
+          color: #22c55e;
+        }
+
+        .recent-amount.lose {
+          color: #ef4444;
+        }
+
+        .recent-time {
+          font-size: 0.7rem;
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+        }
+
+        /* Main Content Styles */
+        .main-content {
+          flex: 1;
+          margin-left: 280px;
+          transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.closed + .main-content {
+          margin-left: 60px;
+        }
+
+        .header {
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.95)'};
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          padding: 20px 32px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .mobile-menu-btn {
+          display: none;
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 1.2rem;
+        }
+
+        .breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9rem;
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
+        }
+
+        .separator {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .balance-display {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        .balance-label {
+          font-size: 0.8rem;
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+          margin-bottom: 2px;
+        }
+
+        .balance-amount {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #d4af37;
+        }
+
+        .account-dropdown {
+          position: relative;
+        }
+
+        .account-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+          padding: 12px 20px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .account-btn:hover {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+        }
+
+        .avatar {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+        }
+
+        .dropdown-arrow {
+          font-size: 0.8rem;
+          transition: transform 0.3s ease;
+        }
+
+        .account-dropdown.open .dropdown-arrow {
+          transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.95)'};
+          backdrop-filter: blur(20px);
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          border-radius: 12px;
+          padding: 8px;
+          min-width: 200px;
+          box-shadow: 0 20px 40px ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
+          z-index: 1000;
+        }
+
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 0.9rem;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
+        }
+
+        .dropdown-item:hover {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+        }
+
+        .dropdown-item.logout {
+          color: #ef4444;
+        }
+
+        .dropdown-item.logout:hover {
+          background: rgba(239, 68, 68, 0.1);
+        }
+
+        .dropdown-icon {
+          font-size: 1rem;
+          width: 16px;
+          text-align: center;
+        }
+
+        .dropdown-divider {
+          height: 1px;
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          margin: 8px 0;
+        }
+
+        .page-content {
+          padding: 32px;
+          min-height: calc(100vh - 80px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .sidebar {
+            transform: translateX(-100%);
+            width: 280px;
+          }
+
+          .sidebar.open {
+            transform: translateX(0);
+          }
+
+          .main-content {
+            margin-left: 0;
+          }
+
+          .mobile-menu-btn {
+            display: block;
+          }
+
+          .header {
+            padding: 16px 20px;
+          }
+
+          .page-content {
+            padding: 20px;
+          }
+
+          .balance-display {
+            display: none;
+          }
+        }
+      `}</style>
 
       <script dangerouslySetInnerHTML={{     
         __html: `
@@ -917,7 +889,7 @@ export default function Home() {
 }
 
 // Landing Page Component
-function LandingPage({ setCurrentPage }) {
+function LandingPage({ setCurrentPage, isDarkMode }) {
   return (
     <div className="landing-page">
       <div className="hero-section">
@@ -1043,7 +1015,7 @@ function LandingPage({ setCurrentPage }) {
 
         .hero-subtitle {
           font-size: 1.3rem;
-          color: rgba(255, 255, 255, 0.7);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
           margin-bottom: 40px;
         }
 
@@ -1067,7 +1039,7 @@ function LandingPage({ setCurrentPage }) {
 
         .stat-label {
           font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.6);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
         }
 
         .featured-games {
@@ -1079,6 +1051,7 @@ function LandingPage({ setCurrentPage }) {
           font-weight: 600;
           margin-bottom: 32px;
           text-align: center;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
         }
 
         .games-grid {
@@ -1088,8 +1061,8 @@ function LandingPage({ setCurrentPage }) {
         }
 
         .game-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
           border-radius: 16px;
           padding: 24px;
           cursor: pointer;
@@ -1100,7 +1073,7 @@ function LandingPage({ setCurrentPage }) {
 
         .game-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 20px 40px ${isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.1)'};
           border-color: rgba(212, 175, 55, 0.3);
         }
 
@@ -1119,10 +1092,11 @@ function LandingPage({ setCurrentPage }) {
           font-size: 1.3rem;
           font-weight: 600;
           margin-bottom: 8px;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
         }
 
         .game-info p {
-          color: rgba(255, 255, 255, 0.7);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
           margin-bottom: 16px;
           font-size: 0.9rem;
         }
@@ -1134,11 +1108,11 @@ function LandingPage({ setCurrentPage }) {
         }
 
         .game-stats .stat {
-          background: rgba(255, 255, 255, 0.1);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
           padding: 4px 8px;
           border-radius: 6px;
           font-size: 0.8rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
         }
 
         .play-button {
@@ -1166,6 +1140,7 @@ function LandingPage({ setCurrentPage }) {
           font-weight: 600;
           margin-bottom: 32px;
           text-align: center;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
         }
 
         .promo-grid {
@@ -1202,10 +1177,11 @@ function LandingPage({ setCurrentPage }) {
         .promo-header h3 {
           font-size: 1.2rem;
           font-weight: 600;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
         }
 
         .promo-card p {
-          color: rgba(255, 255, 255, 0.8);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
           margin-bottom: 16px;
         }
 
@@ -1245,7 +1221,7 @@ function LandingPage({ setCurrentPage }) {
 }
 
 // Dice Game Component
-function DiceGame() {
+function DiceGame({ isDarkMode }) {
   return (
     <div className="dice-game">
       <div className="game-header">
@@ -1360,20 +1336,20 @@ function DiceGame() {
         }
 
         .game-header p {
-          color: rgba(255, 255, 255, 0.7);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
           font-size: 1.1rem;
         }
 
         .game-rules {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'};
           border-radius: 16px;
           padding: 24px;
           margin-bottom: 32px;
         }
 
         .game-rules h3 {
-          color: #ffffff;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
           font-size: 1.2rem;
           font-weight: 600;
           margin-bottom: 20px;
@@ -1390,9 +1366,9 @@ function DiceGame() {
           align-items: center;
           gap: 12px;
           padding: 12px 16px;
-          background: rgba(255, 255, 255, 0.02);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'};
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
         }
 
         .rule-number {
@@ -1410,7 +1386,7 @@ function DiceGame() {
         }
 
         .rule-item span {
-          color: rgba(255, 255, 255, 0.8);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
           font-size: 0.95rem;
         }
 
@@ -1424,7 +1400,7 @@ function DiceGame() {
 
         .bet-input-container label {
           display: block;
-          color: rgba(255, 255, 255, 0.7);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
           font-size: 0.9rem;
           font-weight: 500;
           margin-bottom: 8px;
@@ -1433,10 +1409,10 @@ function DiceGame() {
         .bet-input {
           width: 100%;
           padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
           border-radius: 12px;
-          color: #ffffff;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
           font-size: 1rem;
           font-weight: 500;
           text-align: center;
@@ -1532,7 +1508,7 @@ function DiceGame() {
         .dice-container {
           margin: 32px 0;
           background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
           border-radius: 20px;
           padding: 40px;
           text-align: center;
@@ -1567,8 +1543,8 @@ function DiceGame() {
           margin: 24px 0;
           padding: 20px;
           border-radius: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
         }
 
         .result.win {
@@ -1584,8 +1560,8 @@ function DiceGame() {
         }
 
         .provably-fair {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'};
           border-radius: 16px;
           padding: 24px;
           margin-bottom: 32px;
@@ -1599,7 +1575,7 @@ function DiceGame() {
         }
 
         .pf-header h3 {
-          color: #ffffff;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
           font-size: 1.1rem;
           font-weight: 600;
           display: flex;
@@ -1628,19 +1604,19 @@ function DiceGame() {
         }
 
         .pf-item label {
-          color: rgba(255, 255, 255, 0.6);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
           font-size: 0.85rem;
           font-weight: 500;
         }
 
         .hash-display {
-          background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
           border-radius: 8px;
           padding: 12px;
           font-family: 'Monaco', 'Menlo', monospace;
           font-size: 0.8rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'};
           word-break: break-all;
           line-height: 1.4;
         }
@@ -1665,8 +1641,8 @@ function DiceGame() {
         }
 
         .history {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'};
           border-radius: 16px;
           padding: 24px;
         }
@@ -1679,7 +1655,7 @@ function DiceGame() {
         }
 
         .history-header h3 {
-          color: #ffffff;
+          color: ${isDarkMode ? '#ffffff' : '#000000'};
           font-size: 1.1rem;
           font-weight: 600;
         }
@@ -1707,8 +1683,8 @@ function DiceGame() {
         }
 
         .history-item {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'};
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
           border-radius: 12px;
           padding: 16px;
           display: flex;
@@ -1718,7 +1694,7 @@ function DiceGame() {
         }
 
         .history-item:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
           transform: translateX(4px);
         }
 
@@ -1742,7 +1718,7 @@ function DiceGame() {
         }
 
         .history-item div:last-child {
-          color: rgba(255, 255, 255, 0.6);
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
           font-size: 0.85rem;
           text-align: right;
         }
