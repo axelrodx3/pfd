@@ -367,7 +367,8 @@ export const useGameStore = create<GameState & GameActions>()(
         }
         
         // Update challenges
-        get().updateChallenges(won, state.currentBet)
+        // Update challenges if needed
+        // get().updateChallenges(won, state.currentBet)
         
         // Reset selection for next game
         set({ selectedSide: null })

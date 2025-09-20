@@ -175,7 +175,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
       {/* 3D Dice Display */}
       <div className="flex justify-center items-center w-full">
         <Dice3D
-          targetNumber={lastRoll}
+          targetNumber={lastRoll || 1}
           isRolling={isRolling}
           onRollEnd={() => {
             // Show result modal after dice animation completes
@@ -190,7 +190,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           onLoss={() => {
             // Loss effects handled by Dice3D
           }}
-          won={lastWin}
+          won={lastWin || undefined}
           betAmount={currentBet}
           winnings={lastWin ? currentBet * 1.98 : 0}
           soundEnabled={soundEnabled}
