@@ -172,8 +172,10 @@ export const GamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="mb-8">
-                <DiceRoller />
+              <div className="mb-8 flex justify-center">
+                <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-3xl p-8 backdrop-blur-sm border border-hilo-gold/20 shadow-2xl">
+                  <DiceRoller />
+                </div>
               </div>
 
               {/* Roll Button */}
@@ -208,58 +210,94 @@ export const GamePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Game History */}
+          {/* Enhanced Player History */}
           <div className="lg:col-span-1">
-            <div className="card-hilo">
-              <h3 className="text-xl font-bold text-hilo-gold mb-4">
-                Recent Games
-              </h3>
+            <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-2xl p-6 backdrop-blur-sm border border-hilo-gold/20 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-hilo-gold flex items-center gap-3">
+                  <span className="text-3xl">📊</span>
+                  Player History
+                </h3>
+                <div className="text-sm text-gray-400 bg-gray-800/50 px-3 py-1 rounded-full">
+                  Last {Math.min(gameHistory.length, 10)} games
+                </div>
+              </div>
               
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                 <AnimatePresence>
-                  {gameHistory.slice(0, 10).map((game) => (
+                  {gameHistory.length === 0 ? (
                     <motion.div
-                      key={game.id}
-                      className={`
-                        p-3 rounded-lg border-l-4
-                        ${game.won ? 'border-hilo-green bg-hilo-green/5' : 'border-hilo-red bg-hilo-red/5'}
-                      `}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-12"
                     >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">
-                            {game.roll === 1 ? '⚀' : 
-                             game.roll === 2 ? '⚁' :
-                             game.roll === 3 ? '⚂' :
-                             game.roll === 4 ? '⚃' :
-                             game.roll === 5 ? '⚄' : '⚅'}
-                          </span>
-                          <span className="font-medium">
-                            {game.side.toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className={`font-bold ${game.won ? 'text-hilo-green' : 'text-hilo-red'}`}>
-                            {game.won ? 'WIN' : 'LOSE'}
-                          </div>
-                          <div className="text-sm text-gray-400">
-                            {formatCurrency(game.bet)}
-                          </div>
-                        </div>
-                      </div>
+                      <div className="text-6xl mb-4">🎲</div>
+                      <p className="text-gray-400 text-lg font-medium">No games played yet</p>
+                      <p className="text-gray-500 text-sm mt-2">Start playing to see your history here!</p>
                     </motion.div>
-                  ))}
+                  ) : (
+                    gameHistory.slice(0, 10).map((game, index) => (
+                      <motion.div
+                        key={game.id}
+                        className={`
+                          p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg
+                          ${game.won 
+                            ? 'border-hilo-green/40 bg-gradient-to-r from-hilo-green/10 to-hilo-gold/5' 
+                            : 'border-hilo-red/40 bg-gradient-to-r from-hilo-red/10 to-gray-800/20'
+                          }
+                        `}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ delay: index * 0.1, duration: 0.3 }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-4 h-4 rounded-full ${game.won ? 'bg-hilo-green' : 'bg-hilo-red'} shadow-lg`} />
+                              <div className="text-xs text-gray-400 mt-1">#{gameHistory.length - index}</div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <div className="text-2xl">
+                                {game.roll === 1 ? '⚀' : 
+                                 game.roll === 2 ? '⚁' :
+                                 game.roll === 3 ? '⚂' :
+                                 game.roll === 4 ? '⚃' :
+                                 game.roll === 5 ? '⚄' : '⚅'}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-white flex items-center gap-2">
+                                  <span className="text-lg">{game.side === 'high' ? '📈' : '📉'}</span>
+                                  {game.side.toUpperCase()}
+                                </div>
+                                <div className="text-sm text-gray-400">
+                                  Bet: <span className="font-mono text-hilo-gold">{formatCurrency(game.bet)}</span>
+                                  <span className="mx-2">•</span>
+                                  Result: <span className="font-mono">{game.result.toUpperCase()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className={`text-lg font-bold ${game.won ? 'text-hilo-green' : 'text-hilo-red'}`}>
+                              {game.won ? '+' : '-'}{formatCurrency(game.bet * game.multiplier)}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {new Date(game.timestamp).toLocaleString()}
+                            </div>
+                            {game.won && (
+                              <div className="text-xs text-hilo-gold font-semibold">
+                                {game.multiplier}x Multiplier
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </AnimatePresence>
-                
-                {gameHistory.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
-                    No games played yet
-                  </div>
-                )}
               </div>
             </div>
           </div>

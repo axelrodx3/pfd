@@ -197,6 +197,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         className="mb-4"
       />
 
+
       {/* Confetti Animation */}
       <AnimatePresence>
         {showConfetti && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FloatingResult } from './FloatingResult'
+import { formatCurrency } from '../lib/utils'
 
 interface Dice3DProps {
   targetNumber: number
@@ -33,7 +34,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   soundEnabled = true,
   muted = false
 }) => {
-  const [currentFace, setCurrentFace] = useState(1)
+  const [currentFace, setCurrentFace] = useState(targetNumber || 1)
   const [showResult, setShowResult] = useState(false)
   const [animationComplete, setAnimationComplete] = useState(false)
   const [showFloatingResult, setShowFloatingResult] = useState(false)
@@ -95,11 +96,19 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     6: { rotateX: -90, rotateY: 0 }
   }
 
+  // Update currentFace when targetNumber changes (when not rolling)
+  useEffect(() => {
+    if (!isRolling && targetNumber) {
+      setCurrentFace(targetNumber)
+    }
+  }, [targetNumber, isRolling])
+
   // Handle rolling animation
   useEffect(() => {
     if (isRolling) {
       setShowResult(false)
       setAnimationComplete(false)
+      setShowFloatingResult(false)
       
       // Play roll sound
       playSound('roll')
@@ -109,13 +118,13 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         setCurrentFace(Math.floor(Math.random() * 6) + 1)
       }, 100)
 
-      // Stop rolling after 2.5 seconds and land on target
+      // Stop rolling after 1.8 seconds and land on target
       const rollTimeout = setTimeout(() => {
         clearInterval(rollInterval)
         setCurrentFace(targetNumber)
         setShowResult(true)
         
-        // Suspense delay before showing results (1-2 seconds)
+        // Quick suspense delay before showing results
         setTimeout(() => {
           if (won) {
             playSound('win')
@@ -127,8 +136,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           setAnimationComplete(true)
           setShowFloatingResult(true)
           onRollEnd()
-        }, 1500) // 1.5 second suspense delay
-      }, 2500) // 2.5 second roll duration
+        }, 800) // 0.8 second suspense delay
+      }, 1800) // 1.8 second roll duration
 
       return () => {
         clearInterval(rollInterval)
@@ -143,7 +152,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   return (
     <div className={`relative ${className}`}>
       {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-48 h-48 mx-auto mb-6">
+      <div className="relative w-32 h-32 mx-auto mb-4">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
           {/* Outer Glow Ring */}
@@ -153,9 +162,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-hilo-gold/30 via-hilo-red/30 to-hilo-green/30 blur-sm" />
           
           {/* Floating Grid Pattern */}
-          <div className="absolute inset-4 rounded-2xl border-2 border-hilo-gold/50">
-            <div className="grid grid-cols-6 grid-rows-6 h-full gap-1 p-4">
-              {[...Array(36)].map((_, i) => (
+          <div className="absolute inset-3 rounded-2xl border-2 border-hilo-gold/50">
+            <div className="grid grid-cols-4 grid-rows-4 h-full gap-1 p-3">
+              {[...Array(16)].map((_, i) => (
                 <motion.div 
                   key={i} 
                   className="border border-hilo-gold/30 rounded-sm"
@@ -251,17 +260,17 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           }}
         >
           <motion.div
-            className="relative w-24 h-24"
+            className="relative w-16 h-16"
             style={{
               transformStyle: 'preserve-3d'
             }}
             animate={isRolling ? {
-              rotateX: [0, 180, 360, 540, 720, 900, 1080, 1260, 1440, 1620, 1800],
-              rotateY: [0, 90, 180, 270, 360, 450, 540, 630, 720, 810, 900],
-              rotateZ: [0, 45, 90, 135, 180, 225, 270, 315, 360, 405, 450],
-              scale: [1, 1.3, 0.7, 1.4, 0.6, 1.2, 0.8, 1.1, 0.9, 1.05, 1],
-              y: [0, -25, 15, -30, 20, -15, 25, -20, 10, -5, 0],
-              x: [0, 15, -20, 25, -15, 20, -10, 15, -5, 8, 0]
+              rotateX: [0, 360, 720, 1080, 1440],
+              rotateY: [0, 180, 360, 540, 720],
+              rotateZ: [0, 90, 180, 270, 360],
+              scale: [1, 1.1, 0.9, 1.05, 1],
+              y: [0, -8, 4, -6, 0],
+              x: [0, 4, -6, 3, 0]
             } : {
               rotateX: currentRotation.rotateX,
               rotateY: currentRotation.rotateY,
@@ -270,16 +279,20 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               y: 0,
               x: 0
             }}
+            style={{
+              transformStyle: 'preserve-3d',
+              opacity: 1
+            }}
             transition={isRolling ? {
-              duration: 2.5,
-              ease: "easeInOut",
-              times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+              duration: 1.8,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              times: [0, 0.25, 0.5, 0.75, 1]
             } : {
-              duration: 0.8,
+              duration: 0.6,
               ease: "easeOut",
               type: "spring",
-              stiffness: 200,
-              damping: 20
+              stiffness: 300,
+              damping: 25
             }}
           >
             {/* Dice Cube */}
@@ -297,14 +310,14 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             >
               {/* Dice Dots */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-16 h-16">
+                <div className="grid grid-cols-3 grid-rows-3 gap-1 w-10 h-10">
                   {getDiceDots(currentFace).map((dot, index) => (
                     <div
                       key={index}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                         dot 
                           ? showResult && won
-                            ? 'bg-white shadow-lg'
+                            ? 'bg-white shadow-md'
                             : showResult && !won
                             ? 'bg-gray-200'
                             : 'bg-gray-800'
@@ -384,7 +397,32 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           isWin={won || false}
           isVisible={showFloatingResult}
           onComplete={() => setShowFloatingResult(false)}
+          className="z-50"
         />
+
+        {/* Result Display */}
+        {showResult && (
+          <motion.div
+            className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center z-40"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-hilo-gold/30 shadow-2xl">
+              <div className="text-2xl font-bold text-hilo-gold mb-1">
+                Rolled: {currentFace}
+              </div>
+              <div className={`text-lg font-semibold ${won ? 'text-hilo-green' : 'text-hilo-red'}`}>
+                {won ? '🎉 YOU WIN!' : '💸 YOU LOSE!'}
+              </div>
+              {won && (
+                <div className="text-sm text-hilo-gold">
+                  +{formatCurrency(winnings - betAmount)} HILO
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Enhanced Win Effects */}

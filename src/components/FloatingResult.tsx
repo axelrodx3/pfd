@@ -59,20 +59,21 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
           {/* Main Floating Number */}
           <motion.div
             className={`
-              px-8 py-4 rounded-2xl border-2 font-bold text-3xl
+              px-6 py-3 rounded-xl border-2 font-bold text-2xl
               ${getColorClasses()}
               ${getGlowEffect()}
               backdrop-blur-md
               shadow-2xl
+              z-50
             `}
             animate={{
-              y: [-30, -60, -90, -120],
-              scale: [1, 1.2, 1.1, 0.8],
-              opacity: [1, 0.9, 0.6, 0],
-              rotate: [0, 5, -5, 0]
+              y: [-20, -40, -60, -80],
+              scale: [1, 1.1, 1, 0.9],
+              opacity: [1, 0.9, 0.7, 0],
+              rotate: [0, 2, -2, 0]
             }}
             transition={{
-              duration: 2.5,
+              duration: 2,
               ease: "easeOut",
               times: [0, 0.3, 0.7, 1]
             }}
@@ -86,20 +87,21 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
           {/* Static Smaller Value (stays for 2 seconds) */}
           <motion.div
             className={`
-              absolute top-20 px-4 py-2 rounded-xl border-2
+              absolute top-16 px-3 py-1.5 rounded-lg border
               ${getColorClasses()}
-              text-lg font-bold
+              text-base font-semibold
               backdrop-blur-sm
               shadow-lg
+              z-40
             `}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ 
               opacity: [0, 1, 1, 1, 0],
-              scale: [0.8, 1.1, 1, 1, 0.8],
-              y: [20, 0, 0, 0, -10]
+              scale: [0.8, 1.05, 1, 1, 0.8],
+              y: [10, 0, 0, 0, -5]
             }}
             transition={{
-              duration: 3,
+              duration: 2.5,
               times: [0, 0.2, 0.3, 0.8, 1],
               ease: "easeInOut"
             }}
