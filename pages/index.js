@@ -240,12 +240,13 @@ export default function Home() {
           --shadow-color: ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
         }
 
-        body {
+         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+          background: ${isDarkMode ? 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)'} !important;
           color: var(--text-primary);
           overflow-x: hidden;
           transition: all 0.3s ease;
+          min-height: 100vh;
         }
 
         .app {
