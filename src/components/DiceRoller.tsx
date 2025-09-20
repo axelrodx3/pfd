@@ -30,6 +30,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
   const [displayRoll, setDisplayRoll] = useState<number | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [showResultModal, setShowResultModal] = useState(false)
 
   // Play sound effects
   const playSound = (sound: 'roll' | 'win' | 'lose') => {
@@ -98,9 +99,10 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
     }
   }, [isRolling])
 
-  // Handle win/lose sounds and confetti
+  // Handle win/lose sounds, confetti, and result modal
   useEffect(() => {
     if (lastWin !== null && !isRolling) {
+      setShowResultModal(true)
       if (lastWin) {
         playSound('win')
         setShowConfetti(true)
@@ -258,40 +260,88 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         )}
       </AnimatePresence>
 
-      {/* Result Display */}
+      {/* Result Modal */}
       <AnimatePresence>
-        {lastRoll !== null && !isRolling && (
+        {showResultModal && (
           <motion.div
-            className="text-center"
-            variants={resultVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowResultModal(false)}
           >
             <motion.div
-              className={`
-                text-2xl font-bold mb-2
-                ${lastWin ? 'text-hilo-green' : 'text-hilo-red'}
-              `}
-              animate={{
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 0.3,
-                repeat: 2,
-                repeatType: 'reverse',
-              }}
+              className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 text-center border-2 border-hilo-gold shadow-2xl"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {lastWin ? '🎉 YOU WIN!' : '💸 YOU LOSE!'}
-            </motion.div>
-            
-            <motion.div
-              className="text-lg text-gray-300"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-            >
-              Rolled: {lastRoll} ({lastResult?.toUpperCase()})
+              {/* Result Icon */}
+              <motion.div
+                className="text-8xl mb-4"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 10, -10, 0],
+                }}
+                transition={{
+                  duration: 0.6,
+                  repeat: 2,
+                  repeatType: 'reverse',
+                }}
+              >
+                {lastWin ? '🎉' : '😞'}
+              </motion.div>
+
+              {/* Result Text */}
+              <motion.h2
+                className={`text-4xl font-bold mb-4 ${
+                  lastWin ? 'text-hilo-green' : 'text-hilo-red'
+                }`}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                {lastWin ? 'YOU WIN!' : 'YOU LOSE!'}
+              </motion.h2>
+
+              {/* Roll Details */}
+              <motion.div
+                className="text-lg text-gray-300 mb-6"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <div className="mb-2">
+                  <span className="text-hilo-gold font-semibold">Roll:</span> {lastRoll}
+                </div>
+                <div className="mb-2">
+                  <span className="text-hilo-gold font-semibold">Result:</span> {lastResult?.toUpperCase()}
+                </div>
+                {lastWin && (
+                  <div className="text-hilo-green font-semibold">
+                    <span className="text-hilo-gold">Multiplier:</span> 1.98x
+                  </div>
+                )}
+              </motion.div>
+
+              {/* OK Button */}
+              <motion.button
+                onClick={() => setShowResultModal(false)}
+                className={`px-8 py-3 rounded-lg font-bold text-xl transition-all duration-300 ${
+                  lastWin
+                    ? 'bg-hilo-green text-white hover:bg-hilo-green/80 hover:shadow-hilo-glow-green'
+                    : 'bg-hilo-red text-white hover:bg-hilo-red/80 hover:shadow-hilo-glow-red'
+                }`}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                OK
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -356,3 +406,4 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
 }
 
 export default DiceRoller
+
