@@ -53,53 +53,61 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onAnimationComplete={() => {
-            setTimeout(() => onComplete(), 2000)
+            setTimeout(() => onComplete(), 3000)
           }}
         >
           {/* Main Floating Number */}
           <motion.div
             className={`
-              px-6 py-3 rounded-full border-2 font-bold text-2xl
+              px-8 py-4 rounded-2xl border-2 font-bold text-3xl
               ${getColorClasses()}
               ${getGlowEffect()}
-              backdrop-blur-sm
+              backdrop-blur-md
+              shadow-2xl
             `}
             animate={{
-              y: [-20, -40, -60],
-              scale: [1, 1.1, 0.9],
-              opacity: [1, 0.8, 0]
+              y: [-30, -60, -90, -120],
+              scale: [1, 1.2, 1.1, 0.8],
+              opacity: [1, 0.9, 0.6, 0],
+              rotate: [0, 5, -5, 0]
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               ease: "easeOut",
-              times: [0, 0.5, 1]
+              times: [0, 0.3, 0.7, 1]
             }}
           >
-            {isPositive ? '+' : '-'}{displayAmount.toLocaleString()} HILO
+            <span className="flex items-center gap-2">
+              {isPositive ? '🎉' : '💸'}
+              {isPositive ? '+' : '-'}{displayAmount.toLocaleString()} HILO
+            </span>
           </motion.div>
 
           {/* Static Smaller Value (stays for 2 seconds) */}
           <motion.div
             className={`
-              absolute top-16 px-3 py-1 rounded-full border
+              absolute top-20 px-4 py-2 rounded-xl border-2
               ${getColorClasses()}
-              text-sm font-semibold
+              text-lg font-bold
+              backdrop-blur-sm
+              shadow-lg
             `}
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ 
-              opacity: [0, 1, 1, 0],
-              scale: [0.8, 1, 1, 0.8]
+              opacity: [0, 1, 1, 1, 0],
+              scale: [0.8, 1.1, 1, 1, 0.8],
+              y: [20, 0, 0, 0, -10]
             }}
             transition={{
-              duration: 2.5,
-              times: [0, 0.2, 0.8, 1],
+              duration: 3,
+              times: [0, 0.2, 0.3, 0.8, 1],
               ease: "easeInOut"
             }}
           >
             {isPositive ? '+' : '-'}{displayAmount.toLocaleString()}
           </motion.div>
 
-          {/* Particle Effects for Wins */}
+          {/* Enhanced Particle Effects for Wins */}
           {isWin && isPositive && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
@@ -107,23 +115,48 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {[...Array(8)].map((_, i) => (
+              {/* Gold Coins */}
+              {[...Array(12)].map((_, i) => (
                 <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-hilo-gold rounded-full"
+                  key={`coin-${i}`}
+                  className="absolute w-3 h-3 bg-hilo-gold rounded-full shadow-lg"
                   style={{
                     left: '50%',
                     top: '50%',
                   }}
                   animate={{
-                    x: [0, (Math.random() - 0.5) * 100],
-                    y: [0, -Math.random() * 80 - 40],
-                    scale: [1, 0],
-                    opacity: [1, 0]
+                    x: [0, (Math.random() - 0.5) * 150],
+                    y: [0, -Math.random() * 120 - 60],
+                    scale: [1, 1.2, 0],
+                    opacity: [1, 0.8, 0],
+                    rotate: [0, 360, 720]
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: i * 0.08,
+                    ease: "easeOut"
+                  }}
+                />
+              ))}
+              
+              {/* Sparkles */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={`sparkle-${i}`}
+                  className="absolute w-1 h-1 bg-white rounded-full"
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                  }}
+                  animate={{
+                    x: [0, (Math.random() - 0.5) * 200],
+                    y: [0, -Math.random() * 100 - 50],
+                    scale: [0, 1, 0],
+                    opacity: [0, 1, 0]
                   }}
                   transition={{
                     duration: 1.5,
-                    delay: i * 0.1,
+                    delay: i * 0.05,
                     ease: "easeOut"
                   }}
                 />
@@ -131,7 +164,7 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
             </motion.div>
           )}
 
-          {/* Loss Shake Effect */}
+          {/* Enhanced Loss Shake Effect */}
           {!isWin && !isPositive && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
@@ -140,17 +173,41 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="absolute inset-0 bg-hilo-red/10 rounded-full"
+                className="absolute inset-0 bg-hilo-red/20 rounded-2xl"
                 animate={{
-                  x: [-2, 2, -2, 2, 0],
-                  scale: [1, 1.1, 1],
-                  opacity: [0.3, 0.1, 0.3, 0.1, 0]
+                  x: [-3, 3, -3, 3, -2, 2, 0],
+                  y: [-2, 2, -2, 2, -1, 1, 0],
+                  scale: [1, 1.05, 1, 1.02, 1],
+                  opacity: [0.4, 0.1, 0.4, 0.1, 0.3, 0.1, 0]
                 }}
                 transition={{
-                  duration: 0.8,
+                  duration: 1.2,
                   ease: "easeInOut"
                 }}
               />
+              
+              {/* Loss Particles */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={`loss-${i}`}
+                  className="absolute w-2 h-2 bg-hilo-red/60 rounded-full"
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                  }}
+                  animate={{
+                    x: [0, (Math.random() - 0.5) * 80],
+                    y: [0, Math.random() * 60 + 30],
+                    scale: [1, 0.5, 0],
+                    opacity: [1, 0.5, 0]
+                  }}
+                  transition={{
+                    duration: 1,
+                    delay: i * 0.1,
+                    ease: "easeOut"
+                  }}
+                />
+              ))}
             </motion.div>
           )}
         </motion.div>

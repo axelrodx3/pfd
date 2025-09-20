@@ -300,8 +300,8 @@ export const useGameStore = create<GameState & GameActions>()(
           lastWin: won,
         }))
         
-        // Wait for 3D dice animation to complete (2 seconds)
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // Wait for 3D dice animation to complete (4 seconds total: 2.5s roll + 1.5s suspense)
+        await new Promise(resolve => setTimeout(resolve, 4000))
         
         const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
         

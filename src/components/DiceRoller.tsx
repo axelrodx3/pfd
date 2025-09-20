@@ -183,16 +183,17 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           }
         }}
         onWin={() => {
-          playSound('win')
           setShowConfetti(true)
           setTimeout(() => setShowConfetti(false), 3000)
         }}
         onLoss={() => {
-          playSound('lose')
+          // Loss effects handled by Dice3D
         }}
         won={lastWin}
         betAmount={currentBet}
         winnings={lastWin ? currentBet * 1.98 : 0}
+        soundEnabled={soundEnabled}
+        muted={muted}
         className="mb-4"
       />
 
