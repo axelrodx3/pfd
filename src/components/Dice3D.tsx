@@ -445,7 +445,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                     {won ? '🎉 WIN!' : '💸 LOSE!'}
                   </div>
                   <div className="text-sm text-gray-700 font-semibold">
-                    Rolled: {currentFace}
+                    {won ? `Rolled: ${currentFace}` : `Amount Lost: ${formatCurrency(betAmount)} HILO`}
                   </div>
                   {won && (
                     <div className="text-xs text-green-600 font-bold mt-1">

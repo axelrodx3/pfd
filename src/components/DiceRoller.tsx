@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
-import { getDiceEmoji } from '../lib/utils'
+import { getDiceEmoji, formatCurrency } from '../lib/utils'
 import { Dice3D } from './Dice3D'
 
 interface DiceRollerProps {
@@ -288,7 +288,9 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
                 transition={{ delay: 0.4 }}
               >
                 <div className="mb-2">
-                  <span className="text-hilo-gold font-semibold">Roll:</span> {lastRoll}
+                  <span className="text-hilo-gold font-semibold">
+                    {lastWin ? 'Roll:' : 'Amount Lost:'}
+                  </span> {lastWin ? lastRoll : `${formatCurrency(currentBet)} HILO`}
                 </div>
                 <div className="mb-2">
                   <span className="text-hilo-gold font-semibold">Result:</span> {lastResult?.toUpperCase()}
