@@ -65,7 +65,6 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
               backdrop-blur-md
               shadow-2xl
               z-50
-              text-center
             `}
             animate={{
               y: [-20, -40, -60, -80],
@@ -88,7 +87,7 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
           {/* Static Smaller Value (stays for 2 seconds) */}
           <motion.div
             className={`
-              absolute top-20 left-1/2 transform -translate-x-1/2 px-3 py-1.5 rounded-lg border
+              absolute top-16 px-3 py-1.5 rounded-lg border
               ${getColorClasses()}
               text-base font-semibold
               backdrop-blur-sm

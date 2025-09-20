@@ -168,6 +168,56 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   return (
     <div className={`relative ${className}`}>
+      {/* Win/Loss Probability Scale */}
+      <div className="mb-6">
+        <div className="relative w-80 h-10 mx-auto">
+          {/* Scale Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-hilo-red via-gray-600 to-hilo-green rounded-full shadow-inner border border-gray-500/30">
+            {/* Center Line */}
+            <div className="absolute left-1/2 top-1 w-0.5 h-8 bg-white/70 transform -translate-x-1/2 rounded-full" />
+            {/* Scale Marks */}
+            <div className="absolute left-1/4 top-2 w-0.5 h-6 bg-white/40 transform -translate-x-1/2 rounded-full" />
+            <div className="absolute right-1/4 top-2 w-0.5 h-6 bg-white/40 transform -translate-x-1/2 rounded-full" />
+          </div>
+          
+          {/* Dice Indicator */}
+          <motion.div
+            className="absolute top-1/2 transform -translate-y-1/2 w-10 h-10 z-10"
+            animate={{
+              x: won === null ? 0 : won ? 160 : -160, // Move to green (win) or red (loss) side
+            }}
+            transition={{
+              duration: 1.5,
+              ease: "easeInOut",
+              delay: showResult ? 0.5 : 0
+            }}
+            style={{
+              left: '50%',
+              marginLeft: '-20px' // Center the dice initially
+            }}
+          >
+            {/* Mini Dice with Glow */}
+            <div className={`
+              w-full h-full bg-white rounded-lg shadow-xl border-2 flex items-center justify-center
+              ${won === null ? 'border-gray-300' : won ? 'border-green-400 shadow-green-500/50' : 'border-red-400 shadow-red-500/50'}
+            `}>
+              <div className="text-sm font-bold text-gray-800">
+                {currentFace}
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* Labels */}
+          <div className="absolute -top-8 left-0 text-sm text-hilo-red font-bold">LOW (1-3)</div>
+          <div className="absolute -top-8 right-0 text-sm text-hilo-green font-bold">HIGH (4-6)</div>
+          
+          {/* Probability Text */}
+          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-medium">
+            {won === null ? '50/50' : won ? 'WIN!' : 'LOSS'}
+          </div>
+        </div>
+      </div>
+
       {/* 3D Environment - Enhanced Glowing Table */}
       <div className="relative w-32 h-32 mx-auto mb-4">
         {/* Table Surface with Enhanced Glow */}
@@ -416,24 +466,6 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
-        {/* Show Current Number on Left Side After Game */}
-        {showResult && won !== null && (
-          <motion.div
-            className="absolute -left-20 top-1/2 transform -translate-y-1/2 text-center z-40"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className={`
-              bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border shadow-xl
-              ${won ? 'border-green-500/50 shadow-green-500/30' : 'border-red-500/50 shadow-red-500/30'}
-            `}>
-              <div className={`text-lg font-bold ${won ? 'text-green-400' : 'text-red-400'}`}>
-                {currentFace}
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
