@@ -38,6 +38,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   const [showResult, setShowResult] = useState(false)
   const [animationComplete, setAnimationComplete] = useState(false)
   const [showFloatingResult, setShowFloatingResult] = useState(false)
+  const [isLanding, setIsLanding] = useState(false)
 
   // Sound effects
   const playSound = (sound: 'roll' | 'win' | 'lose') => {
@@ -124,6 +125,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       setShowResult(false)
       setAnimationComplete(false)
       setShowFloatingResult(false)
+      setIsLanding(false)
     }
   }, [isRolling])
 
@@ -145,6 +147,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       // Stop rolling after 1.8 seconds and land on target
       const rollTimeout = setTimeout(() => {
         clearInterval(rollInterval)
+        // Set landing state for smooth transition
+        setIsLanding(true)
         // Immediately set the target number to prevent dice from disappearing
         setCurrentFace(targetNumber)
         
@@ -290,10 +294,17 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               scale: [1, 1.15, 0.85, 1.1, 0.9, 1.05, 0.95, 1.02, 1],
               y: [0, -12, 6, -9, 3, -6, 4, -3, 0],
               x: [0, 6, -9, 4, -6, 3, -4, 2, 0]
+            } : isLanding ? {
+              rotateX: currentRotation.rotateX + 5,
+              rotateY: currentRotation.rotateY + 5,
+              rotateZ: 2,
+              scale: [1.1, 1],
+              y: [0, 0],
+              x: [0, 0]
             } : {
-              rotateX: currentRotation.rotateX,
-              rotateY: currentRotation.rotateY,
-              rotateZ: 0,
+              rotateX: currentRotation.rotateX + 3,
+              rotateY: currentRotation.rotateY + 3,
+              rotateZ: 1,
               scale: 1,
               y: 0,
               x: 0
@@ -302,6 +313,12 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               duration: 1.8,
               ease: [0.23, 1, 0.32, 1],
               times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
+            } : isLanding ? {
+              duration: 0.5,
+              ease: "easeOut",
+              type: "spring",
+              stiffness: 400,
+              damping: 30
             } : {
               duration: 0.3,
               ease: "easeOut",
