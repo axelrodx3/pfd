@@ -100,9 +100,12 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   useEffect(() => {
     if (!isRolling && targetNumber) {
       setCurrentFace(targetNumber)
-      setShowResult(true) // Always show the result when we have a target number
+      // Only show result if we actually have a game result (won is not null)
+      if (won !== null) {
+        setShowResult(true)
+      }
     }
-  }, [targetNumber, isRolling])
+  }, [targetNumber, isRolling, won])
 
   // Handle rolling animation
   useEffect(() => {
@@ -419,14 +422,15 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           </div>
         </motion.div>
 
-        {/* Result Display - Auto-fade after 3 seconds */}
-        {showResult && (
+        {/* Result Display - Cloud bubble next to dice */}
+        {showResult && won !== null && (
           <motion.div
-            className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center z-40"
-            initial={{ opacity: 0, y: 20 }}
+            className="absolute -right-32 top-1/2 transform -translate-y-1/2 z-40"
+            initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ 
               opacity: [0, 1, 1, 0],
-              y: [20, 0, 0, -10]
+              scale: [0.8, 1, 1, 0.9],
+              x: [20, 0, 0, -10]
             }}
             transition={{ 
               duration: 3.5,
@@ -435,18 +439,35 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             }}
             onAnimationComplete={() => setShowResult(false)}
           >
-            <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-hilo-gold/30 shadow-2xl">
-              <div className="text-2xl font-bold text-hilo-gold mb-1">
-                Rolled: {currentFace}
-              </div>
-              <div className={`text-lg font-semibold ${won ? 'text-hilo-green' : 'text-hilo-red'}`}>
-                {won ? '🎉 YOU WIN!' : '💸 YOU LOSE!'}
-              </div>
-              {won && (
-                <div className="text-sm text-hilo-gold">
-                  +{formatCurrency(winnings - betAmount)} HILO
+            <div className="relative">
+              {/* Cloud bubble */}
+              <div className={`
+                bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm 
+                rounded-3xl px-4 py-3 shadow-2xl border-2
+                ${won ? 'border-green-300 shadow-green-500/30' : 'border-red-300 shadow-red-500/30'}
+                relative
+              `}>
+                <div className="text-center">
+                  <div className={`text-lg font-bold ${won ? 'text-green-600' : 'text-red-600'} mb-1`}>
+                    {won ? '🎉 WIN!' : '💸 LOSE!'}
+                  </div>
+                  <div className="text-sm text-gray-700 font-semibold">
+                    Rolled: {currentFace}
+                  </div>
+                  {won && (
+                    <div className="text-xs text-green-600 font-bold mt-1">
+                      +{formatCurrency(winnings - betAmount)} HILO
+                    </div>
+                  )}
                 </div>
-              )}
+                
+                {/* Cloud tail */}
+                <div className={`
+                  absolute -left-2 top-1/2 transform -translate-y-1/2 w-0 h-0
+                  border-t-8 border-b-8 border-r-8 border-transparent
+                  ${won ? 'border-r-green-300' : 'border-r-red-300'}
+                `} />
+              </div>
             </div>
           </motion.div>
         )}

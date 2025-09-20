@@ -174,7 +174,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
 
       {/* 3D Dice Display */}
       <Dice3D
-        targetNumber={lastRoll || 1}
+        targetNumber={lastRoll}
         isRolling={isRolling}
         onRollEnd={() => {
           // Show result modal after dice animation completes
