@@ -347,60 +347,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         )}
       </AnimatePresence>
 
-      {/* Rolling Indicator */}
-      <AnimatePresence>
-        {isRolling && (
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="text-hilo-gold text-lg font-semibold mb-2"
-              animate={{
-                opacity: [0.5, 1, 0.5],
-              }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              Rolling...
-            </motion.div>
-            
-            <motion.div
-              className="flex justify-center space-x-1"
-              animate={{
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-2 h-2 bg-hilo-gold rounded-full"
-                  animate={{
-                    y: [0, -10, 0],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
