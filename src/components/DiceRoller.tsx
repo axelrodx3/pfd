@@ -160,11 +160,11 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={`dice-container relative ${className}`}>
+    <div className={`dice-container relative flex flex-col items-center justify-center ${className}`}>
       {/* Auto-roll indicator */}
       {autoRollEnabled && (
         <motion.div
-          className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-hilo-red text-white text-xs px-2 py-1 rounded-full z-10"
+          className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-hilo-red text-white text-xs px-3 py-2 rounded-full z-10 shadow-lg"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
         >
@@ -172,31 +172,32 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         </motion.div>
       )}
 
-
       {/* 3D Dice Display */}
-      <Dice3D
-        targetNumber={lastRoll}
-        isRolling={isRolling}
-        onRollEnd={() => {
-          // Show result modal after dice animation completes
-          if (lastWin !== null) {
-            setShowResultModal(true)
-          }
-        }}
-        onWin={() => {
-          setShowConfetti(true)
-          setTimeout(() => setShowConfetti(false), 3000)
-        }}
-        onLoss={() => {
-          // Loss effects handled by Dice3D
-        }}
-        won={lastWin}
-        betAmount={currentBet}
-        winnings={lastWin ? currentBet * 1.98 : 0}
-        soundEnabled={soundEnabled}
-        muted={muted}
-        className="mb-4"
-      />
+      <div className="flex justify-center items-center w-full">
+        <Dice3D
+          targetNumber={lastRoll}
+          isRolling={isRolling}
+          onRollEnd={() => {
+            // Show result modal after dice animation completes
+            if (lastWin !== null) {
+              setShowResultModal(true)
+            }
+          }}
+          onWin={() => {
+            setShowConfetti(true)
+            setTimeout(() => setShowConfetti(false), 3000)
+          }}
+          onLoss={() => {
+            // Loss effects handled by Dice3D
+          }}
+          won={lastWin}
+          betAmount={currentBet}
+          winnings={lastWin ? currentBet * 1.98 : 0}
+          soundEnabled={soundEnabled}
+          muted={muted}
+          className=""
+        />
+      </div>
 
 
       {/* Confetti Animation */}

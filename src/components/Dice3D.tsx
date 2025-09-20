@@ -219,7 +219,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       </div>
 
       {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-24 h-24 mx-auto mb-6">
+      <div className="relative w-40 h-40 mx-auto mb-6">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
           
@@ -322,11 +322,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           }}
         >
           <motion.div
-            className="relative w-12 h-12"
-            style={{
-              transformStyle: 'preserve-3d',
-              opacity: 1
-            }}
+            className="relative w-16 h-16"
             animate={isRolling ? {
               rotateX: [0, 180, 360, 540, 720, 900, 1080, 1260, 1440],
               rotateY: [0, 90, 180, 270, 360, 450, 540, 630, 720],
@@ -353,6 +349,10 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               stiffness: 400,
               damping: 30
             }}
+            style={{
+              transformStyle: 'preserve-3d',
+              opacity: 1
+            }}
           >
             {/* Modern Dice Cube */}
     <div
@@ -374,7 +374,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                   {getDiceDots(currentFace).map((dot, index) => (
                     <div
                       key={index}
-                      className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
                         dot 
                           ? showResult && won === true
                             ? 'bg-white shadow-lg drop-shadow-sm'
@@ -440,7 +440,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
         {/* Bouncing Shadow */}
         <motion.div
-          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-4 bg-black/20 rounded-full blur-sm"
+          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black/20 rounded-full blur-sm"
           animate={isRolling ? {
             scale: [1, 1.5, 0.8, 1.2, 1],
             opacity: [0.2, 0.4, 0.1, 0.3, 0.2]
@@ -467,7 +467,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
           <motion.div
-            className="absolute -right-48 top-1/4 transform -translate-y-1/2 z-40"
+            className="absolute -right-52 top-1/4 transform -translate-y-1/2 z-40"
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ 
               opacity: [0, 1, 1, 0],

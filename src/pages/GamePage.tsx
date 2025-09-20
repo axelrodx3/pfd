@@ -172,8 +172,8 @@ export const GamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="mb-8 flex justify-center">
-                <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-3xl p-8 backdrop-blur-sm border border-hilo-gold/20 shadow-2xl">
+              <div className="mb-12 flex justify-center px-4">
+                <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-3xl p-8 backdrop-blur-sm border border-hilo-gold/20 shadow-2xl w-full max-w-md">
                   <DiceRoller />
                 </div>
               </div>

@@ -268,8 +268,8 @@ export const EnhancedGamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="flex justify-center items-center mb-8">
-                <div className="relative">
+              <div className="flex justify-center items-center mb-12 px-4">
+                <div className="relative w-full max-w-md">
                   <DiceRoller />
                 </div>
               </div>
