@@ -185,46 +185,62 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
       )}
 
       {/* Dice Display */}
-      <motion.div
-        className={`relative w-24 h-24 mx-auto mb-4 rounded-lg border-2 ${getDiceSkinStyles(selectedDiceSkin)}`}
-        variants={diceVariants}
-        initial="initial"
-        animate={isRolling ? "rolling" : "landed"}
-      >
+      {!showResultModal && (
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-6xl"
-          animate={isRolling && !showResultModal ? {
-            rotate: [0, 90, 180, 270, 360],
-          } : false}
-          transition={{
-            duration: 0.2,
-            repeat: isRolling && !showResultModal ? Infinity : 0,
-            ease: 'linear'
-          }}
+          className={`relative w-24 h-24 mx-auto mb-4 rounded-lg border-2 ${getDiceSkinStyles(selectedDiceSkin)}`}
+          variants={diceVariants}
+          initial="initial"
+          animate={isRolling ? "rolling" : "landed"}
         >
-          {displayRoll ? getDiceEmoji(displayRoll) : '🎲'}
-        </motion.div>
-
-        {/* Glow Effect */}
-        {isRolling && !showResultModal && (
           <motion.div
-            className={`absolute inset-0 rounded-lg opacity-20 ${
-              selectedDiceSkin === 'neon' ? 'bg-cyan-500' :
-              selectedDiceSkin === 'gold' ? 'bg-yellow-400' :
-              'bg-hilo-gold'
-            }`}
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.2, 0.4, 0.2],
-            }}
+            className="absolute inset-0 flex items-center justify-center text-6xl"
+            animate={isRolling ? {
+              rotate: [0, 90, 180, 270, 360],
+            } : false}
             transition={{
-              duration: 0.5,
-              repeat: Infinity,
-              repeatType: 'reverse',
+              duration: 0.2,
+              repeat: isRolling ? Infinity : 0,
+              ease: 'linear'
             }}
-          />
-        )}
-      </motion.div>
+          >
+            {displayRoll ? getDiceEmoji(displayRoll) : '🎲'}
+          </motion.div>
+
+          {/* Glow Effect */}
+          {isRolling && (
+            <motion.div
+              className={`absolute inset-0 rounded-lg opacity-20 ${
+                selectedDiceSkin === 'neon' ? 'bg-cyan-500' :
+                selectedDiceSkin === 'gold' ? 'bg-yellow-400' :
+                'bg-hilo-gold'
+              }`}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.2, 0.4, 0.2],
+              }}
+              transition={{
+                duration: 0.5,
+                repeat: Infinity,
+                repeatType: 'reverse',
+              }}
+            />
+          )}
+        </motion.div>
+      )}
+
+      {/* Final Dice Result (when modal is showing) */}
+      {showResultModal && lastRoll && (
+        <motion.div
+          className="flex justify-center mb-4"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        >
+          <div className="text-8xl">
+            {getDiceEmoji(lastRoll)}
+          </div>
+        </motion.div>
+      )}
 
       {/* Confetti Animation */}
       <AnimatePresence>
