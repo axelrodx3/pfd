@@ -191,10 +191,10 @@ export const EnhancedGamePage: React.FC = () => {
     <div className="min-h-screen bg-hilo-black text-white p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+          <div className="text-center lg:text-left">
             <h1 className="text-4xl font-bold text-hilo-gold mb-2">HILO Casino</h1>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center lg:justify-start gap-4">
               <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${getVIPTierColor(vipTier)} text-white text-sm font-bold`}>
                 {vipTier}
               </div>
@@ -203,7 +203,7 @@ export const EnhancedGamePage: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-4 w-full lg:w-auto">
             <button
               onClick={() => setShowRules(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -244,7 +244,7 @@ export const EnhancedGamePage: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-gray-900 rounded-lg p-6 mb-6">
               {/* Balance & Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-hilo-gold">{hiloTokens.toLocaleString()}</div>
                   <div className="text-sm text-gray-400">HILO Tokens</div>
@@ -268,17 +268,17 @@ export const EnhancedGamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center items-center mb-8">
                 <DiceRoller />
               </div>
 
               {/* Bet Controls */}
-              <div className="space-y-4">
+              <div className="space-y-6 max-w-2xl mx-auto">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-3 text-center">
                     Bet Amount (HILO Tokens)
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-center">
                     <input
                       type="number"
                       value={currentBet}
@@ -309,10 +309,10 @@ export const EnhancedGamePage: React.FC = () => {
                 </div>
 
                 {/* Side Selection */}
-                <div className="flex gap-4">
+                <div className="flex gap-4 justify-center">
                   <button
                     onClick={() => handleSideSelect('high')}
-                    className={`flex-1 py-4 px-6 rounded-lg font-bold text-xl transition-all ${
+                    className={`flex-1 max-w-xs py-4 px-6 rounded-lg font-bold text-xl transition-all ${
                       selectedSide === 'high'
                         ? 'bg-hilo-green text-white shadow-hilo-glow-green'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -322,7 +322,7 @@ export const EnhancedGamePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleSideSelect('low')}
-                    className={`flex-1 py-4 px-6 rounded-lg font-bold text-xl transition-all ${
+                    className={`flex-1 max-w-xs py-4 px-6 rounded-lg font-bold text-xl transition-all ${
                       selectedSide === 'low'
                         ? 'bg-hilo-red text-white shadow-hilo-glow-red'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -333,19 +333,21 @@ export const EnhancedGamePage: React.FC = () => {
                 </div>
 
                 {/* Roll Button */}
-                <button
-                  onClick={handleRoll}
-                  disabled={isRolling || !selectedSide || currentBet > hiloTokens}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-xl rounded-lg hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isRolling ? 'Rolling...' : 'ROLL DICE'}
-                </button>
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleRoll}
+                    disabled={isRolling || !selectedSide || currentBet > hiloTokens}
+                    className="w-full max-w-md py-4 px-6 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-xl rounded-lg hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRolling ? 'Rolling...' : 'ROLL DICE'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col">
             {/* Auto-Roll Controls */}
             <div className="bg-gray-900 rounded-lg p-4">
               <h3 className="text-lg font-bold text-hilo-gold mb-4">Auto-Roll</h3>
