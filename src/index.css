@@ -63,18 +63,7 @@
     @apply card-hilo shadow-hilo-glow;
   }
   
-  /* Text Styles */
-  .text-hilo-gold {
-    @apply text-hilo-gold;
-  }
-  
-  .text-hilo-red {
-    @apply text-hilo-red;
-  }
-  
-  .text-hilo-green {
-    @apply text-hilo-green;
-  }
+  /* Text Styles - These are already defined in Tailwind config */
   
   /* Dice Animation */
   .dice-container {
