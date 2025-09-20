@@ -564,12 +564,12 @@ const Settings = {
  */
 const AuditLog = {
   // Log action
-  async log(userId, adminId, action, details, ipAddress, userAgent) {
+  async log(userId, adminId, action, details, ipAddress, userAgent, transactionHash = null) {
     return new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO audit_log (user_id, admin_id, action, details, ip_address, user_agent)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, adminId, action, details, ipAddress, userAgent],
+        `INSERT INTO audit_log (user_id, admin_id, action, details, ip_address, user_agent, transaction_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, adminId, action, details, ipAddress, userAgent, transactionHash],
         function (err) {
           if (err) return reject(err)
           resolve({ id: this.lastID })
@@ -577,6 +577,68 @@ const AuditLog = {
       )
     })
   },
+
+  // Enhanced logging for financial transactions
+  async logTransaction(userId, action, amount, transactionHash, details = {}) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO audit_log (user_id, admin_id, action, details, transaction_hash, created_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [userId, null, action, JSON.stringify({
+          amount,
+          ...details,
+          timestamp: new Date().toISOString()
+        }), transactionHash],
+        function (err) {
+          if (err) return reject(err)
+          resolve({ id: this.lastID })
+        }
+      )
+    })
+  },
+
+  // Get user's transaction history
+  async getUserHistory(userId, limit = 50) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT action, details, transaction_hash, created_at 
+         FROM audit_log 
+         WHERE user_id = ? 
+         ORDER BY created_at DESC 
+         LIMIT ?`,
+        [userId, limit],
+        (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows.map(row => ({
+            ...row,
+            details: JSON.parse(row.details)
+          })))
+        }
+      )
+    })
+  },
+
+  // Get suspicious activity
+  async getSuspiciousActivity(hours = 24) {
+    return new Promise((resolve, reject) => {
+      const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000)
+      db.all(
+        `SELECT user_id, action, details, ip_address, created_at
+         FROM audit_log 
+         WHERE action IN ('RATE_LIMIT_EXCEEDED', 'DAILY_LIMIT_EXCEEDED', 'SUSPICIOUS_ACTIVITY')
+         AND created_at >= ?
+         ORDER BY created_at DESC`,
+        [cutoff.toISOString()],
+        (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows.map(row => ({
+            ...row,
+            details: JSON.parse(row.details)
+          })))
+        }
+      )
+    })
+  }
 }
 
 module.exports = {

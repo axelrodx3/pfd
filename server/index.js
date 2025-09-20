@@ -27,6 +27,14 @@ const TreasuryService = require('./services/treasury')
 const DepositMonitorService = require('./services/depositMonitor')
 const GameService = require('./services/gameService')
 const PayoutService = require('./services/payoutService')
+const MonitoringService = require('./services/monitoring')
+const BalanceSyncService = require('./services/balanceSync')
+const ProvablyFair2Service = require('./services/provablyFair2')
+const MockFaucetService = require('./services/mockFaucet')
+
+// Import middleware
+const { createLimitsMiddleware, replayProtection } = require('./middleware/limits')
+const { failSafeService } = require('./middleware/failsafe')
 const {
   User,
   Deposit,
@@ -104,9 +112,31 @@ const validatePaymentInput = (req, res, next) => {
 app.use('/api/auth/nonce', rateLimit(rateLimitConfig.nonce))
 app.use('/api/auth/verify-signature', rateLimit(rateLimitConfig.signature))
 app.use('/api/wallet/withdraw', rateLimit(rateLimitConfig.withdrawal))
-app.use('/api/deposits', rateLimit(rateLimitConfig.general), validatePaymentInput)
-app.use('/api/games/play', rateLimit(rateLimitConfig.general), validatePaymentInput)
-app.use('/api/withdrawals', rateLimit(rateLimitConfig.withdrawal), validatePaymentInput)
+// Apply enhanced security middleware
+app.use('/api/deposits', 
+  rateLimit(rateLimitConfig.general), 
+  validatePaymentInput,
+  createLimitsMiddleware('DEPOSIT'),
+  replayProtection,
+  failSafeService.middleware()
+)
+
+app.use('/api/games/play', 
+  rateLimit(rateLimitConfig.general), 
+  validatePaymentInput,
+  createLimitsMiddleware('GAME_BET'),
+  replayProtection,
+  failSafeService.middleware()
+)
+
+app.use('/api/withdrawals', 
+  rateLimit(rateLimitConfig.withdrawal), 
+  validatePaymentInput,
+  createLimitsMiddleware('WITHDRAWAL'),
+  replayProtection,
+  failSafeService.middleware()
+)
+
 app.use('/api/', rateLimit(rateLimitConfig.general))
 
 // Initialize services
@@ -114,6 +144,10 @@ let treasuryService
 let depositMonitorService
 let gameService
 let payoutService
+let monitoringService
+let balanceSyncService
+let provablyFair2Service
+let mockFaucetService
 
 async function initializeServices() {
   try {
@@ -134,6 +168,24 @@ async function initializeServices() {
     // Initialize deposit monitor
     depositMonitorService = new DepositMonitorService(treasuryService)
     await depositMonitorService.start()
+
+    // Initialize monitoring service
+    monitoringService = new MonitoringService()
+    await monitoringService.initialize(treasuryService)
+    monitoringService.start()
+
+    // Initialize balance sync service
+    balanceSyncService = new BalanceSyncService(connection)
+    balanceSyncService.start()
+
+    // Initialize Provably Fair 2.0 service
+    provablyFair2Service = new ProvablyFair2Service()
+
+    // Initialize mock faucet service
+    mockFaucetService = new MockFaucetService(connection, treasuryService)
+
+    // Initialize fail-safe service
+    failSafeService.initialize(monitoringService)
 
     console.log('✅ All services initialized successfully')
   } catch (error) {
@@ -724,6 +776,117 @@ app.post(
   }
 )
 
+// Enhanced API endpoints with new security features
+
+// Mock Faucet endpoints (devnet only)
+app.post('/api/faucet/request', async (req, res) => {
+  try {
+    const { amount = 1.0 } = req.body
+    const user = await User.findByPublicKey(req.user.publicKey)
+    
+    const result = await mockFaucetService.requestFaucet(user.id, req.user.publicKey, amount)
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.get('/api/faucet/status', async (req, res) => {
+  try {
+    const user = await User.findByPublicKey(req.user.publicKey)
+    const status = mockFaucetService.getUserFaucetStatus(user.id)
+    res.json(status)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Provably Fair 2.0 endpoints
+app.post('/api/games/commit', async (req, res) => {
+  try {
+    const { gameType } = req.body
+    const serverCommit = provablyFair2Service.generateServerCommit()
+    res.json(serverCommit)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/games/play-enhanced', async (req, res) => {
+  try {
+    const { serverCommit, clientCommit, clientSeed, gameType, betAmount, transactionHash } = req.body
+    const user = await User.findByPublicKey(req.user.publicKey)
+    
+    const result = await provablyFair2Service.revealAndCalculate(
+      serverCommit, clientCommit, clientSeed, gameType, betAmount, transactionHash
+    )
+    
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Balance sync endpoints
+app.get('/api/balance/sync', async (req, res) => {
+  try {
+    const user = await User.findByPublicKey(req.user.publicKey)
+    await balanceSyncService.syncUserBalanceManual(user.id)
+    
+    const updatedUser = await User.findById(user.id)
+    res.json({ balance: updatedUser.balance_lamports / 1e9 })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.get('/api/balance/pending', async (req, res) => {
+  try {
+    const user = await User.findByPublicKey(req.user.publicKey)
+    const pending = await balanceSyncService.getUserPendingTransactions(user.id)
+    res.json(pending)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Transaction history endpoint
+app.get('/api/transactions/history', async (req, res) => {
+  try {
+    const user = await User.findByPublicKey(req.user.publicKey)
+    const history = await AuditLog.getUserHistory(user.id, 50)
+    res.json(history)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Monitoring endpoints (admin only)
+app.get('/api/admin/monitoring/status', requireAdmin, async (req, res) => {
+  try {
+    const metrics = monitoringService.getMetrics()
+    const failSafeStatus = failSafeService.getStatus()
+    const balanceSyncStatus = balanceSyncService.getStatus()
+    
+    res.json({
+      monitoring: metrics,
+      failSafe: failSafeStatus,
+      balanceSync: balanceSyncStatus
+    })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.get('/api/admin/monitoring/alerts', requireAdmin, async (req, res) => {
+  try {
+    const suspiciousActivity = await AuditLog.getSuspiciousActivity(24)
+    res.json(suspiciousActivity)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -738,7 +901,12 @@ app.get('/api/health', (req, res) => {
       depositMonitor: !!depositMonitorService,
       gameService: !!gameService,
       payoutService: !!payoutService,
+      monitoring: !!monitoringService,
+      balanceSync: !!balanceSyncService,
+      provablyFair2: !!provablyFair2Service,
+      mockFaucet: !!mockFaucetService,
     },
+    failSafe: failSafeService.getStatus(),
   })
 })
 
@@ -772,6 +940,14 @@ process.on('SIGTERM', async () => {
     payoutService.stopProcessing()
   }
 
+  if (monitoringService) {
+    monitoringService.stop()
+  }
+
+  if (balanceSyncService) {
+    balanceSyncService.stop()
+  }
+
   server.close(() => {
     console.log('✅ Server closed')
     process.exit(0)
@@ -787,6 +963,14 @@ process.on('SIGINT', async () => {
 
   if (payoutService) {
     payoutService.stopProcessing()
+  }
+
+  if (monitoringService) {
+    monitoringService.stop()
+  }
+
+  if (balanceSyncService) {
+    balanceSyncService.stop()
   }
 
   server.close(() => {
