@@ -193,12 +193,12 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
       >
         <motion.div
           className="absolute inset-0 flex items-center justify-center text-6xl"
-          animate={isRolling ? {
+          animate={isRolling && !showResultModal ? {
             rotate: [0, 90, 180, 270, 360],
           } : false}
           transition={{
             duration: 0.2,
-            repeat: isRolling ? Infinity : 0,
+            repeat: isRolling && !showResultModal ? Infinity : 0,
             ease: 'linear'
           }}
         >
@@ -206,7 +206,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         </motion.div>
 
         {/* Glow Effect */}
-        {isRolling && (
+        {isRolling && !showResultModal && (
           <motion.div
             className={`absolute inset-0 rounded-lg opacity-20 ${
               selectedDiceSkin === 'neon' ? 'bg-cyan-500' :
