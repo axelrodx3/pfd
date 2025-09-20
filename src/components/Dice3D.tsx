@@ -104,6 +104,13 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     }
   }, [targetNumber, isRolling, won])
 
+  // Ensure dice face is always set to prevent disappearing
+  useEffect(() => {
+    if (targetNumber && !isRolling) {
+      setCurrentFace(targetNumber)
+    }
+  }, [targetNumber, isRolling])
+
   // Ensure dice stays on the correct number after landing
   useEffect(() => {
     if (!isRolling && targetNumber && won !== null) {
@@ -138,13 +145,12 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       // Stop rolling after 1.8 seconds and land on target
       const rollTimeout = setTimeout(() => {
         clearInterval(rollInterval)
+        // Immediately set the target number to prevent dice from disappearing
+        setCurrentFace(targetNumber)
         
         // Small delay to let the motion animation finish smoothly
         setTimeout(() => {
-          // Smoothly transition to target number
-          setCurrentFace(targetNumber)
-          
-          // Show results immediately after dice lands
+          // Show results after dice lands
           setShowResult(true)
           if (won) {
             playSound('win')
@@ -156,7 +162,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           setAnimationComplete(true)
           setShowFloatingResult(true)
           onRollEnd()
-        }, 100) // Small delay for smooth transition
+        }, 200) // Small delay for smooth transition
       }, 1800) // 1.8 second roll duration
 
       return () => {
@@ -166,8 +172,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     }
   }, [isRolling, targetNumber, won, onWin, onLoss, onRollEnd])
 
-  // Get the rotation for the current face
-  const currentRotation = diceFaces[currentFace as keyof typeof diceFaces]
+  // Get the rotation for the current face (with fallback)
+  const currentRotation = diceFaces[currentFace as keyof typeof diceFaces] || diceFaces[1]
 
   return (
     <div className={`relative ${className}`}>
@@ -325,7 +331,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               {/* Modern Dice Dots */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="grid grid-cols-3 grid-rows-3 gap-2 w-16 h-16">
-                  {getDiceDots(currentFace).map((dot, index) => (
+                  {getDiceDots(currentFace || 1).map((dot, index) => (
                     <div
                       key={index}
                       className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
