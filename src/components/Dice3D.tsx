@@ -100,6 +100,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   useEffect(() => {
     if (!isRolling && targetNumber) {
       setCurrentFace(targetNumber)
+      setShowResult(true) // Always show the result when we have a target number
     }
   }, [targetNumber, isRolling])
 
@@ -265,12 +266,12 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               transformStyle: 'preserve-3d'
             }}
             animate={isRolling ? {
-              rotateX: [0, 360, 720, 1080, 1440],
-              rotateY: [0, 180, 360, 540, 720],
-              rotateZ: [0, 90, 180, 270, 360],
-              scale: [1, 1.1, 0.9, 1.05, 1],
-              y: [0, -8, 4, -6, 0],
-              x: [0, 4, -6, 3, 0]
+              rotateX: [0, 180, 360, 540, 720, 900, 1080, 1260, 1440],
+              rotateY: [0, 90, 180, 270, 360, 450, 540, 630, 720],
+              rotateZ: [0, 45, 90, 135, 180, 225, 270, 315, 360],
+              scale: [1, 1.15, 0.85, 1.1, 0.9, 1.05, 0.95, 1.02, 1],
+              y: [0, -12, 6, -9, 3, -6, 4, -3, 0],
+              x: [0, 6, -9, 4, -6, 3, -4, 2, 0]
             } : {
               rotateX: currentRotation.rotateX,
               rotateY: currentRotation.rotateY,
@@ -285,42 +286,43 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             }}
             transition={isRolling ? {
               duration: 1.8,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              times: [0, 0.25, 0.5, 0.75, 1]
+              ease: [0.23, 1, 0.32, 1],
+              times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
             } : {
-              duration: 0.6,
+              duration: 0.8,
               ease: "easeOut",
               type: "spring",
-              stiffness: 300,
-              damping: 25
+              stiffness: 400,
+              damping: 30
             }}
           >
-            {/* Dice Cube */}
+            {/* Modern Dice Cube */}
             <div
-              className={`absolute inset-0 rounded-xl shadow-2xl border-2 transition-all duration-500 ${
+              className={`absolute inset-0 rounded-2xl shadow-2xl border-2 transition-all duration-700 ${
                 showResult && won 
-                  ? 'bg-gradient-to-br from-hilo-green/90 to-hilo-gold/90 border-hilo-gold shadow-hilo-glow-green' 
+                  ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 border-emerald-300 shadow-emerald-500/50' 
                   : showResult && !won
-                  ? 'bg-gradient-to-br from-hilo-red/90 to-gray-800/90 border-hilo-red shadow-hilo-glow-red'
-                  : 'bg-gradient-to-br from-white to-gray-200 border-gray-300'
+                  ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300 shadow-red-500/50'
+                  : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 border-slate-300 shadow-slate-400/30'
               }`}
               style={{
-                transform: 'translateZ(10px)'
+                transform: 'translateZ(12px)',
+                opacity: 1
               }}
             >
-              {/* Dice Dots */}
+              {/* Modern Dice Dots */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="grid grid-cols-3 grid-rows-3 gap-1 w-10 h-10">
+                <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-12 h-12">
                   {getDiceDots(currentFace).map((dot, index) => (
                     <div
                       key={index}
-                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      className={`w-2 h-2 rounded-full transition-all duration-500 ${
                         dot 
                           ? showResult && won
-                            ? 'bg-white shadow-md'
+                            ? 'bg-white shadow-lg drop-shadow-sm'
                             : showResult && !won
-                            ? 'bg-gray-200'
-                            : 'bg-gray-800'
+                            ? 'bg-white shadow-md'
+                            : 'bg-slate-700 shadow-sm'
                           : 'bg-transparent'
                       }`}
                     />
@@ -328,25 +330,28 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                 </div>
               </div>
 
-              {/* Enhanced Glow Effect */}
+              {/* Modern Glow Effect */}
               {showResult && (
                 <motion.div
-                  className={`absolute inset-0 rounded-xl ${
+                  className={`absolute inset-0 rounded-2xl ${
                     won 
-                      ? 'bg-gradient-to-br from-hilo-green/20 to-hilo-gold/20' 
-                      : 'bg-gradient-to-br from-hilo-red/20 to-gray-800/20'
+                      ? 'bg-gradient-to-br from-emerald-300/30 to-green-400/20' 
+                      : 'bg-gradient-to-br from-red-300/30 to-red-400/20'
                   }`}
                   animate={{
-                    opacity: [0, 1, 0.8, 1, 0],
-                    scale: [1, 1.1, 1.05, 1.1, 1]
+                    opacity: [0, 0.8, 0.4, 0.8, 0],
+                    scale: [1, 1.05, 1.02, 1.05, 1]
                   }}
                   transition={{
-                    duration: 2,
-                    repeat: won ? 2 : 1,
+                    duration: 2.5,
+                    repeat: won ? 3 : 1,
                     repeatType: 'reverse'
                   }}
                 />
               )}
+
+              {/* Shine Effect */}
+              <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
             </div>
 
             {/* Win/Loss Glow Effect */}
@@ -400,10 +405,24 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
+        {/* Always Show Current Number */}
+        <motion.div
+          className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center z-40"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-600/50 shadow-xl">
+            <div className="text-lg font-bold text-white">
+              {currentFace}
+            </div>
+          </div>
+        </motion.div>
+
         {/* Result Display */}
         {showResult && (
           <motion.div
-            className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center z-40"
+            className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center z-40"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
