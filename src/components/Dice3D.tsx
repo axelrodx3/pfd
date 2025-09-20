@@ -169,7 +169,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   return (
     <div className={`relative ${className}`}>
       {/* Win/Loss Probability Scale */}
-      <div className="mb-4">
+      <div className="mb-8">
         <div className="relative w-48 h-6 mx-auto">
           {/* Scale Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-hilo-red via-gray-600 to-hilo-green rounded-full shadow-inner border border-gray-500/30">
@@ -219,7 +219,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       </div>
 
       {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-40 h-40 mx-auto mb-8">
+      <div className="relative w-24 h-24 mx-auto mb-6">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
           
@@ -322,7 +322,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           }}
         >
           <motion.div
-            className="relative w-20 h-20"
+            className="relative w-12 h-12"
             style={{
               transformStyle: 'preserve-3d',
               opacity: 1
