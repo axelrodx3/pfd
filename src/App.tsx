@@ -11,12 +11,27 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import ProvablyFairPage from './pages/ProvablyFairPage'
 import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
 import AboutPage from './pages/AboutPage'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { ToastContainer, useToast } from './components/Toast'
 
 /**
  * Main App Component
- * Sets up routing and global layout
+ * Sets up routing and global layout with error boundaries and theme support
  */
 function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </ErrorBoundary>
+  )
+}
+
+function AppContent() {
+  const { toasts, removeToast } = useToast()
+
   return (
     <Router>
       <div className="min-h-screen bg-hilo-black text-white">
@@ -37,6 +52,9 @@ function App() {
         
         {/* Footer */}
         <Footer />
+        
+        {/* Toast Notifications */}
+        <ToastContainer toasts={toasts} onClose={removeToast} />
       </div>
     </Router>
   )

@@ -3,6 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { DiceRoller } from '../components/DiceRoller'
 import { mockAPI } from '../lib/api'
+import { useToast } from '../components/Toast'
+import { LoadingSpinner, LoadingButton } from '../components/LoadingSpinner'
+import { GameRulesModal } from '../components/GameRulesModal'
+import { SettingsModal } from '../components/SettingsModal'
+import { AdvancedStats } from '../components/AdvancedStats'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { Settings, HelpCircle, BarChart3, Download, X } from 'lucide-react'
 
 /**
  * Enhanced Game Page Component
@@ -65,6 +72,14 @@ export const EnhancedGamePage: React.FC = () => {
   const [showDailyWheel, setShowDailyWheel] = useState(false)
   const [wheelSpinning, setWheelSpinning] = useState(false)
   const [wheelResult, setWheelResult] = useState<number | null>(null)
+  
+  // New enhanced features state
+  const [showRules, setShowRules] = useState(false)
+  const [showAdvancedStats, setShowAdvancedStats] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  
+  const { success, error, warning, info } = useToast()
 
   // Auto-roll logic
   useEffect(() => {
@@ -128,6 +143,50 @@ export const EnhancedGamePage: React.FC = () => {
     }
   }
 
+  // Enhanced keyboard shortcuts
+  useKeyboardShortcuts({
+    onRollDice: () => {
+      if (!isRolling && selectedSide && currentBet <= hiloTokens) {
+        handleRollDice()
+      }
+    },
+    onSelectHigh: () => selectSide('high'),
+    onSelectLow: () => selectSide('low'),
+    onQuickBet10: () => setBet(10),
+    onQuickBet25: () => setBet(25),
+    onQuickBet50: () => setBet(50),
+    onQuickBet100: () => setBet(100),
+    onMaxBet: () => setBet(hiloTokens),
+    onToggleSound: toggleSound,
+    onToggleMute: toggleMute,
+    onShowRules: () => setShowRules(true),
+    onShowHistory: () => setShowAdvancedStats(true)
+  })
+
+  // Enhanced roll dice with loading and feedback
+  const handleRollDice = async () => {
+    if (isRolling || !selectedSide || currentBet > hiloTokens) {
+      if (currentBet > hiloTokens) {
+        error('Insufficient Funds', 'You need more HILO tokens to place this bet')
+      }
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await rollDice()
+      if (lastWin) {
+        success('You Won!', `+${(currentBet * 1.98).toLocaleString()} HILO`)
+      } else if (lastWin === false) {
+        warning('You Lost', `-${currentBet.toLocaleString()} HILO`)
+      }
+    } catch (err) {
+      error('Roll Failed', 'Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-hilo-black text-white p-4">
       <div className="max-w-6xl mx-auto">
@@ -145,6 +204,20 @@ export const EnhancedGamePage: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowRules(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Rules
+            </button>
+            <button
+              onClick={() => setShowAdvancedStats(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Stats
+            </button>
             <button
               onClick={() => setShowChallenges(true)}
               className="px-4 py-2 bg-hilo-green text-white rounded-lg hover:bg-hilo-green/80 transition-colors"
@@ -558,6 +631,59 @@ export const EnhancedGamePage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Enhanced Modals */}
+        <GameRulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+        <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+        
+        {/* Advanced Stats Modal */}
+        {showAdvancedStats && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAdvancedStats(false)}
+          >
+            <motion.div
+              className="bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <BarChart3 className="w-8 h-8 text-hilo-gold" />
+                    Advanced Statistics
+                  </h2>
+                  <button
+                    onClick={() => setShowAdvancedStats(false)}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <X className="w-6 h-6 text-gray-400" />
+                  </button>
+                </div>
+                <AdvancedStats />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Loading Overlay */}
+        {isLoading && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="bg-gray-900 rounded-xl p-8 shadow-2xl border border-gray-700">
+              <LoadingSpinner size="xl" text="Rolling dice..." />
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   )

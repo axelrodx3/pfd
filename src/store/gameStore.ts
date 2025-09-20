@@ -137,6 +137,7 @@ export interface GameActions {
   // History actions
   addToHistory: (game: Omit<GameState['gameHistory'][0], 'id'>) => void
   clearHistory: () => void
+  exportHistory: () => string
   addToLiveFeed: (win: Omit<GameState['recentWins'][0], 'id'>) => void
   
   // Leaderboard actions
@@ -534,6 +535,24 @@ export const useGameStore = create<GameState & GameActions>()(
       
       clearHistory: () => {
         set({ gameHistory: [] })
+      },
+      
+      exportHistory: () => {
+        const state = get()
+        const csvContent = [
+          ['Date', 'Bet Amount', 'Side', 'Roll', 'Result', 'Won', 'Winnings', 'Hash'],
+          ...state.gameHistory.map(game => [
+            new Date(game.timestamp).toISOString(),
+            game.bet.toString(),
+            game.side,
+            game.roll.toString(),
+            game.result,
+            game.won ? 'Yes' : 'No',
+            (game.bet * game.multiplier).toString(),
+            game.hash
+          ])
+        ].map(row => row.join(',')).join('\n')
+        return csvContent
       },
       
       addToLiveFeed: (win) => {
