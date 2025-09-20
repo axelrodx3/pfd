@@ -229,7 +229,7 @@ export default function Home() {
           box-sizing: border-box;
         }
 
-        :root {
+      :root {
           --bg-primary: ${isDarkMode ? '#0f0f0f' : '#ffffff'};
           --bg-secondary: ${isDarkMode ? '#1a1a1a' : '#f8f9fa'};
           --bg-tertiary: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
@@ -240,13 +240,15 @@ export default function Home() {
           --shadow-color: ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
         }
 
-         body {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background: ${isDarkMode ? 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)'} !important;
-          color: var(--text-primary);
-          overflow-x: hidden;
-          transition: all 0.3s ease;
-          min-height: 100vh;
+        /* FORCE DARK MODE - NUCLEAR OPTION */
+        html, body {
+          background: #0f0f0f !important;
+          color: #ffffff !important;
+        }
+
+        body {
+          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%) !important;
+          color: #ffffff !important;
         }
 
         .app {
