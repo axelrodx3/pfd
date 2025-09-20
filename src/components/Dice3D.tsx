@@ -306,9 +306,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         )}
       </div>
 
-      {/* Simple Win/Loss Effects - No Emojis */}
+      {/* Simple Win Effects Only */}
       <AnimatePresence>
-        {showResult && (
+        {showResult && won && (
           <motion.div
             className="absolute inset-0 pointer-events-none flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.5 }}
@@ -316,8 +316,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.3 }}
           >
-            <div className={`text-4xl font-bold ${won ? 'text-green-500' : 'text-red-500'}`}>
-              {won ? 'WIN!' : 'LOSE'}
+            <div className="text-4xl font-bold text-green-500">
+              WIN!
             </div>
           </motion.div>
         )}

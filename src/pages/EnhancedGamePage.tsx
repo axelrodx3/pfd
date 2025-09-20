@@ -122,23 +122,26 @@ export const EnhancedGamePage: React.FC = () => {
 
   // Auto-roll logic - Continue automatically regardless of win/loss
   useEffect(() => {
-    if (autoRollEnabled && !isRolling && selectedSide && currentBet <= hiloTokens && autoRollCount < autoRollMax) {
-      // Determine delay based on last result
-      const delay = lastWin === true ? 2000 : 500 // 2 seconds for wins, 0.5 seconds for losses
-      
-      // Show delay indicator
+    if (!autoRollEnabled || isRolling || !selectedSide || currentBet > hiloTokens || autoRollCount >= autoRollMax) {
+      setAutorollDelay(false)
+      return
+    }
+
+    // Determine delay based on last result - wins get delay, losses are immediate
+    const delay = lastWin === true ? 2000 : 0 // 2 seconds for wins, immediate for losses
+    
+    // Show delay indicator only for wins
+    if (lastWin === true) {
       setAutorollDelay(true)
-      
-      const timer = setTimeout(() => {
-        setAutorollDelay(false)
-        handleRollDice()
-      }, delay)
-      
-      return () => {
-        clearTimeout(timer)
-        setAutorollDelay(false)
-      }
-    } else {
+    }
+    
+    const timer = setTimeout(() => {
+      setAutorollDelay(false)
+      handleRollDice()
+    }, delay)
+    
+    return () => {
+      clearTimeout(timer)
       setAutorollDelay(false)
     }
   }, [autoRollEnabled, isRolling, selectedSide, currentBet, hiloTokens, handleRollDice, autoRollCount, autoRollMax, lastWin])
