@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { HiloLogo } from '../components/HiloLogo'
 import { WalletButton } from '../components/WalletButton'
+import { LiveFeed } from '../components/LiveFeed'
 
 /**
  * Home Page Component
@@ -16,14 +17,34 @@ export const HomePage: React.FC = () => {
       description: 'Every roll is verifiable and transparent'
     },
     {
-      icon: '⚡',
-      title: 'Instant Payouts',
-      description: 'Win instantly with no waiting periods'
+      icon: '👑',
+      title: 'VIP Tiers',
+      description: 'Bronze, Silver, Gold, and Diamond levels'
     },
     {
-      icon: '🔒',
-      title: 'Secure & Safe',
-      description: 'Your funds are protected with bank-level security'
+      icon: '🎯',
+      title: 'Daily Challenges',
+      description: 'Complete challenges to earn bonus tokens'
+    },
+    {
+      icon: '⚡',
+      title: 'Auto-Roll',
+      description: 'Set up automatic rolling with stop conditions'
+    },
+    {
+      icon: '🔊',
+      title: 'Sound Effects',
+      description: 'Immersive audio with customizable settings'
+    },
+    {
+      icon: '🎨',
+      title: 'Dice Skins',
+      description: 'Classic, Neon, and Gold themed dice'
+    },
+    {
+      icon: '📊',
+      title: 'Live Statistics',
+      description: 'Track streaks, wins, and performance'
     },
     {
       icon: '🏆',
@@ -191,7 +212,7 @@ export const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -211,6 +232,70 @@ export const HomePage: React.FC = () => {
                 </p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Live Feed Section */}
+      <section className="py-20 bg-hilo-gray">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold text-hilo-gold mb-4">
+              Live Wins Feed
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Watch real-time wins from players around the world
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <LiveFeed />
+            
+            <motion.div
+              className="bg-gray-900 rounded-lg p-6"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-2xl font-bold text-hilo-gold mb-4">Enhanced Features</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🎲</div>
+                  <div>
+                    <div className="font-semibold text-white">Multiple Dice Skins</div>
+                    <div className="text-sm text-gray-400">Classic, Neon, and Gold themes</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🔊</div>
+                  <div>
+                    <div className="font-semibold text-white">Sound Effects</div>
+                    <div className="text-sm text-gray-400">Immersive audio with mute option</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🎉</div>
+                  <div>
+                    <div className="font-semibold text-white">Confetti Animations</div>
+                    <div className="text-sm text-gray-400">Celebrate your big wins</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">📊</div>
+                  <div>
+                    <div className="font-semibold text-white">Detailed Statistics</div>
+                    <div className="text-sm text-gray-400">Track your streaks and performance</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
