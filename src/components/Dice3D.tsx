@@ -100,12 +100,21 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   useEffect(() => {
     if (!isRolling && targetNumber) {
       setCurrentFace(targetNumber)
-      // Only show result if we actually have a game result (won is not null)
+      // Always show result when we have a target number and game result
       if (won !== null) {
         setShowResult(true)
       }
     }
   }, [targetNumber, isRolling, won])
+
+  // Reset dice state when a new game starts (isRolling becomes true)
+  useEffect(() => {
+    if (isRolling) {
+      setShowResult(false)
+      setAnimationComplete(false)
+      setShowFloatingResult(false)
+    }
+  }, [isRolling])
 
   // Handle rolling animation
   useEffect(() => {
@@ -300,19 +309,19 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             }}
           >
             {/* Modern Dice Cube */}
-            <div
-              className={`absolute inset-0 rounded-2xl shadow-2xl border-2 transition-all duration-700 ${
-                showResult && won 
-                  ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 border-emerald-300 shadow-emerald-500/50' 
-                  : showResult && !won
-                  ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300 shadow-red-500/50'
-                  : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 border-slate-300 shadow-slate-400/30'
-              }`}
-              style={{
-                transform: 'translateZ(12px)',
-                opacity: 1
-              }}
-            >
+    <div
+      className={`absolute inset-0 rounded-2xl shadow-2xl border-2 transition-all duration-700 ${
+        won === true
+          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 border-emerald-300 shadow-emerald-500/50' 
+          : won === false
+          ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300 shadow-red-500/50'
+          : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 border-slate-300 shadow-slate-400/30'
+      }`}
+      style={{
+        transform: 'translateZ(12px)',
+        opacity: 1
+      }}
+    >
               {/* Modern Dice Dots */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-12 h-12">
@@ -321,9 +330,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                       key={index}
                       className={`w-2 h-2 rounded-full transition-all duration-500 ${
                         dot 
-                          ? showResult && won
+                          ? won === true
                             ? 'bg-white shadow-lg drop-shadow-sm'
-                            : showResult && !won
+                            : won === false
                             ? 'bg-white shadow-md'
                             : 'bg-slate-700 shadow-sm'
                           : 'bg-transparent'
@@ -334,7 +343,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               </div>
 
               {/* Modern Glow Effect */}
-              {showResult && (
+              {won !== null && (
                 <motion.div
                   className={`absolute inset-0 rounded-2xl ${
                     won 
@@ -408,16 +417,19 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
-        {/* Show Current Number Only After Game */}
+        {/* Show Current Number on Right Side After Game */}
         {won !== null && (
           <motion.div
-            className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center z-40"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="absolute -right-20 top-1/2 transform -translate-y-1/2 text-center z-40"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-600/50 shadow-xl">
-              <div className="text-lg font-bold text-white">
+            <div className={`
+              bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border shadow-xl
+              ${won ? 'border-green-500/50 shadow-green-500/30' : 'border-red-500/50 shadow-red-500/30'}
+            `}>
+              <div className={`text-lg font-bold ${won ? 'text-green-400' : 'text-red-400'}`}>
                 {currentFace}
               </div>
             </div>
@@ -427,7 +439,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
           <motion.div
-            className="absolute -right-32 top-1/2 transform -translate-y-1/2 z-40"
+            className="absolute -right-48 top-1/2 transform -translate-y-1/2 z-40"
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ 
               opacity: [0, 1, 1, 0],
