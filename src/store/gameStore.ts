@@ -303,10 +303,9 @@ export const useGameStore = create<GameState & GameActions>()(
         const roll = rollDice()
         const result = getDiceResult(roll)
         
-        // Apply house edge (49% win chance for player)
-        const random = Math.random()
-        const playerWinChance = 0.49
-        const won = random < playerWinChance && state.selectedSide === result
+        // Player wins if their selected side matches the dice result
+        // House edge is built into the 1.98x multiplier (instead of 2x)
+        const won = state.selectedSide === result
         
         // Set the roll result immediately for 3D dice
         set((prevState) => ({

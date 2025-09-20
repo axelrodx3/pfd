@@ -68,6 +68,7 @@ export class MockAPI {
     clientSeed: string,
     serverSeed: string,
     nonce: number,
+    selectedSide: 'high' | 'low',
     houseEdge: number = 0.02
   ): Promise<GameResult> {
     // Simulate network delay
@@ -78,11 +79,9 @@ export class MockAPI {
     const roll = this.hashToRoll(hash)
     const result = roll > 3 ? 'high' : 'low'
     
-    // Apply house edge (49% win chance for player)
-    const playerWinChance = 0.5 - houseEdge / 2
-    const random = Math.random()
-    const won = random < playerWinChance
-    
+    // Player wins if their selected side matches the dice result
+    // House edge is built into the 1.98x multiplier (instead of 2x)
+    const won = selectedSide === result
     const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
 
     return {
