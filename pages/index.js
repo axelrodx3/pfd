@@ -4,108 +4,146 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>HILO - Premium Dice Game</title>
-        <meta name="description" content="HILO - A premium dice game experience with elegant design and provably fair mechanics" />
+        <title>HILO - Premium Casino Experience</title>
+        <meta name="description" content="HILO - Experience premium dice gaming with elegant design and provably fair mechanics" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
       
       <div className="app-container">
         <div className="game-container">
+          {/* Header */}
           <div className="header">
-            <h1>HILO</h1>
-            <p className="subtitle">Premium Dice Experience</p>
+            <div className="logo">
+              <div className="logo-icon">🎯</div>
+              <h1>HILO</h1>
+            </div>
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-label">Online</span>
+                <span className="stat-value">1,247</span>
+              </div>
+            </div>
           </div>
-          
+
+          {/* Balance Card */}
           <div className="balance-card">
-            <div className="balance-icon">💰</div>
-            <div className="balance-info">
-              <span className="balance-label">Balance</span>
-              <span className="balance-amount">$<span id="balance">1000</span></span>
-            </div>
-          </div>
-
-          <div className="game-rules">
-            <h3>Game Rules</h3>
-            <div className="rules-grid">
-              <div className="rule-item">
-                <div className="rule-number">1</div>
-                <span>Roll a 6-sided dice</span>
-              </div>
-              <div className="rule-item">
-                <div className="rule-number">2</div>
-                <span><strong>HIGH (4-6):</strong> House wins</span>
-              </div>
-              <div className="rule-item">
-                <div className="rule-number">3</div>
-                <span><strong>LOW (1-3):</strong> Player wins</span>
+            <div className="balance-main">
+              <div className="balance-icon">💎</div>
+              <div className="balance-info">
+                <span className="balance-label">Your Balance</span>
+                <span className="balance-amount">$<span id="balance">1000</span></span>
               </div>
             </div>
-          </div>
-
-          <div className="bet-section">
-            <div className="bet-input-container">
-              <label htmlFor="betAmount">Bet Amount</label>
-              <input 
-                type="number" 
-                id="betAmount" 
-                min="1" 
-                max="1000" 
-                defaultValue="10"
-                className="bet-input"
-              />
-            </div>
-            
-            <div className="bet-buttons">
-              <button className="bet-btn bet-low" id="betLow">
-                <span className="btn-text">BET LOW</span>
-                <span className="btn-subtext">1-3</span>
-              </button>
-              <button className="bet-btn bet-high" id="betHigh">
-                <span className="btn-text">BET HIGH</span>
-                <span className="btn-subtext">4-6</span>
-              </button>
+            <div className="balance-actions">
+              <button className="action-btn deposit">+ Deposit</button>
+              <button className="action-btn withdraw">- Withdraw</button>
             </div>
           </div>
 
-          <div className="dice-container" id="diceContainer" style={{display: 'none'}}>
-            <div className="dice-rolling">
-              <h3>Rolling...</h3>
-              <div className="dice" id="dice">⚀</div>
-              <div className="result" id="result"></div>
+          {/* Game Area */}
+          <div className="game-area">
+            <div className="game-header">
+              <h2>Dice Game</h2>
+              <div className="game-stats">
+                <span className="stat">House Edge: 2.5%</span>
+                <span className="stat">Max Win: $10,000</span>
+              </div>
+            </div>
+
+            {/* Betting Section */}
+            <div className="betting-section">
+              <div className="bet-amount">
+                <label>Bet Amount</label>
+                <div className="input-group">
+                  <span className="currency">$</span>
+                  <input 
+                    type="number" 
+                    id="betAmount" 
+                    min="1" 
+                    max="1000" 
+                    defaultValue="10"
+                    className="bet-input"
+                  />
+                </div>
+                <div className="quick-bets">
+                  <button className="quick-bet" onClick={() => document.getElementById('betAmount').value = '10'}>$10</button>
+                  <button className="quick-bet" onClick={() => document.getElementById('betAmount').value = '50'}>$50</button>
+                  <button className="quick-bet" onClick={() => document.getElementById('betAmount').value = '100'}>$100</button>
+                  <button className="quick-bet" onClick={() => document.getElementById('betAmount').value = '500'}>$500</button>
+                </div>
+              </div>
+
+              <div className="bet-options">
+                <button className="bet-option bet-low" id="betLow">
+                  <div className="bet-icon">📉</div>
+                  <div className="bet-info">
+                    <span className="bet-title">LOW</span>
+                    <span className="bet-subtitle">1 - 3</span>
+                    <span className="bet-payout">Payout: 2x</span>
+                  </div>
+                </button>
+                
+                <button className="bet-option bet-high" id="betHigh">
+                  <div className="bet-icon">📈</div>
+                  <div className="bet-info">
+                    <span className="bet-title">HIGH</span>
+                    <span className="bet-subtitle">4 - 6</span>
+                    <span className="bet-payout">Payout: 2x</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Dice Display */}
+            <div className="dice-display" id="diceContainer" style={{display: 'none'}}>
+              <div className="dice-animation">
+                <div className="dice" id="dice">⚀</div>
+                <div className="dice-shadow"></div>
+              </div>
+              <div className="result-display" id="result"></div>
             </div>
           </div>
 
+          {/* Provably Fair Section */}
           <div className="provably-fair">
             <div className="pf-header">
-              <h3>�� Provably Fair</h3>
-              <span className="pf-badge">Verified</span>
+              <h3>🔒 Provably Fair</h3>
+              <div className="pf-status">
+                <span className="status-dot"></span>
+                <span>Verified</span>
+              </div>
             </div>
             <div className="pf-content">
-              <div className="pf-item">
-                <label>Server Seed</label>
-                <div className="hash-display" id="serverSeed">Generating...</div>
+              <div className="pf-grid">
+                <div className="pf-item">
+                  <label>Server Seed</label>
+                  <div className="hash-display" id="serverSeed">Generating...</div>
+                </div>
+                <div className="pf-item">
+                  <label>Client Seed</label>
+                  <div className="hash-display" id="clientSeed">Click to generate</div>
+                </div>
+                <div className="pf-item">
+                  <label>Nonce</label>
+                  <span id="nonce" className="nonce-value">0</span>
+                </div>
+                <div className="pf-item">
+                  <label>Result Hash</label>
+                  <div className="hash-display" id="resultHash">-</div>
+                </div>
               </div>
-              <div className="pf-item">
-                <label>Client Seed</label>
-                <div className="hash-display" id="clientSeed">Click to generate</div>
-              </div>
-              <div className="pf-item">
-                <label>Nonce</label>
-                <span id="nonce">0</span>
-              </div>
-              <div className="pf-item">
-                <label>Result Hash</label>
-                <div className="hash-display" id="resultHash">-</div>
-              </div>
-              <button className="verify-btn" onClick={() => window.verifyResult()}>Verify Result</button>
+              <button className="verify-btn" onClick={() => window.verifyResult()}>
+                <span>🔍</span> Verify Result
+              </button>
             </div>
           </div>
 
-          <div className="history">
+          {/* Game History */}
+          <div className="history-section">
             <div className="history-header">
-              <h3>Game History</h3>
-              <button className="clear-history" onClick={() => window.clearHistory()}>Clear</button>
+              <h3>Recent Games</h3>
+              <button className="clear-btn" onClick={() => window.clearHistory()}>Clear All</button>
             </div>
             <div id="historyList" className="history-list"></div>
           </div>
@@ -120,85 +158,121 @@ export default function Home() {
         }
 
         body {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
           min-height: 100vh;
           color: #ffffff;
+          overflow-x: hidden;
         }
 
         .app-container {
           min-height: 100vh;
           padding: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          position: relative;
+        }
+
+        .app-container::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: 
+            radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 50%);
+          pointer-events: none;
+          z-index: -1;
         }
 
         .game-container {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 48px;
-          max-width: 640px;
-          width: 100%;
-          box-shadow: 
-            0 32px 64px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-          position: relative;
-          overflow: hidden;
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          gap: 24px;
         }
 
-        .game-container::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        }
-
+        /* Header */
         .header {
-          text-align: center;
-          margin-bottom: 48px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 24px 32px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          backdrop-filter: blur(20px);
         }
 
-        h1 {
-          font-size: 3.5rem;
-          font-weight: 700;
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .logo-icon {
+          font-size: 2rem;
+          filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+        }
+
+        .logo h1 {
+          font-size: 2.5rem;
+          font-weight: 800;
           background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
           letter-spacing: -0.02em;
-          margin-bottom: 8px;
         }
 
-        .subtitle {
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 1.1rem;
-          font-weight: 400;
-          letter-spacing: 0.5px;
-        }
-
-        .balance-card {
-          background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
-          border: 1px solid rgba(212, 175, 55, 0.3);
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 32px;
+        .header-stats {
           display: flex;
+          gap: 24px;
+        }
+
+        .stat-item {
+          text-align: right;
+        }
+
+        .stat-label {
+          display: block;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.8rem;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+
+        .stat-value {
+          display: block;
+          color: #22c55e;
+          font-size: 1.2rem;
+          font-weight: 700;
+        }
+
+        /* Balance Card */
+        .balance-card {
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+          border-radius: 20px;
+          padding: 32px;
+          display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 16px;
           box-shadow: 
-            0 8px 32px rgba(212, 175, 55, 0.1),
+            0 20px 40px rgba(0, 0, 0, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
+        .balance-main {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
         .balance-icon {
-          font-size: 2rem;
-          filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
+          font-size: 3rem;
+          filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
         }
 
         .balance-info {
@@ -208,130 +282,180 @@ export default function Home() {
 
         .balance-label {
           color: rgba(255, 255, 255, 0.7);
-          font-size: 0.9rem;
-          font-weight: 500;
-          margin-bottom: 4px;
-        }
-
-        .balance-amount {
-          color: #d4af37;
-          font-size: 1.8rem;
-          font-weight: 700;
-        }
-
-        .game-rules {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 32px;
-        }
-
-        .game-rules h3 {
-          color: #ffffff;
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin-bottom: 20px;
-          text-align: center;
-        }
-
-        .rules-grid {
-          display: grid;
-          gap: 16px;
-        }
-
-        .rule-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .rule-number {
-          background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-          color: white;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.8rem;
-          font-weight: 600;
-          flex-shrink: 0;
-        }
-
-        .rule-item span {
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 0.95rem;
-        }
-
-        .bet-section {
-          margin-bottom: 32px;
-        }
-
-        .bet-input-container {
-          margin-bottom: 24px;
-        }
-
-        .bet-input-container label {
-          display: block;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 0.9rem;
+          font-size: 1rem;
           font-weight: 500;
           margin-bottom: 8px;
         }
 
-        .bet-input {
-          width: 100%;
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        .balance-amount {
+          color: #d4af37;
+          font-size: 2.5rem;
+          font-weight: 800;
+          text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .balance-actions {
+          display: flex;
+          gap: 12px;
+        }
+
+        .action-btn {
+          padding: 12px 24px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
           color: #ffffff;
-          font-size: 1rem;
-          font-weight: 500;
-          text-align: center;
+          font-weight: 600;
+          cursor: pointer;
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
+        }
+
+        .action-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
+        }
+
+        .action-btn.deposit {
+          border-color: rgba(34, 197, 94, 0.5);
+          color: #22c55e;
+        }
+
+        .action-btn.withdraw {
+          border-color: rgba(239, 68, 68, 0.5);
+          color: #ef4444;
+        }
+
+        /* Game Area */
+        .game-area {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 32px;
+          backdrop-filter: blur(20px);
+        }
+
+        .game-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+        }
+
+        .game-header h2 {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .game-stats {
+          display: flex;
+          gap: 24px;
+        }
+
+        .stat {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        /* Betting Section */
+        .betting-section {
+          display: grid;
+          gap: 32px;
+        }
+
+        .bet-amount {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .bet-amount label {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        .input-group {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .currency {
+          position: absolute;
+          left: 20px;
+          color: #d4af37;
+          font-weight: 700;
+          font-size: 1.2rem;
+          z-index: 2;
+        }
+
+        .bet-input {
+          width: 100%;
+          padding: 20px 20px 20px 50px;
+          background: rgba(0, 0, 0, 0.3);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          color: #ffffff;
+          font-size: 1.2rem;
+          font-weight: 600;
+          text-align: center;
+          transition: all 0.3s ease;
         }
 
         .bet-input:focus {
           outline: none;
           border-color: #d4af37;
-          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+          box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
         }
 
-        .bet-input::placeholder {
-          color: rgba(255, 255, 255, 0.4);
+        .quick-bets {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
         }
 
-        .bet-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-
-        .bet-btn {
-          padding: 20px 24px;
-          border: none;
-          border-radius: 16px;
+        .quick-bet {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.9rem;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .bet-btn::before {
+        .quick-bet:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+
+        /* Bet Options */
+        .bet-options {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        .bet-option {
+          padding: 32px 24px;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.02);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .bet-option::before {
           content: '';
           position: absolute;
           top: 0;
@@ -342,74 +466,102 @@ export default function Home() {
           transition: left 0.5s ease;
         }
 
-        .bet-btn:hover::before {
+        .bet-option:hover::before {
           left: 100%;
         }
 
+        .bet-option:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
         .bet-low {
-          background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
           border-color: rgba(34, 197, 94, 0.3);
-          color: #22c55e;
         }
 
         .bet-low:hover {
-          background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(34, 197, 94, 0.2);
+          border-color: rgba(34, 197, 94, 0.6);
+          box-shadow: 0 20px 40px rgba(34, 197, 94, 0.2);
         }
 
         .bet-high {
-          background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
           border-color: rgba(239, 68, 68, 0.3);
-          color: #ef4444;
         }
 
         .bet-high:hover {
-          background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.6);
+          box-shadow: 0 20px 40px rgba(239, 68, 68, 0.2);
         }
 
-        .bet-btn:disabled {
+        .bet-icon {
+          font-size: 2.5rem;
+          filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        .bet-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .bet-title {
+          font-size: 1.4rem;
+          font-weight: 800;
+          color: #ffffff;
+        }
+
+        .bet-subtitle {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 500;
+        }
+
+        .bet-payout {
+          font-size: 0.9rem;
+          color: #d4af37;
+          font-weight: 600;
+        }
+
+        .bet-option:disabled {
           opacity: 0.5;
           cursor: not-allowed;
           transform: none;
         }
 
-        .btn-text {
-          font-size: 1.1rem;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-
-        .btn-subtext {
-          font-size: 0.85rem;
-          opacity: 0.8;
-          font-weight: 400;
-        }
-
-        .dice-container {
-          margin: 32px 0;
-          background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+        /* Dice Display */
+        .dice-display {
+          text-align: center;
+          padding: 40px;
+          background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 20px;
-          padding: 40px;
-          text-align: center;
-          backdrop-filter: blur(20px);
+          margin-top: 32px;
         }
 
-        .dice-rolling h3 {
-          color: #d4af37;
-          font-size: 1.3rem;
-          margin-bottom: 24px;
-          font-weight: 500;
+        .dice-animation {
+          position: relative;
+          margin-bottom: 32px;
         }
 
         .dice {
-          font-size: 5rem;
-          margin: 24px 0;
-          animation: diceRoll 1.5s ease-in-out;
-          filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+          font-size: 6rem;
+          margin: 0 auto;
+          animation: diceRoll 2s ease-in-out;
+          filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.5));
+          position: relative;
+          z-index: 2;
+        }
+
+        .dice-shadow {
+          position: absolute;
+          bottom: -20px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80px;
+          height: 20px;
+          background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent);
+          border-radius: 50%;
+          z-index: 1;
         }
 
         @keyframes diceRoll {
@@ -420,142 +572,174 @@ export default function Home() {
           100% { transform: rotate(360deg) scale(1); }
         }
 
-        .result {
-          font-size: 1.4rem;
-          font-weight: 600;
-          margin: 24px 0;
-          padding: 20px;
-          border-radius: 12px;
+        .result-display {
+          font-size: 1.5rem;
+          font-weight: 700;
+          padding: 20px 32px;
+          border-radius: 16px;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
+          display: inline-block;
         }
 
-        .result.win {
+        .result-display.win {
           background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
           border-color: rgba(34, 197, 94, 0.3);
           color: #22c55e;
         }
 
-        .result.lose {
+        .result-display.lose {
           background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
           border-color: rgba(239, 68, 68, 0.3);
           color: #ef4444;
         }
 
+        /* Provably Fair */
         .provably-fair {
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 32px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 32px;
+          backdrop-filter: blur(20px);
         }
 
         .pf-header {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
+          align-items: center;
+          margin-bottom: 24px;
         }
 
         .pf-header h3 {
+          font-size: 1.3rem;
+          font-weight: 700;
           color: #ffffff;
-          font-size: 1.1rem;
-          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .pf-status {
           display: flex;
           align-items: center;
           gap: 8px;
-        }
-
-        .pf-badge {
-          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 0.75rem;
+          color: #22c55e;
           font-weight: 600;
         }
 
-        .pf-content {
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          background: #22c55e;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .pf-grid {
           display: grid;
-          gap: 16px;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          margin-bottom: 24px;
         }
 
         .pf-item {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
         }
 
         .pf-item label {
           color: rgba(255, 255, 255, 0.6);
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           font-weight: 500;
         }
 
         .hash-display {
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.4);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-          padding: 12px;
+          border-radius: 12px;
+          padding: 16px;
           font-family: 'Monaco', 'Menlo', monospace;
           font-size: 0.8rem;
           color: rgba(255, 255, 255, 0.8);
           word-break: break-all;
           line-height: 1.4;
+          min-height: 60px;
+        }
+
+        .nonce-value {
+          background: rgba(212, 175, 55, 0.2);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+          border-radius: 12px;
+          padding: 16px;
+          color: #d4af37;
+          font-size: 1.2rem;
+          font-weight: 700;
+          text-align: center;
         }
 
         .verify-btn {
           background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-          color: white;
           border: none;
-          padding: 12px 24px;
-          border-radius: 10px;
-          cursor: pointer;
-          font-size: 0.9rem;
+          padding: 16px 32px;
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
           font-weight: 600;
-          margin-top: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           transition: all 0.3s ease;
+          margin: 0 auto;
         }
 
         .verify-btn:hover {
           background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 12px 32px rgba(34, 197, 94, 0.3);
         }
 
-        .history {
+        /* History */
+        .history-section {
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          padding: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 32px;
+          backdrop-filter: blur(20px);
         }
 
         .history-header {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
+          align-items: center;
+          margin-bottom: 24px;
         }
 
         .history-header h3 {
+          font-size: 1.3rem;
+          font-weight: 700;
           color: #ffffff;
-          font-size: 1.1rem;
-          font-weight: 600;
         }
 
-        .clear-history {
+        .clear-btn {
           background: rgba(239, 68, 68, 0.2);
-          color: #ef4444;
           border: 1px solid rgba(239, 68, 68, 0.3);
           padding: 8px 16px;
           border-radius: 8px;
-          cursor: pointer;
-          font-size: 0.8rem;
+          color: #ef4444;
+          font-size: 0.9rem;
           font-weight: 500;
+          cursor: pointer;
           transition: all 0.3s ease;
         }
 
-        .clear-history:hover {
+        .clear-btn:hover {
           background: rgba(239, 68, 68, 0.3);
           transform: translateY(-1px);
         }
@@ -569,7 +753,7 @@ export default function Home() {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 12px;
-          padding: 16px;
+          padding: 16px 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -596,27 +780,46 @@ export default function Home() {
         }
 
         .history-item strong {
-          font-size: 1.2rem;
+          font-size: 1.4rem;
           filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
         }
 
         .history-item div:last-child {
           color: rgba(255, 255, 255, 0.6);
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           text-align: right;
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
           .game-container {
-            padding: 24px;
-            margin: 10px;
+            gap: 16px;
           }
           
-          h1 {
-            font-size: 2.5rem;
+          .header {
+            padding: 16px 20px;
           }
           
-          .bet-buttons {
+          .logo h1 {
+            font-size: 2rem;
+          }
+          
+          .balance-card {
+            padding: 20px;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+          }
+          
+          .game-area {
+            padding: 20px;
+          }
+          
+          .bet-options {
+            grid-template-columns: 1fr;
+          }
+          
+          .pf-grid {
             grid-template-columns: 1fr;
           }
           
@@ -723,7 +926,7 @@ export default function Home() {
                 
                 const resultText = \`Rolled \${diceResult} - \${isHigh ? 'HIGH' : 'LOW'} - \${playerWon ? 'YOU WIN!' : 'HOUSE WINS!'}\`;
                 document.getElementById('result').textContent = resultText;
-                document.getElementById('result').className = \`result \${playerWon ? 'win' : 'lose'}\`;
+                document.getElementById('result').className = \`result-display \${playerWon ? 'win' : 'lose'}\`;
                 
                 document.getElementById('serverSeed').textContent = this.serverSeed;
                 document.getElementById('clientSeed').textContent = this.clientSeed;
