@@ -314,12 +314,12 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           >
             {/* Modern Dice Cube */}
     <div
-      className={`absolute inset-0 rounded-2xl shadow-2xl border-2 transition-all duration-700 ${
+      className={`absolute inset-0 rounded-2xl shadow-2xl transition-all duration-700 ${
         showResult && won === true
-          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 border-emerald-300 shadow-emerald-500/50' 
+          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-emerald-500/50' 
           : showResult && won === false
-          ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300 shadow-red-500/50'
-          : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 border-slate-300 shadow-slate-400/30'
+          ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 shadow-red-500/50'
+          : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 shadow-slate-400/30'
       }`}
       style={{
         transform: 'translateZ(12px)',
