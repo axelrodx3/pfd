@@ -49,7 +49,6 @@ function AppContent() {
   const { toasts, removeToast } = useToast()
 
   try {
-
     return (
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="min-h-screen bg-hilo-black text-white">

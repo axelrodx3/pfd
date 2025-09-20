@@ -4,7 +4,8 @@
  */
 
 export const DEBUG =
-  import.meta.env.VITE_DEBUG === 'true' || import.meta.env.DEV
+  (import.meta as any).env?.VITE_DEBUG === 'true' ||
+  (import.meta as any).env?.DEV
 
 export const debug = {
   info: (message: string, data?: any) => {
