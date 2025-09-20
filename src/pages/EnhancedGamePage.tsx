@@ -171,7 +171,7 @@ export const EnhancedGamePage: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-gray-900 rounded-lg p-6 mb-6">
               {/* Balance & Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-hilo-gold">{hiloTokens.toLocaleString()}</div>
                   <div className="text-sm text-gray-400">HILO Tokens</div>
@@ -187,6 +187,10 @@ export const EnhancedGamePage: React.FC = () => {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-hilo-gold">{totalGames}</div>
                   <div className="text-sm text-gray-400">Total Games</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-emerald-400">{totalWon.toLocaleString()}</div>
+                  <div className="text-sm text-gray-400">Total Won</div>
                 </div>
               </div>
 

@@ -8,6 +8,7 @@ export interface GameState {
   walletAddress: string
   balance: number
   hiloTokens: number
+  lastFaucetClaim: number | null
   
   // Game state
   currentBet: number
@@ -149,6 +150,7 @@ const initialState: GameState = {
   walletAddress: '',
   balance: 1000, // Starting balance
   hiloTokens: 10000, // Starting HILO tokens
+  lastFaucetClaim: null,
   
   // Game state
   currentBet: 10,
@@ -261,9 +263,21 @@ export const useGameStore = create<GameState & GameActions>()(
       },
       
       claimFaucet: () => {
+        const state = get()
+        const now = Date.now()
+        const twentyFourHours = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+        
+        // Check if 24 hours have passed since last claim
+        if (state.lastFaucetClaim && (now - state.lastFaucetClaim) < twentyFourHours) {
+          const timeLeft = twentyFourHours - (now - state.lastFaucetClaim)
+          const hoursLeft = Math.ceil(timeLeft / (60 * 60 * 1000))
+          throw new Error(`Faucet cooldown: ${hoursLeft} hours remaining`)
+        }
+        
         const faucetAmount = 1000
         set((state) => ({
           hiloTokens: state.hiloTokens + faucetAmount,
+          lastFaucetClaim: now,
         }))
       },
       
@@ -577,6 +591,7 @@ export const useGameStore = create<GameState & GameActions>()(
         soundEnabled: state.soundEnabled,
         selectedDiceSkin: state.selectedDiceSkin,
         muted: state.muted,
+        lastFaucetClaim: state.lastFaucetClaim,
       }),
     }
   )

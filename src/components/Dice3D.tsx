@@ -419,13 +419,21 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           </div>
         </motion.div>
 
-        {/* Result Display */}
+        {/* Result Display - Auto-fade after 3 seconds */}
         {showResult && (
           <motion.div
             className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center z-40"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            animate={{ 
+              opacity: [0, 1, 1, 0],
+              y: [20, 0, 0, -10]
+            }}
+            transition={{ 
+              duration: 3.5,
+              times: [0, 0.1, 0.8, 1],
+              ease: "easeInOut"
+            }}
+            onAnimationComplete={() => setShowResult(false)}
           >
             <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl px-6 py-3 border border-hilo-gold/30 shadow-2xl">
               <div className="text-2xl font-bold text-hilo-gold mb-1">

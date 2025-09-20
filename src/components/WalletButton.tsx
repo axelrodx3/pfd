@@ -48,6 +48,8 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) =>
       }
     } catch (error) {
       console.error('Failed to claim faucet:', error)
+      // Show error message to user
+      alert(error instanceof Error ? error.message : 'Failed to claim faucet')
     } finally {
       setIsClaiming(false)
     }
