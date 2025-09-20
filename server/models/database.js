@@ -33,6 +33,7 @@ function initializeTables() {
       public_key TEXT UNIQUE NOT NULL,
       username TEXT,
       email TEXT,
+      avatar_url TEXT,
       balance_lamports INTEGER DEFAULT 0,
       reserved_balance_lamports INTEGER DEFAULT 0,
       pending_withdrawal_lamports INTEGER DEFAULT 0,
@@ -43,10 +44,19 @@ function initializeTables() {
       vip_tier TEXT DEFAULT 'Bronze',
       level INTEGER DEFAULT 1,
       xp INTEGER DEFAULT 0,
+      badges TEXT DEFAULT '[]',
+      streaks TEXT DEFAULT '{"daily":0,"wins":0,"losses":0}',
+      referral_code TEXT UNIQUE,
+      referred_by INTEGER,
+      referrals_count INTEGER DEFAULT 0,
+      biggest_win INTEGER DEFAULT 0,
+      games_played INTEGER DEFAULT 0,
+      last_active DATETIME DEFAULT CURRENT_TIMESTAMP,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT 1,
-      kyc_verified BOOLEAN DEFAULT 0
+      kyc_verified BOOLEAN DEFAULT 0,
+      FOREIGN KEY (referred_by) REFERENCES users(id)
     )
   `)
 
@@ -151,9 +161,128 @@ function initializeTables() {
       details TEXT,
       ip_address TEXT,
       user_agent TEXT,
+      transaction_hash TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id),
       FOREIGN KEY (admin_id) REFERENCES users (id)
+    )
+  `)
+
+  // Casino economics tables
+  db.run(`
+    CREATE TABLE IF NOT EXISTS game_pools (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      game_type TEXT UNIQUE NOT NULL,
+      bankroll_lamports INTEGER DEFAULT 0,
+      house_edge_percent REAL DEFAULT 2.0,
+      min_bet_lamports INTEGER DEFAULT 1000000,
+      max_bet_lamports INTEGER DEFAULT 10000000000,
+      is_active BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS prize_pools (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pool_type TEXT NOT NULL,
+      total_lamports INTEGER DEFAULT 0,
+      distributed_lamports INTEGER DEFAULT 0,
+      distribution_schedule TEXT DEFAULT 'weekly',
+      last_distribution DATETIME,
+      next_distribution DATETIME,
+      is_active BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS prize_distributions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pool_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      amount_lamports INTEGER NOT NULL,
+      rank INTEGER,
+      distribution_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (pool_id) REFERENCES prize_pools(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+
+  // Anti-abuse tracking tables
+  db.run(`
+    CREATE TABLE IF NOT EXISTS device_fingerprints (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fingerprint TEXT UNIQUE NOT NULL,
+      user_id INTEGER,
+      ip_address TEXT,
+      user_agent TEXT,
+      first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+      is_suspicious BOOLEAN DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS abuse_flags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      flag_type TEXT NOT NULL,
+      severity TEXT DEFAULT 'low',
+      details TEXT,
+      ip_address TEXT,
+      device_fingerprint TEXT,
+      is_resolved BOOLEAN DEFAULT 0,
+      resolved_by INTEGER,
+      resolved_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (resolved_by) REFERENCES users(id)
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS faucet_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      amount_lamports INTEGER NOT NULL,
+      ip_address TEXT,
+      device_fingerprint TEXT,
+      user_agent TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS referral_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referrer_id INTEGER,
+      referred_id INTEGER,
+      referral_code TEXT,
+      ip_address TEXT,
+      device_fingerprint TEXT,
+      is_valid BOOLEAN DEFAULT 0,
+      rejection_reason TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (referrer_id) REFERENCES users(id),
+      FOREIGN KEY (referred_id) REFERENCES users(id)
+    )
+  `)
+
+  // Balance discrepancies table (for balance sync)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS balance_discrepancies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      on_chain_balance REAL NOT NULL,
+      in_app_balance REAL NOT NULL,
+      discrepancy REAL NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `)
 
@@ -290,8 +419,8 @@ const User = {
     })
   },
 
-  // Get user by public key
-  async getByPublicKey(publicKey) {
+  // Find user by public key
+  async findByPublicKey(publicKey) {
     return new Promise((resolve, reject) => {
       db.get(
         'SELECT * FROM users WHERE public_key = ?',
@@ -302,6 +431,132 @@ const User = {
         }
       )
     })
+  },
+
+  // Find user by referral code
+  async findByReferralCode(referralCode) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM users WHERE referral_code = ?',
+        [referralCode],
+        (err, row) => {
+          if (err) return reject(err)
+          resolve(row)
+        }
+      )
+    })
+  },
+
+  // Update user profile
+  async updateProfile(userId, profileData) {
+    return new Promise((resolve, reject) => {
+      const fields = Object.keys(profileData)
+      const values = Object.values(profileData)
+      const setClause = fields.map(field => `${field} = ?`).join(', ')
+      
+      db.run(
+        `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [...values, userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Update XP and level
+  async updateXP(userId, xp, level) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET xp = ?, level = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [xp, level, userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Update badges
+  async updateBadges(userId, badges) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET badges = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [JSON.stringify(badges), userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Update streaks
+  async updateStreaks(userId, streaks) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET streaks = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [JSON.stringify(streaks), userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Set referrer
+  async setReferrer(userId, referrerId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET referred_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [referrerId, userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Increment referrals count
+  async incrementReferrals(userId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET referrals_count = referrals_count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: userId, changes: this.changes })
+        }
+      )
+    })
+  },
+
+  // Get leaderboard
+  async getLeaderboard(orderClause, limit = 50) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT id, username, avatar_url, level, xp, balance_lamports, total_won_lamports, 
+                streaks, referrals_count, public_key 
+         FROM users 
+         WHERE is_active = 1 
+         ${orderClause} 
+         LIMIT ?`,
+        [limit],
+        (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows)
+        }
+      )
+    })
+  },
+
+  // Find user by ID (alias for getById)
+  async findById(userId) {
+    return this.getById(userId)
   },
 }
 

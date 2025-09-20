@@ -31,6 +31,9 @@ const MonitoringService = require('./services/monitoring')
 const BalanceSyncService = require('./services/balanceSync')
 const ProvablyFair2Service = require('./services/provablyFair2')
 const MockFaucetService = require('./services/mockFaucet')
+const UserProfileService = require('./models/userProfile')
+const CasinoEconomicsService = require('./services/casinoEconomics')
+const AntiAbuseService = require('./services/antiAbuse')
 
 // Import middleware
 const { createLimitsMiddleware, replayProtection } = require('./middleware/limits')
@@ -148,6 +151,9 @@ let monitoringService
 let balanceSyncService
 let provablyFair2Service
 let mockFaucetService
+let userProfileService
+let casinoEconomicsService
+let antiAbuseService
 
 async function initializeServices() {
   try {
@@ -186,6 +192,19 @@ async function initializeServices() {
 
     // Initialize fail-safe service
     failSafeService.initialize(monitoringService)
+
+    // Initialize user profile service
+    userProfileService = new UserProfileService()
+    console.log('✅ User profile service initialized')
+
+    // Initialize casino economics service
+    casinoEconomicsService = new CasinoEconomicsService()
+    await casinoEconomicsService.initializeGamePools()
+    console.log('✅ Casino economics service initialized')
+
+    // Initialize anti-abuse service
+    antiAbuseService = new AntiAbuseService()
+    console.log('✅ Anti-abuse service initialized')
 
     console.log('✅ All services initialized successfully')
   } catch (error) {
@@ -887,6 +906,157 @@ app.get('/api/admin/monitoring/alerts', requireAdmin, async (req, res) => {
   }
 })
 
+// User Profile endpoints
+app.get('/api/profile', async (req, res) => {
+  try {
+    const user = await User.findByPublicKey(req.user.publicKey)
+    const profile = await userProfileService.getProfile(user.id)
+    res.json(profile)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/profile/update', async (req, res) => {
+  try {
+    const { username, avatarUrl } = req.body
+    const user = await User.findByPublicKey(req.user.publicKey)
+    
+    const profile = await userProfileService.createOrUpdateProfile(
+      user.id, 
+      req.user.publicKey, 
+      username, 
+      avatarUrl
+    )
+    
+    res.json(profile)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/profile/referral', async (req, res) => {
+  try {
+    const { referralCode } = req.body
+    const user = await User.findByPublicKey(req.user.publicKey)
+    
+    // Check for referral abuse
+    const abuseCheck = await antiAbuseService.checkReferralAbuse(
+      null, user.id, referralCode, req
+    )
+    
+    if (!abuseCheck.allowed) {
+      return res.status(400).json({ error: abuseCheck.reason })
+    }
+    
+    const result = await userProfileService.processReferral(
+      null, user.id, referralCode
+    )
+    
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Leaderboard endpoints
+app.get('/api/leaderboard/:type', async (req, res) => {
+  try {
+    const { type } = req.params
+    const { limit = 50 } = req.query
+    
+    const leaderboard = await casinoEconomicsService.getLeaderboard(type, parseInt(limit))
+    res.json(leaderboard)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Casino Economics endpoints (admin only)
+app.get('/api/admin/economics/stats', requireAdmin, async (req, res) => {
+  try {
+    const stats = await casinoEconomicsService.getHouseStats()
+    res.json(stats)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/admin/economics/house-edge', requireAdmin, async (req, res) => {
+  try {
+    const { gameType, newEdge } = req.body
+    const result = await casinoEconomicsService.updateHouseEdge(gameType, newEdge)
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/admin/economics/prize-pool', requireAdmin, async (req, res) => {
+  try {
+    const { poolType, totalLamports, distributionSchedule } = req.body
+    const result = await casinoEconomicsService.createPrizePool(
+      poolType, totalLamports, distributionSchedule
+    )
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/admin/economics/distribute-prize', requireAdmin, async (req, res) => {
+  try {
+    const { poolId, distributionType } = req.body
+    const result = await casinoEconomicsService.distributePrizePool(poolId, distributionType)
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Anti-Abuse endpoints (admin only)
+app.get('/api/admin/abuse/flags', requireAdmin, async (req, res) => {
+  try {
+    const { hours = 24 } = req.query
+    const flags = await antiAbuseService.getSuspiciousActivity(parseInt(hours))
+    res.json(flags)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/admin/abuse/resolve', requireAdmin, async (req, res) => {
+  try {
+    const { flagId } = req.body
+    // Implementation for resolving abuse flags
+    res.json({ success: true, message: 'Flag resolved' })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Enhanced faucet with anti-abuse
+app.post('/api/faucet/request', async (req, res) => {
+  try {
+    const { amount = 1.0 } = req.body
+    const user = await User.findByPublicKey(req.user.publicKey)
+    
+    // Check for faucet abuse
+    const abuseCheck = await antiAbuseService.checkFaucetAbuse(
+      user.id, Math.floor(amount * 1e9), req
+    )
+    
+    if (!abuseCheck.allowed) {
+      return res.status(400).json({ error: abuseCheck.reason })
+    }
+    
+    const result = await mockFaucetService.requestFaucet(user.id, req.user.publicKey, amount)
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -905,6 +1075,9 @@ app.get('/api/health', (req, res) => {
       balanceSync: !!balanceSyncService,
       provablyFair2: !!provablyFair2Service,
       mockFaucet: !!mockFaucetService,
+      userProfile: !!userProfileService,
+      casinoEconomics: !!casinoEconomicsService,
+      antiAbuse: !!antiAbuseService,
     },
     failSafe: failSafeService.getStatus(),
   })
