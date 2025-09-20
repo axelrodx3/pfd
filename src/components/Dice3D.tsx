@@ -421,11 +421,11 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
-        {/* Show Current Number on Right Side After Game */}
+        {/* Show Current Number on Left Side After Game */}
         {showResult && won !== null && (
           <motion.div
-            className="absolute -right-20 top-1/2 transform -translate-y-1/2 text-center z-40"
-            initial={{ opacity: 0, x: 20 }}
+            className="absolute -left-20 top-1/2 transform -translate-y-1/2 text-center z-40"
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
