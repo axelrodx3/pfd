@@ -440,7 +440,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
         {/* Bouncing Shadow */}
         <motion.div
-          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black/20 rounded-full blur-sm"
+          className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-5 bg-black/20 rounded-full blur-sm"
           animate={isRolling ? {
             scale: [1, 1.5, 0.8, 1.2, 1],
             opacity: [0.2, 0.4, 0.1, 0.3, 0.2]
