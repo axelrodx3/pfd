@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { getDiceEmoji } from '../lib/utils'
 import { Dice3D } from './Dice3D'
-import { SlidingScale } from './SlidingScale'
 
 interface DiceRollerProps {
   className?: string
@@ -173,14 +172,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         </motion.div>
       )}
 
-      {/* Sliding Scale Indicator */}
-      <div className="mb-6 px-4">
-        <SlidingScale
-          isWin={lastWin}
-          isRolling={isRolling}
-          className="max-w-xs mx-auto"
-        />
-      </div>
 
       {/* 3D Dice Display */}
       <Dice3D
