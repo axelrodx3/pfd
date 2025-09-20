@@ -32,8 +32,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('hilo-theme') as Theme
-    const savedColorScheme = localStorage.getItem('hilo-color-scheme') as ColorScheme
-    
+    const savedColorScheme = localStorage.getItem(
+      'hilo-color-scheme'
+    ) as ColorScheme
+
     if (savedTheme) setTheme(savedTheme)
     if (savedColorScheme) setColorScheme(savedColorScheme)
   }, [])
@@ -42,24 +44,26 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Save theme to localStorage
     localStorage.setItem('hilo-theme', theme)
     localStorage.setItem('hilo-color-scheme', colorScheme)
-    
+
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme)
     document.documentElement.setAttribute('data-color-scheme', colorScheme)
   }, [theme, colorScheme])
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
 
   return (
-    <ThemeContext.Provider value={{
-      theme,
-      colorScheme,
-      setTheme,
-      setColorScheme,
-      toggleTheme
-    }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        colorScheme,
+        setTheme,
+        setColorScheme,
+        toggleTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   )
@@ -73,15 +77,19 @@ export const ThemeSelector: React.FC = () => {
     { id: 'dark', name: 'Dark', icon: '🌙' },
     { id: 'light', name: 'Light', icon: '☀️' },
     { id: 'neon', name: 'Neon', icon: '⚡' },
-    { id: 'classic', name: 'Classic', icon: '🎰' }
+    { id: 'classic', name: 'Classic', icon: '🎰' },
   ] as const
 
   const colorSchemes = [
-    { id: 'default', name: 'Default', colors: ['#FFD700', '#FF2D2D', '#00C853'] },
+    {
+      id: 'default',
+      name: 'Default',
+      colors: ['#FFD700', '#FF2D2D', '#00C853'],
+    },
     { id: 'ocean', name: 'Ocean', colors: ['#00BFFF', '#FF6B6B', '#4ECDC4'] },
     { id: 'forest', name: 'Forest', colors: ['#32CD32', '#FF4500', '#228B22'] },
     { id: 'sunset', name: 'Sunset', colors: ['#FF8C00', '#FF1493', '#FFD700'] },
-    { id: 'purple', name: 'Purple', colors: ['#9370DB', '#FF69B4', '#00CED1'] }
+    { id: 'purple', name: 'Purple', colors: ['#9370DB', '#FF69B4', '#00CED1'] },
   ] as const
 
   return (
@@ -90,15 +98,16 @@ export const ThemeSelector: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold text-white mb-3">Theme</h3>
         <div className="grid grid-cols-2 gap-3">
-          {themes.map((themeOption) => (
+          {themes.map(themeOption => (
             <button
               key={themeOption.id}
               onClick={() => setTheme(themeOption.id)}
               className={`
                 p-3 rounded-lg border transition-all duration-200
-                ${theme === themeOption.id
-                  ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
-                  : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500'
+                ${
+                  theme === themeOption.id
+                    ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
+                    : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500'
                 }
               `}
             >
@@ -113,15 +122,16 @@ export const ThemeSelector: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold text-white mb-3">Color Scheme</h3>
         <div className="space-y-2">
-          {colorSchemes.map((scheme) => (
+          {colorSchemes.map(scheme => (
             <button
               key={scheme.id}
               onClick={() => setColorScheme(scheme.id)}
               className={`
                 w-full p-3 rounded-lg border transition-all duration-200 flex items-center gap-3
-                ${colorScheme === scheme.id
-                  ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
-                  : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500'
+                ${
+                  colorScheme === scheme.id
+                    ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
+                    : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500'
                 }
               `}
             >

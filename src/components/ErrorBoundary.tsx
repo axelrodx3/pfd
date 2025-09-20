@@ -50,13 +50,16 @@ export class ErrorBoundary extends Component<Props, State> {
                 Oops! Something went wrong
               </h1>
               <p className="text-gray-400 mb-6">
-                We encountered an unexpected error. Don't worry, your game progress is safe!
+                We encountered an unexpected error. Don&apos;t worry, your game
+                progress is safe!
               </p>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-left">
-                <h3 className="text-red-400 font-semibold mb-2">Error Details:</h3>
+                <h3 className="text-red-400 font-semibold mb-2">
+                  Error Details:
+                </h3>
                 <pre className="text-xs text-red-300 whitespace-pre-wrap overflow-auto max-h-32">
                   {this.state.error.toString()}
                 </pre>
@@ -76,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="w-5 h-5" />
                 Reload Page
               </button>
-              
+
               <button
                 onClick={this.handleGoHome}
                 className="w-full bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
@@ -102,7 +105,7 @@ export class ErrorBoundary extends Component<Props, State> {
 export const useErrorHandler = () => {
   const reportError = (error: Error, context?: string) => {
     console.error('Error reported:', error, context)
-    
+
     // In a real app, you would send this to an error reporting service
     // like Sentry, LogRocket, or Bugsnag
     if (process.env.NODE_ENV === 'production') {

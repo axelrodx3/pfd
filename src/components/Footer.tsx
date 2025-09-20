@@ -9,7 +9,7 @@ interface FooterProps {
 /**
  * Footer Component
  * Social links and disclaimer for mock gambling site
- * 
+ *
  * @param className - Additional CSS classes
  */
 export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
@@ -27,7 +27,9 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
   ]
 
   return (
-    <footer className={`bg-hilo-gray border-t border-hilo-gray-light ${className}`}>
+    <footer
+      className={`bg-hilo-gray border-t border-hilo-gray-light ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -40,10 +42,11 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
             >
               <HiloLogo size="md" animated={false} className="mb-4" />
               <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md">
-                HILO Casino - The ultimate dice gaming experience. 
-                Bet high, bet low, win big with our provably fair system.
+                HILO Casino - The ultimate dice gaming experience. Bet high, bet
+                low, win big with our provably fair system.
                 <span className="block mt-2 text-hilo-red font-semibold">
-                  ⚠️ This is a mock gambling site for demonstration purposes only.
+                  ⚠️ This is a mock gambling site for demonstration purposes
+                  only.
                 </span>
               </p>
             </motion.div>

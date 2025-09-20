@@ -1,5 +1,5 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 /**
  * Utility function to merge Tailwind CSS classes
@@ -81,13 +81,17 @@ export function generateMockAddress(): string {
  * @param nonce - Nonce value
  * @returns Mock hash
  */
-export function generateMockHash(serverSeed: string, clientSeed: string, nonce: number): string {
+export function generateMockHash(
+  serverSeed: string,
+  clientSeed: string,
+  nonce: number
+): string {
   const message = `${serverSeed}:${clientSeed}:${nonce}`
   // Simple hash simulation (not cryptographically secure)
   let hash = 0
   for (let i = 0; i < message.length; i++) {
     const char = message.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
+    hash = (hash << 5) - hash + char
     hash = hash & hash // Convert to 32-bit integer
   }
   return Math.abs(hash).toString(16).padStart(8, '0')

@@ -16,19 +16,27 @@ export const LeaderboardPage: React.FC = () => {
 
   const getRankIcon = (index: number) => {
     switch (index) {
-      case 0: return '🥇'
-      case 1: return '🥈'
-      case 2: return '🥉'
-      default: return `#${index + 1}`
+      case 0:
+        return '🥇'
+      case 1:
+        return '🥈'
+      case 2:
+        return '🥉'
+      default:
+        return `#${index + 1}`
     }
   }
 
   const getRankColor = (index: number) => {
     switch (index) {
-      case 0: return 'text-hilo-gold'
-      case 1: return 'text-gray-300'
-      case 2: return 'text-orange-400'
-      default: return 'text-gray-400'
+      case 0:
+        return 'text-hilo-gold'
+      case 1:
+        return 'text-gray-300'
+      case 2:
+        return 'text-orange-400'
+      default:
+        return 'text-gray-400'
     }
   }
 
@@ -71,7 +79,12 @@ export const LeaderboardPage: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="text-3xl font-bold text-hilo-green mb-2">
-              {formatCurrency(leaderboard.reduce((sum, player) => sum + player.totalWagered, 0))}
+              {formatCurrency(
+                leaderboard.reduce(
+                  (sum, player) => sum + player.totalWagered,
+                  0
+                )
+              )}
             </div>
             <div className="text-gray-400">Total Wagered</div>
           </motion.div>
@@ -83,9 +96,17 @@ export const LeaderboardPage: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <div className="text-3xl font-bold text-hilo-red mb-2">
-              {leaderboard.length > 0 
-                ? Math.round(leaderboard.reduce((sum, player) => sum + player.winRate, 0) / leaderboard.length * 100)
-                : 0}%
+              {leaderboard.length > 0
+                ? Math.round(
+                    (leaderboard.reduce(
+                      (sum, player) => sum + player.winRate,
+                      0
+                    ) /
+                      leaderboard.length) *
+                      100
+                  )
+                : 0}
+              %
             </div>
             <div className="text-gray-400">Average Win Rate</div>
           </motion.div>
@@ -102,11 +123,21 @@ export const LeaderboardPage: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-hilo-gray-light">
-                  <th className="text-left py-4 px-6 text-hilo-gold font-semibold">Rank</th>
-                  <th className="text-left py-4 px-6 text-hilo-gold font-semibold">Player</th>
-                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">Wins</th>
-                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">Wagered</th>
-                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">Win Rate</th>
+                  <th className="text-left py-4 px-6 text-hilo-gold font-semibold">
+                    Rank
+                  </th>
+                  <th className="text-left py-4 px-6 text-hilo-gold font-semibold">
+                    Player
+                  </th>
+                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">
+                    Wins
+                  </th>
+                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">
+                    Wagered
+                  </th>
+                  <th className="text-right py-4 px-6 text-hilo-gold font-semibold">
+                    Win Rate
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -136,29 +167,33 @@ export const LeaderboardPage: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    
+
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className="text-2xl">{player.avatar}</div>
                         <div>
-                          <div className="font-semibold text-white">{player.username}</div>
-                          <div className="text-sm text-gray-400">Player #{player.id.split('-')[1]}</div>
+                          <div className="font-semibold text-white">
+                            {player.username}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            Player #{player.id.split('-')[1]}
+                          </div>
                         </div>
                       </div>
                     </td>
-                    
+
                     <td className="py-4 px-6 text-right">
                       <div className="font-semibold text-hilo-green">
                         {player.totalWins.toLocaleString()}
                       </div>
                     </td>
-                    
+
                     <td className="py-4 px-6 text-right">
                       <div className="font-semibold text-hilo-gold">
                         {formatCurrency(player.totalWagered)}
                       </div>
                     </td>
-                    
+
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <div className="font-semibold text-white">

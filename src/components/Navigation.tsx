@@ -11,7 +11,7 @@ interface NavigationProps {
 /**
  * Main Navigation Component
  * Responsive navigation with mobile menu and wallet integration
- * 
+ *
  * @param className - Additional CSS classes
  */
 export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
@@ -53,15 +53,16 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={`
                   flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300
-                  ${isActive(item.path)
-                    ? 'text-hilo-gold bg-hilo-gold/10 shadow-hilo-glow'
-                    : 'text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/5'
+                  ${
+                    isActive(item.path)
+                      ? 'text-hilo-gold bg-hilo-gold/10 shadow-hilo-glow'
+                      : 'text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/5'
                   }
                 `}
               >
@@ -105,7 +106,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
               <motion.div
                 key={item.path}
                 initial={{ opacity: 0, x: -20 }}
-                animate={{ 
+                animate={{
                   opacity: isMobileMenuOpen ? 1 : 0,
                   x: isMobileMenuOpen ? 0 : -20,
                 }}
@@ -116,9 +117,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300
-                    ${isActive(item.path)
-                      ? 'text-hilo-gold bg-hilo-gold/10 shadow-hilo-glow'
-                      : 'text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/5'
+                    ${
+                      isActive(item.path)
+                        ? 'text-hilo-gold bg-hilo-gold/10 shadow-hilo-glow'
+                        : 'text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/5'
                     }
                   `}
                 >
@@ -127,12 +129,12 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                 </Link>
               </motion.div>
             ))}
-            
+
             {/* Mobile Wallet Button */}
             <motion.div
               className="pt-4 border-t border-hilo-gray-light"
               initial={{ opacity: 0, y: 20 }}
-              animate={{ 
+              animate={{
                 opacity: isMobileMenuOpen ? 1 : 0,
                 y: isMobileMenuOpen ? 0 : 20,
               }}

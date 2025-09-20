@@ -12,7 +12,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   color = 'primary',
   text,
-  className = ''
+  className = '',
 }) => {
   const getSizeClasses = () => {
     switch (size) {
@@ -56,7 +56,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         transition={{
           duration: 1,
           repeat: Infinity,
-          ease: "linear"
+          ease: 'linear',
         }}
       />
       {text && (
@@ -89,7 +89,7 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
   className = '',
   disabled = false,
   onClick,
-  loadingText = 'Loading...'
+  loadingText = 'Loading...',
 }) => {
   return (
     <button
@@ -101,9 +101,7 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
       disabled={disabled || loading}
       onClick={onClick}
     >
-      {loading && (
-        <LoadingSpinner size="sm" color="primary" />
-      )}
+      {loading && <LoadingSpinner size="sm" color="primary" />}
       <span className={loading ? 'opacity-0' : 'opacity-100'}>
         {loading ? loadingText : children}
       </span>
@@ -119,7 +117,7 @@ interface LoadingOverlayProps {
 
 export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   isVisible,
-  text = 'Loading...'
+  text = 'Loading...',
 }) => {
   if (!isVisible) return null
 

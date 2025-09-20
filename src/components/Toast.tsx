@@ -17,7 +17,7 @@ export const Toast: React.FC<ToastProps> = ({
   title,
   message,
   duration = 5000,
-  onClose
+  onClose,
 }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,7 +62,7 @@ export const Toast: React.FC<ToastProps> = ({
       initial={{ opacity: 0, y: 50, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -50, scale: 0.95 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`
         relative max-w-sm w-full bg-opacity-90 backdrop-blur-sm rounded-lg border p-4 shadow-lg
         ${getStyles()}
@@ -72,9 +72,7 @@ export const Toast: React.FC<ToastProps> = ({
         {getIcon()}
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-sm">{title}</h4>
-          {message && (
-            <p className="text-xs opacity-90 mt-1">{message}</p>
-          )}
+          {message && <p className="text-xs opacity-90 mt-1">{message}</p>}
         </div>
         <button
           onClick={() => onClose(id)}
@@ -92,11 +90,14 @@ export interface ToastContainerProps {
   onClose: (id: string) => void
 }
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
+export const ToastContainer: React.FC<ToastContainerProps> = ({
+  toasts,
+  onClose,
+}) => {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
-        {toasts.map((toast) => (
+        {toasts.map(toast => (
           <Toast key={toast.id} {...toast} onClose={onClose} />
         ))}
       </AnimatePresence>
@@ -117,16 +118,16 @@ export const useToast = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }
 
-  const success = (title: string, message?: string) => 
+  const success = (title: string, message?: string) =>
     addToast({ type: 'success', title, message })
-  
-  const error = (title: string, message?: string) => 
+
+  const error = (title: string, message?: string) =>
     addToast({ type: 'error', title, message })
-  
-  const warning = (title: string, message?: string) => 
+
+  const warning = (title: string, message?: string) =>
     addToast({ type: 'warning', title, message })
-  
-  const info = (title: string, message?: string) => 
+
+  const info = (title: string, message?: string) =>
     addToast({ type: 'info', title, message })
 
   return {
@@ -136,6 +137,6 @@ export const useToast = () => {
     success,
     error,
     warning,
-    info
+    info,
   }
 }

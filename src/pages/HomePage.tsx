@@ -14,50 +14,50 @@ export const HomePage: React.FC = () => {
     {
       icon: '🎲',
       title: 'Provably Fair',
-      description: 'Every roll is verifiable and transparent'
+      description: 'Every roll is verifiable and transparent',
     },
     {
       icon: '👑',
       title: 'VIP Tiers',
-      description: 'Bronze, Silver, Gold, and Diamond levels'
+      description: 'Bronze, Silver, Gold, and Diamond levels',
     },
     {
       icon: '🎯',
       title: 'Daily Challenges',
-      description: 'Complete challenges to earn bonus tokens'
+      description: 'Complete challenges to earn bonus tokens',
     },
     {
       icon: '⚡',
       title: 'Auto-Roll',
-      description: 'Set up automatic rolling with stop conditions'
+      description: 'Set up automatic rolling with stop conditions',
     },
     {
       icon: '🔊',
       title: 'Sound Effects',
-      description: 'Immersive audio with customizable settings'
+      description: 'Immersive audio with customizable settings',
     },
     {
       icon: '🎨',
       title: 'Dice Skins',
-      description: 'Classic, Neon, and Gold themed dice'
+      description: 'Classic, Neon, and Gold themed dice',
     },
     {
       icon: '📊',
       title: 'Live Statistics',
-      description: 'Track streaks, wins, and performance'
+      description: 'Track streaks, wins, and performance',
     },
     {
       icon: '🏆',
       title: 'Leaderboards',
-      description: 'Compete with players worldwide'
-    }
+      description: 'Compete with players worldwide',
+    },
   ]
 
   const stats = [
     { number: '$2.5M+', label: 'Won Today' },
     { number: '15K+', label: 'Active Players' },
     { number: '99.9%', label: 'Uptime' },
-    { number: '50K+', label: 'Games Played' }
+    { number: '50K+', label: 'Games Played' },
   ]
 
   return (
@@ -67,7 +67,7 @@ export const HomePage: React.FC = () => {
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-hilo-black via-hilo-gray to-hilo-black" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_50%)]" />
-        
+
         {/* Floating Dice */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(6)].map((_, i) => (
@@ -124,7 +124,7 @@ export const HomePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Experience the thrill of dice gaming with our provably fair system. 
+            Experience the thrill of dice gaming with our provably fair system.
             No tricks, no gimmicks - just pure, transparent gameplay.
           </motion.p>
 
@@ -144,7 +144,7 @@ export const HomePage: React.FC = () => {
                 🎲 Start Playing
               </motion.button>
             </Link>
-            
+
             <WalletButton className="text-lg px-8 py-4" />
           </motion.div>
 
@@ -184,9 +184,7 @@ export const HomePage: React.FC = () => {
                 <div className="text-3xl md:text-4xl font-bold text-hilo-gold mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-400 text-sm">
-                  {stat.label}
-                </div>
+                <div className="text-gray-400 text-sm">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -207,8 +205,8 @@ export const HomePage: React.FC = () => {
               Why Choose HILO?
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Experience the future of online gaming with cutting-edge technology 
-              and transparent gameplay.
+              Experience the future of online gaming with cutting-edge
+              technology and transparent gameplay.
             </p>
           </motion.div>
 
@@ -227,9 +225,7 @@ export const HomePage: React.FC = () => {
                 <h3 className="text-xl font-semibold text-hilo-gold mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-400 text-sm">
-                  {feature.description}
-                </p>
+                <p className="text-gray-400 text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -256,7 +252,7 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <LiveFeed />
-            
+
             <motion.div
               className="bg-gray-900 rounded-lg p-6"
               initial={{ opacity: 0, x: 30 }}
@@ -264,34 +260,52 @@ export const HomePage: React.FC = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl font-bold text-hilo-gold mb-4">Enhanced Features</h3>
+              <h3 className="text-2xl font-bold text-hilo-gold mb-4">
+                Enhanced Features
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">🎲</div>
                   <div>
-                    <div className="font-semibold text-white">Multiple Dice Skins</div>
-                    <div className="text-sm text-gray-400">Classic, Neon, and Gold themes</div>
+                    <div className="font-semibold text-white">
+                      Multiple Dice Skins
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Classic, Neon, and Gold themes
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">🔊</div>
                   <div>
-                    <div className="font-semibold text-white">Sound Effects</div>
-                    <div className="text-sm text-gray-400">Immersive audio with mute option</div>
+                    <div className="font-semibold text-white">
+                      Sound Effects
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Immersive audio with mute option
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">🎉</div>
                   <div>
-                    <div className="font-semibold text-white">Confetti Animations</div>
-                    <div className="text-sm text-gray-400">Celebrate your big wins</div>
+                    <div className="font-semibold text-white">
+                      Confetti Animations
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Celebrate your big wins
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-2xl">📊</div>
                   <div>
-                    <div className="font-semibold text-white">Detailed Statistics</div>
-                    <div className="text-sm text-gray-400">Track your streaks and performance</div>
+                    <div className="font-semibold text-white">
+                      Detailed Statistics
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Track your streaks and performance
+                    </div>
                   </div>
                 </div>
               </div>

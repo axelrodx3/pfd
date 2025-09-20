@@ -10,15 +10,15 @@ interface HiloLogoProps {
 /**
  * HILO Logo Component
  * Features gold text, red die, and green glow effects
- * 
+ *
  * @param size - Logo size variant
  * @param animated - Whether to show animation effects
  * @param className - Additional CSS classes
  */
-export const HiloLogo: React.FC<HiloLogoProps> = ({ 
-  size = 'md', 
-  animated = true, 
-  className = '' 
+export const HiloLogo: React.FC<HiloLogoProps> = ({
+  size = 'md',
+  animated = true,
+  className = '',
 }) => {
   const sizeClasses = {
     sm: 'text-2xl',
@@ -44,10 +44,14 @@ export const HiloLogo: React.FC<HiloLogoProps> = ({
       {/* Red Die with Green Glow */}
       <motion.div
         className={`${dieSizeClasses[size]} relative`}
-        animate={animated ? {
-          rotate: [0, 5, -5, 0],
-          scale: [1, 1.1, 1],
-        } : false}
+        animate={
+          animated
+            ? {
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.1, 1],
+              }
+            : false
+        }
         transition={{
           duration: 2,
           repeat: Infinity,
@@ -76,13 +80,17 @@ export const HiloLogo: React.FC<HiloLogoProps> = ({
       {/* HILO Text */}
       <motion.div
         className={`${sizeClasses[size]} font-display font-bold`}
-        animate={animated ? {
-          textShadow: [
-            '0 0 10px rgba(255, 215, 0, 0.5)',
-            '0 0 20px rgba(255, 215, 0, 0.8)',
-            '0 0 10px rgba(255, 215, 0, 0.5)',
-          ],
-        } : false}
+        animate={
+          animated
+            ? {
+                textShadow: [
+                  '0 0 10px rgba(255, 215, 0, 0.5)',
+                  '0 0 20px rgba(255, 215, 0, 0.8)',
+                  '0 0 10px rgba(255, 215, 0, 0.5)',
+                ],
+              }
+            : false
+        }
         transition={{
           duration: 2,
           repeat: Infinity,

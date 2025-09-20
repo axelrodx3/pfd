@@ -11,14 +11,14 @@ interface DiceRollerProps {
 /**
  * Dice Roller Component
  * Animated dice with physics-like roll animation
- * 
+ *
  * @param className - Additional CSS classes
  */
 export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
-  const { 
-    lastRoll, 
-    isRolling, 
-    lastResult, 
+  const {
+    lastRoll,
+    isRolling,
+    lastResult,
     lastWin,
     currentBet,
     selectedDiceSkin,
@@ -26,9 +26,9 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
     autoRollCount,
     autoRollMax,
     soundEnabled,
-    muted
+    muted,
   } = useGameStore()
-  
+
   const [displayRoll, setDisplayRoll] = useState<number | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
@@ -37,38 +37,60 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
   // Play sound effects
   const playSound = (sound: 'roll' | 'win' | 'lose') => {
     if (!soundEnabled || muted) return
-    
+
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
-      
+
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-      
+
       switch (sound) {
         case 'roll':
           oscillator.frequency.setValueAtTime(200, audioContext.currentTime)
-          oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1)
+          oscillator.frequency.exponentialRampToValueAtTime(
+            400,
+            audioContext.currentTime + 0.1
+          )
           gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.1
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.1)
           break
         case 'win':
           oscillator.frequency.setValueAtTime(523, audioContext.currentTime) // C5
-          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1) // E5
-          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2) // G5
+          oscillator.frequency.setValueAtTime(
+            659,
+            audioContext.currentTime + 0.1
+          ) // E5
+          oscillator.frequency.setValueAtTime(
+            784,
+            audioContext.currentTime + 0.2
+          ) // G5
           gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.3
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.3)
           break
         case 'lose':
           oscillator.frequency.setValueAtTime(200, audioContext.currentTime)
-          oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2)
+          oscillator.frequency.exponentialRampToValueAtTime(
+            100,
+            audioContext.currentTime + 0.2
+          )
           gainNode.gain.setValueAtTime(0.15, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.2
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.2)
           break
@@ -94,7 +116,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
       const interval = setInterval(() => {
         setDisplayRoll(Math.floor(Math.random() * 6) + 1)
       }, 100)
-      
+
       return () => clearInterval(interval)
     } else {
       setIsAnimating(false)
@@ -113,20 +135,20 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
   }
 
   const diceVariants = {
-    initial: { 
-      rotate: 0, 
+    initial: {
+      rotate: 0,
       scale: 1,
-      y: 0 
+      y: 0,
     },
-    rolling: { 
+    rolling: {
       rotate: [0, 180, 360, 540, 720],
       scale: [1, 1.2, 0.8, 1.1, 1],
       y: [0, -10, 10, -5, 0],
       transition: {
         duration: 2,
         ease: 'easeInOut',
-        times: [0, 0.2, 0.4, 0.6, 1]
-      }
+        times: [0, 0.2, 0.4, 0.6, 1],
+      },
     },
     landed: {
       rotate: 0,
@@ -135,32 +157,34 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
       transition: {
         type: 'spring',
         stiffness: 200,
-        damping: 20
-      }
-    }
+        damping: 20,
+      },
+    },
   }
 
   const resultVariants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       scale: 0.8,
-      y: 20 
+      y: 20,
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       y: 0,
       transition: {
         type: 'spring',
         stiffness: 300,
         damping: 20,
-        delay: 0.5
-      }
-    }
+        delay: 0.5,
+      },
+    },
   }
 
   return (
-    <div className={`dice-container relative flex flex-col items-center justify-center ${className}`}>
+    <div
+      className={`dice-container relative flex flex-col items-center justify-center ${className}`}
+    >
       {/* Auto-roll indicator */}
       {autoRollEnabled && (
         <motion.div
@@ -199,7 +223,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         />
       </div>
 
-
       {/* Confetti Animation */}
       <AnimatePresence>
         {showConfetti && (
@@ -226,7 +249,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
                 transition={{
                   duration: 2,
                   delay: Math.random() * 0.5,
-                  ease: "easeOut"
+                  ease: 'easeOut',
                 }}
               />
             ))}
@@ -250,7 +273,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               {/* Result Icon */}
               <motion.div
@@ -290,10 +313,12 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
                 <div className="mb-2">
                   <span className="text-hilo-gold font-semibold">
                     {lastWin ? 'Roll:' : 'Amount Lost:'}
-                  </span> {lastWin ? lastRoll : `${formatCurrency(currentBet)} HILO`}
+                  </span>{' '}
+                  {lastWin ? lastRoll : `${formatCurrency(currentBet)} HILO`}
                 </div>
                 <div className="mb-2">
-                  <span className="text-hilo-gold font-semibold">Result:</span> {lastResult?.toUpperCase()}
+                  <span className="text-hilo-gold font-semibold">Result:</span>{' '}
+                  {lastResult?.toUpperCase()}
                 </div>
                 {lastWin && (
                   <div className="text-hilo-green font-semibold">
@@ -322,10 +347,8 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   )
 }
 
 export default DiceRoller
-

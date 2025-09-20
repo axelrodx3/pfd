@@ -1,40 +1,40 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import SolanaWallet from '../components/SolanaWallet';
-import SOLTransfer from '../components/SOLTransfer';
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import SolanaWallet from '../components/SolanaWallet'
+import SOLTransfer from '../components/SOLTransfer'
 
 const WalletPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'wallet' | 'transfer'>('wallet');
+  const [activeTab, setActiveTab] = useState<'wallet' | 'transfer'>('wallet')
   const [authStatus, setAuthStatus] = useState<{
-    isAuthenticated: boolean;
-    publicKey: string | null;
+    isAuthenticated: boolean
+    publicKey: string | null
   }>({
     isAuthenticated: false,
     publicKey: null,
-  });
+  })
 
   const handleAuthSuccess = (publicKey: string, signature: string) => {
     setAuthStatus({
       isAuthenticated: true,
       publicKey,
-    });
-  };
+    })
+  }
 
   const handleAuthError = (error: string) => {
-    console.error('Authentication error:', error);
+    console.error('Authentication error:', error)
     setAuthStatus({
       isAuthenticated: false,
       publicKey: null,
-    });
-  };
+    })
+  }
 
   const handleTransferSuccess = (signature: string) => {
-    console.log('Transfer successful:', signature);
-  };
+    console.log('Transfer successful:', signature)
+  }
 
   const handleTransferError = (error: string) => {
-    console.error('Transfer error:', error);
-  };
+    console.error('Transfer error:', error)
+  }
 
   return (
     <div className="min-h-screen bg-hilo-black py-12">
@@ -50,7 +50,8 @@ const WalletPage: React.FC = () => {
             Solana Wallet
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Connect your Phantom, Solflare, or Backpack wallet to authenticate and manage your SOL securely
+            Connect your Phantom, Solflare, or Backpack wallet to authenticate
+            and manage your SOL securely
           </p>
         </motion.div>
 
@@ -117,7 +118,7 @@ const WalletPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-white mb-6 text-center">
               🔒 Security & Trust
             </h2>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-xl font-semibold text-hilo-gold mb-4">
@@ -126,11 +127,16 @@ const WalletPage: React.FC = () => {
                 <ul className="space-y-3 text-gray-300">
                   <li className="flex items-start">
                     <span className="text-green-400 mr-2">✅</span>
-                    <span>Request minimal permissions - only signMessage for authentication</span>
+                    <span>
+                      Request minimal permissions - only signMessage for
+                      authentication
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-400 mr-2">✅</span>
-                    <span>Use nonce-based authentication to prevent replay attacks</span>
+                    <span>
+                      Use nonce-based authentication to prevent replay attacks
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-400 mr-2">✅</span>
@@ -138,14 +144,16 @@ const WalletPage: React.FC = () => {
                   </li>
                   <li className="flex items-start">
                     <span className="text-green-400 mr-2">✅</span>
-                    <span>Use HTTPS and security headers for all communications</span>
+                    <span>
+                      Use HTTPS and security headers for all communications
+                    </span>
                   </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h3 className="text-xl font-semibold text-hilo-gold mb-4">
-                  What We Don't Do
+                  What We Don&apos;t Do
                 </h3>
                 <ul className="space-y-3 text-gray-300">
                   <li className="flex items-start">
@@ -154,11 +162,15 @@ const WalletPage: React.FC = () => {
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-400 mr-2">❌</span>
-                    <span>Never auto-connect or connect without explicit permission</span>
+                    <span>
+                      Never auto-connect or connect without explicit permission
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-400 mr-2">❌</span>
-                    <span>Never sign transactions without your explicit approval</span>
+                    <span>
+                      Never sign transactions without your explicit approval
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-red-400 mr-2">❌</span>
@@ -173,9 +185,10 @@ const WalletPage: React.FC = () => {
                 🛡️ Phantom Safety
               </h4>
               <p className="text-blue-200 text-sm">
-                This implementation follows all Solana security best practices to ensure Phantom 
-                and other wallets will not show unsafe site warnings. We only request the minimum 
-                permissions necessary and never attempt to access your funds without explicit consent.
+                This implementation follows all Solana security best practices
+                to ensure Phantom and other wallets will not show unsafe site
+                warnings. We only request the minimum permissions necessary and
+                never attempt to access your funds without explicit consent.
               </p>
             </div>
           </div>
@@ -199,7 +212,7 @@ const WalletPage: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default WalletPage;
+export default WalletPage

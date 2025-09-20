@@ -10,33 +10,34 @@ export const AboutPage: React.FC = () => {
     {
       icon: '🎯',
       title: 'Fair Gaming',
-      description: 'Provably fair system ensures every game is transparent and verifiable'
+      description:
+        'Provably fair system ensures every game is transparent and verifiable',
     },
     {
       icon: '🔒',
       title: 'Secure Platform',
-      description: 'Bank-level security protects your data and transactions'
+      description: 'Bank-level security protects your data and transactions',
     },
     {
       icon: '⚡',
       title: 'Instant Payouts',
-      description: 'Win instantly with no waiting periods or delays'
+      description: 'Win instantly with no waiting periods or delays',
     },
     {
       icon: '📱',
       title: 'Mobile First',
-      description: 'Optimized for all devices with responsive design'
+      description: 'Optimized for all devices with responsive design',
     },
     {
       icon: '🏆',
       title: 'Leaderboards',
-      description: 'Compete with players worldwide and climb the ranks'
+      description: 'Compete with players worldwide and climb the ranks',
     },
     {
       icon: '🎨',
       title: 'Modern UI',
-      description: 'Beautiful, intuitive interface with smooth animations'
-    }
+      description: 'Beautiful, intuitive interface with smooth animations',
+    },
   ]
 
   const team = [
@@ -44,20 +45,20 @@ export const AboutPage: React.FC = () => {
       name: 'Alex Developer',
       role: 'Lead Developer',
       avatar: '👨‍💻',
-      description: 'Full-stack developer with 5+ years experience'
+      description: 'Full-stack developer with 5+ years experience',
     },
     {
       name: 'Sarah Designer',
       role: 'UI/UX Designer',
       avatar: '👩‍🎨',
-      description: 'Creative designer specializing in gaming interfaces'
+      description: 'Creative designer specializing in gaming interfaces',
     },
     {
       name: 'Mike Security',
       role: 'Security Expert',
       avatar: '👨‍🔒',
-      description: 'Cybersecurity specialist ensuring platform safety'
-    }
+      description: 'Cybersecurity specialist ensuring platform safety',
+    },
   ]
 
   return (
@@ -92,19 +93,24 @@ export const AboutPage: React.FC = () => {
             </h2>
             <div className="text-lg text-gray-300 space-y-4 max-w-4xl mx-auto">
               <p>
-                <strong>HILO Casino is a MOCK gambling website created for demonstration purposes only.</strong>
+                <strong>
+                  HILO Casino is a MOCK gambling website created for
+                  demonstration purposes only.
+                </strong>
               </p>
               <p>
-                This platform is designed to showcase modern web development techniques, 
-                including React, TypeScript, Framer Motion, and provably fair gaming concepts.
+                This platform is designed to showcase modern web development
+                techniques, including React, TypeScript, Framer Motion, and
+                provably fair gaming concepts.
               </p>
               <p>
-                <strong>No real money is involved.</strong> All transactions, balances, and winnings 
-                are simulated and have no monetary value.
+                <strong>No real money is involved.</strong> All transactions,
+                balances, and winnings are simulated and have no monetary value.
               </p>
               <p>
-                This project is intended for educational and portfolio purposes only. 
-                Please do not use this as a basis for real gambling activities.
+                This project is intended for educational and portfolio purposes
+                only. Please do not use this as a basis for real gambling
+                activities.
               </p>
             </div>
           </div>
@@ -122,9 +128,9 @@ export const AboutPage: React.FC = () => {
           </h2>
           <div className="text-center max-w-4xl mx-auto">
             <p className="text-xl text-gray-300 leading-relaxed mb-6">
-              HILO Casino was created to demonstrate the power of modern web technologies 
-              in creating engaging, interactive gaming experiences. Our goal is to showcase 
-              best practices in:
+              HILO Casino was created to demonstrate the power of modern web
+              technologies in creating engaging, interactive gaming experiences.
+              Our goal is to showcase best practices in:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               <ul className="space-y-2">
@@ -191,9 +197,7 @@ export const AboutPage: React.FC = () => {
                 <h3 className="text-xl font-semibold text-hilo-gold mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-400 text-sm">
-                  {feature.description}
-                </p>
+                <p className="text-gray-400 text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -226,9 +230,7 @@ export const AboutPage: React.FC = () => {
                 <p className="text-hilo-green font-medium mb-2">
                   {member.role}
                 </p>
-                <p className="text-gray-400 text-sm">
-                  {member.description}
-                </p>
+                <p className="text-gray-400 text-sm">{member.description}</p>
               </motion.div>
             ))}
           </div>
@@ -264,9 +266,7 @@ export const AboutPage: React.FC = () => {
                 whileHover={{ scale: 1.1 }}
               >
                 <div className="text-4xl mb-2">{tech.icon}</div>
-                <div className={`font-semibold ${tech.color}`}>
-                  {tech.name}
-                </div>
+                <div className={`font-semibold ${tech.color}`}>{tech.name}</div>
               </motion.div>
             ))}
           </div>
@@ -283,7 +283,8 @@ export const AboutPage: React.FC = () => {
             Ready to Explore?
           </h3>
           <p className="text-gray-300 mb-6">
-            Experience our mock gambling platform and see what modern web development can create!
+            Experience our mock gambling platform and see what modern web
+            development can create!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.a

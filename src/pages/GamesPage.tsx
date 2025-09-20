@@ -20,7 +20,7 @@ export const GamesPage: React.FC = () => {
       minBet: '1 HILO',
       maxBet: '10,000 HILO',
       houseEdge: '2%',
-      route: '/game'
+      route: '/game',
     },
     {
       id: 'blackjack',
@@ -35,7 +35,7 @@ export const GamesPage: React.FC = () => {
       minBet: '5 HILO',
       maxBet: '50,000 HILO',
       houseEdge: '0.5%',
-      route: '/blackjack'
+      route: '/blackjack',
     },
     {
       id: 'roulette',
@@ -50,7 +50,7 @@ export const GamesPage: React.FC = () => {
       minBet: '2 HILO',
       maxBet: '25,000 HILO',
       houseEdge: '2.7%',
-      route: '/roulette'
+      route: '/roulette',
     },
     {
       id: 'slots',
@@ -65,7 +65,7 @@ export const GamesPage: React.FC = () => {
       minBet: '1 HILO',
       maxBet: '5,000 HILO',
       houseEdge: '3-5%',
-      route: '/slots'
+      route: '/slots',
     },
     {
       id: 'poker',
@@ -80,7 +80,7 @@ export const GamesPage: React.FC = () => {
       minBet: '10 HILO',
       maxBet: '100,000 HILO',
       houseEdge: '0%',
-      route: '/poker'
+      route: '/poker',
     },
     {
       id: 'tournaments',
@@ -95,11 +95,11 @@ export const GamesPage: React.FC = () => {
       minBet: 'Entry Fee',
       maxBet: 'Varies',
       houseEdge: '0%',
-      route: '/tournaments'
-    }
+      route: '/tournaments',
+    },
   ]
 
-  const handleGameClick = (game: typeof games[0]) => {
+  const handleGameClick = (game: (typeof games)[0]) => {
     if (game.status === 'available') {
       navigate(game.route)
     }
@@ -110,7 +110,7 @@ export const GamesPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <motion.h1 
+          <motion.h1
             className="text-5xl font-bold text-hilo-gold mb-4"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -118,13 +118,14 @@ export const GamesPage: React.FC = () => {
           >
             Choose Your Game
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-xl text-gray-300 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Select from our collection of exciting casino games. Each game offers unique thrills and opportunities to win big!
+            Select from our collection of exciting casino games. Each game
+            offers unique thrills and opportunities to win big!
           </motion.p>
         </div>
 
@@ -135,9 +136,10 @@ export const GamesPage: React.FC = () => {
               key={game.id}
               className={`
                 relative group cursor-pointer transition-all duration-300
-                ${game.status === 'available' 
-                  ? 'hover:scale-105 hover:shadow-2xl' 
-                  : 'opacity-60 cursor-not-allowed'
+                ${
+                  game.status === 'available'
+                    ? 'hover:scale-105 hover:shadow-2xl'
+                    : 'opacity-60 cursor-not-allowed'
                 }
               `}
               initial={{ opacity: 0, y: 20 }}
@@ -145,11 +147,13 @@ export const GamesPage: React.FC = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               onClick={() => handleGameClick(game)}
             >
-              <div className={`
+              <div
+                className={`
                 bg-gradient-to-br ${game.color} rounded-2xl p-6 h-full
                 border-2 ${game.borderColor} shadow-xl ${game.shadowColor}
                 relative overflow-hidden
-              `}>
+              `}
+              >
                 {/* Status Badge */}
                 <div className="absolute top-4 right-4">
                   {game.status === 'available' ? (
@@ -212,8 +216,10 @@ export const GamesPage: React.FC = () => {
                         Play Now
                       </motion.button>
                     ) : (
-                      <div className="w-full bg-white/10 backdrop-blur-sm text-white/60 font-bold py-3 px-6 rounded-xl
-                                    border border-white/20 text-center">
+                      <div
+                        className="w-full bg-white/10 backdrop-blur-sm text-white/60 font-bold py-3 px-6 rounded-xl
+                                    border border-white/20 text-center"
+                      >
                         Coming Soon
                       </div>
                     )}
@@ -228,7 +234,7 @@ export const GamesPage: React.FC = () => {
         </div>
 
         {/* Bottom Info */}
-        <motion.div 
+        <motion.div
           className="text-center mt-16 p-8 bg-gray-900/50 rounded-2xl border border-gray-700"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,9 +244,10 @@ export const GamesPage: React.FC = () => {
             🎰 More Games Coming Soon!
           </h3>
           <p className="text-gray-300 max-w-3xl mx-auto">
-            We're constantly adding new and exciting games to our platform. 
-            Stay tuned for Blackjack, Roulette, Slots, Poker, and exclusive tournaments. 
-            Each game is designed with provably fair mechanics and stunning visuals.
+            We&apos;re constantly adding new and exciting games to our platform.
+            Stay tuned for Blackjack, Roulette, Slots, Poker, and exclusive
+            tournaments. Each game is designed with provably fair mechanics and
+            stunning visuals.
           </p>
         </motion.div>
       </div>

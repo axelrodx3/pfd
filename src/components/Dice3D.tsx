@@ -32,7 +32,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   winnings = 0,
   className = '',
   soundEnabled = true,
-  muted = false
+  muted = false,
 }) => {
   const [currentFace, setCurrentFace] = useState(1)
   const [showResult, setShowResult] = useState(false)
@@ -43,41 +43,66 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   // Sound effects
   const playSound = (sound: 'roll' | 'win' | 'lose') => {
     if (!soundEnabled || muted) return
-    
+
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
-      
+
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-      
+
       switch (sound) {
         case 'roll':
           oscillator.frequency.setValueAtTime(200, audioContext.currentTime)
-          oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1)
+          oscillator.frequency.exponentialRampToValueAtTime(
+            400,
+            audioContext.currentTime + 0.1
+          )
           gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.1
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.1)
           break
         case 'win':
           // Win chime sound
           oscillator.frequency.setValueAtTime(523, audioContext.currentTime) // C5
-          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1) // E5
-          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2) // G5
-          oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.3) // C6
+          oscillator.frequency.setValueAtTime(
+            659,
+            audioContext.currentTime + 0.1
+          ) // E5
+          oscillator.frequency.setValueAtTime(
+            784,
+            audioContext.currentTime + 0.2
+          ) // G5
+          oscillator.frequency.setValueAtTime(
+            1047,
+            audioContext.currentTime + 0.3
+          ) // C6
           gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.4
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.4)
           break
         case 'lose':
           // Muted thud sound
           oscillator.frequency.setValueAtTime(150, audioContext.currentTime)
-          oscillator.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.3)
+          oscillator.frequency.exponentialRampToValueAtTime(
+            80,
+            audioContext.currentTime + 0.3
+          )
           gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.3
+          )
           oscillator.start()
           oscillator.stop(audioContext.currentTime + 0.3)
           break
@@ -127,10 +152,10 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       setShowResult(false)
       setAnimationComplete(false)
       setShowFloatingResult(false)
-      
+
       // Play roll sound
       playSound('roll')
-      
+
       // Random dice faces during rolling
       const rollInterval = setInterval(() => {
         setCurrentFace(Math.floor(Math.random() * 6) + 1)
@@ -143,7 +168,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         setIsLanding(true)
         // Immediately set the target number to prevent dice from disappearing
         setCurrentFace(targetNumber)
-        
+
         // Small delay to let the motion animation finish smoothly
         setTimeout(() => {
           // Show results after dice lands
@@ -172,39 +197,45 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-
       {/* Simple Dice Container */}
       <div className="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-
         {/* Simple Dice */}
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
             className="relative w-20 h-20"
-            animate={isRolling ? {
-              rotate: [0, 180, 360, 540, 720],
-              scale: [1, 1.1, 0.9, 1.05, 1],
-              y: [0, -8, 4, -6, 0],
-            } : {
-              rotate: 0,
-              scale: 1,
-              y: 0,
-            }}
-            transition={isRolling ? {
-              duration: 1.5,
-              ease: "easeInOut"
-            } : {
-              duration: 0.3,
-              ease: "easeOut"
-            }}
+            animate={
+              isRolling
+                ? {
+                    rotate: [0, 180, 360, 540, 720],
+                    scale: [1, 1.1, 0.9, 1.05, 1],
+                    y: [0, -8, 4, -6, 0],
+                  }
+                : {
+                    rotate: 0,
+                    scale: 1,
+                    y: 0,
+                  }
+            }
+            transition={
+              isRolling
+                ? {
+                    duration: 1.5,
+                    ease: 'easeInOut',
+                  }
+                : {
+                    duration: 0.3,
+                    ease: 'easeOut',
+                  }
+            }
           >
             {/* Simple Dice */}
             <div
               className={`w-full h-full rounded-lg shadow-lg border-2 transition-all duration-300 flex items-center justify-center ${
                 showResult && won === true
-                  ? 'bg-green-500 border-green-600 shadow-green-500/30' 
+                  ? 'bg-green-500 border-green-600 shadow-green-500/30'
                   : showResult && won === false
-                  ? 'bg-red-500 border-red-600 shadow-red-500/30'
-                  : 'bg-white border-gray-300 shadow-gray-400/20'
+                    ? 'bg-red-500 border-red-600 shadow-red-500/30'
+                    : 'bg-white border-gray-300 shadow-gray-400/20'
               }`}
             >
               {/* Dice Dots */}
@@ -227,18 +258,17 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                   won ? 'bg-green-400/20' : 'bg-red-400/20'
                 }`}
                 initial={{ opacity: 0, scale: 1 }}
-                animate={{ 
+                animate={{
                   opacity: [0, 0.4, 0],
-                  scale: [1, 1.05, 1]
+                  scale: [1, 1.05, 1],
                 }}
                 transition={{
                   duration: 0.8,
                   repeat: 1,
-                  repeatType: 'reverse'
+                  repeatType: 'reverse',
                 }}
               />
             )}
-
           </motion.div>
         </div>
 
@@ -254,38 +284,43 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
-
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
           <motion.div
             className="absolute -right-52 top-1/4 transform -translate-y-1/2 z-40"
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
-            animate={{ 
+            animate={{
               opacity: [0, 1, 1, 0],
               scale: [0.8, 1, 1, 0.9],
-              x: [20, 0, 0, -10]
+              x: [20, 0, 0, -10],
             }}
-            transition={{ 
+            transition={{
               duration: 6,
               times: [0, 0.1, 0.8, 1],
-              ease: "easeInOut"
+              ease: 'easeInOut',
             }}
             onAnimationComplete={() => setShowResult(false)}
           >
             <div className="relative">
               {/* Cloud bubble */}
-              <div className={`
+              <div
+                className={`
                 bg-gradient-to-br from-white/95 to-gray-100/95 backdrop-blur-sm 
                 rounded-3xl px-4 py-3 shadow-2xl border-2
                 ${won ? 'border-green-300 shadow-green-500/30' : 'border-red-300 shadow-red-500/30'}
                 relative
-              `}>
+              `}
+              >
                 <div className="text-center">
-                  <div className={`text-lg font-bold ${won ? 'text-green-600' : 'text-red-600'} mb-1`}>
+                  <div
+                    className={`text-lg font-bold ${won ? 'text-green-600' : 'text-red-600'} mb-1`}
+                  >
                     {won ? '🎉 WIN!' : '💸 LOSE!'}
                   </div>
                   <div className="text-sm text-gray-700 font-semibold">
-                    {won ? `Rolled: ${currentFace}` : `Amount Lost: ${formatCurrency(betAmount)} HILO`}
+                    {won
+                      ? `Rolled: ${currentFace}`
+                      : `Amount Lost: ${formatCurrency(betAmount)} HILO`}
                   </div>
                   {won && (
                     <div className="text-xs text-green-600 font-bold mt-1">
@@ -293,13 +328,15 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                     </div>
                   )}
                 </div>
-                
+
                 {/* Cloud tail */}
-                <div className={`
+                <div
+                  className={`
                   absolute -left-2 top-1/2 transform -translate-y-1/2 w-0 h-0
                   border-t-8 border-b-8 border-r-8 border-transparent
                   ${won ? 'border-r-green-300' : 'border-r-red-300'}
-                `} />
+                `}
+                />
               </div>
             </div>
           </motion.div>
@@ -316,9 +353,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             exit={{ opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-4xl font-bold text-green-500">
-              WIN!
-            </div>
+            <div className="text-4xl font-bold text-green-500">WIN!</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -336,9 +371,9 @@ function getDiceDots(face: number): boolean[] {
     3: [true, false, false, false, true, false, false, false, true],
     4: [true, false, true, false, false, false, true, false, true],
     5: [true, false, true, false, true, false, true, false, true],
-    6: [true, false, true, true, false, true, true, false, true]
+    6: [true, false, true, true, false, true, true, false, true],
   }
-  
+
   return patterns[face as keyof typeof patterns] || patterns[1]
 }
 

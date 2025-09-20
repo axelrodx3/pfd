@@ -18,7 +18,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({ className = '' }) => {
   useEffect(() => {
     // Start live feed simulation
     mockAPI.startLiveFeed(addToLiveFeed)
-    
+
     return () => {
       mockAPI.stopLiveFeed()
     }
@@ -28,7 +28,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({ className = '' }) => {
     const now = new Date()
     const diff = now.getTime() - timestamp.getTime()
     const seconds = Math.floor(diff / 1000)
-    
+
     if (seconds < 60) return `${seconds}s ago`
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
     return `${Math.floor(seconds / 3600)}h ago`
@@ -84,12 +84,16 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({ className = '' }) => {
                     <div className="flex items-center gap-3">
                       <div className="text-2xl">{win.avatar}</div>
                       <div>
-                        <div className="text-sm font-medium text-white">{win.username}</div>
+                        <div className="text-sm font-medium text-white">
+                          {win.username}
+                        </div>
                         <div className="text-xs text-gray-400">{win.game}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-bold ${getAmountColor(win.amount)}`}>
+                      <div
+                        className={`font-bold ${getAmountColor(win.amount)}`}
+                      >
                         {win.amount.toLocaleString()} HILO
                       </div>
                       <div className="text-xs text-gray-400">
@@ -99,7 +103,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({ className = '' }) => {
                   </motion.div>
                 ))}
               </AnimatePresence>
-              
+
               {recentWins.length === 0 && (
                 <div className="text-center text-gray-400 py-8">
                   <div className="text-4xl mb-2">🎲</div>
@@ -115,7 +119,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({ className = '' }) => {
       {/* Compact view when collapsed */}
       {!isExpanded && recentWins.length > 0 && (
         <div className="space-y-1">
-          {recentWins.slice(0, 3).map((win) => (
+          {recentWins.slice(0, 3).map(win => (
             <motion.div
               key={win.id}
               className="flex items-center justify-between text-sm"

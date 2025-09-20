@@ -1,4 +1,4 @@
-const helmet = require('helmet');
+const helmet = require('helmet')
 
 /**
  * Comprehensive security headers configuration for Solana wallet integration
@@ -11,7 +11,7 @@ const securityConfig = {
     directives: {
       // Default source - only allow same origin
       defaultSrc: ["'self'"],
-      
+
       // Script sources - only allow trusted sources, no inline scripts
       scriptSrc: [
         "'self'",
@@ -20,86 +20,78 @@ const securityConfig = {
         // Allow Solana wallet adapters
         "'unsafe-inline'", // Required for wallet adapters, but we'll minimize this
         // Trusted CDNs (use SRI in production)
-        "https://unpkg.com",
-        "https://cdn.jsdelivr.net"
+        'https://unpkg.com',
+        'https://cdn.jsdelivr.net',
       ],
-      
+
       // Style sources
       styleSrc: [
         "'self'",
         "'unsafe-inline'", // Required for Tailwind CSS and wallet adapters
-        "https://fonts.googleapis.com"
+        'https://fonts.googleapis.com',
       ],
-      
+
       // Font sources
-      fontSrc: [
-        "'self'",
-        "https://fonts.gstatic.com",
-        "data:"
-      ],
-      
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+
       // Image sources
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https:",
-        "blob:"
-      ],
-      
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+
       // Connect sources for API calls and Solana RPC
       connectSrc: [
         "'self'",
         // Solana RPC endpoints
-        "https://api.mainnet-beta.solana.com",
-        "https://api.devnet.solana.com",
-        "https://api.testnet.solana.com",
+        'https://api.mainnet-beta.solana.com',
+        'https://api.devnet.solana.com',
+        'https://api.testnet.solana.com',
         // Custom RPC endpoints (configure via environment)
         ...(process.env.SOLANA_RPC_URL ? [process.env.SOLANA_RPC_URL] : []),
         // WebSocket connections for real-time updates
-        "wss://api.mainnet-beta.solana.com",
-        "wss://api.devnet.solana.com",
-        "wss://api.testnet.solana.com"
+        'wss://api.mainnet-beta.solana.com',
+        'wss://api.devnet.solana.com',
+        'wss://api.testnet.solana.com',
       ],
-      
+
       // Frame sources - deny all to prevent clickjacking
       frameSrc: ["'none'"],
-      
+
       // Object sources - deny all
       objectSrc: ["'none'"],
-      
+
       // Base URI - restrict to same origin
       baseUri: ["'self'"],
-      
+
       // Form action - restrict to same origin
       formAction: ["'self'"],
-      
+
       // Frame ancestors - deny all
       frameAncestors: ["'none'"],
-      
+
       // Upgrade insecure requests in production
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+      upgradeInsecureRequests:
+        process.env.NODE_ENV === 'production' ? [] : null,
     },
   },
-  
+
   // Cross-Origin Embedder Policy
   crossOriginEmbedderPolicy: false, // Disabled to allow wallet connections
-  
+
   // Cross-Origin Opener Policy
-  crossOriginOpenerPolicy: { policy: "same-origin" },
-  
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+
   // Cross-Origin Resource Policy
-  crossOriginResourcePolicy: { policy: "same-origin" },
-  
+  crossOriginResourcePolicy: { policy: 'same-origin' },
+
   // DNS Prefetch Control
   dnsPrefetchControl: { allow: false },
-  
+
   // Expect CT (Certificate Transparency)
   expectCt: {
     maxAge: 86400,
     enforce: true,
-    reportUri: process.env.CT_REPORT_URI || null
+    reportUri: process.env.CT_REPORT_URI || null,
   },
-  
+
   // Feature Policy / Permissions Policy
   permissionsPolicy: {
     camera: [],
@@ -114,38 +106,38 @@ const securityConfig = {
     ambientLightSensor: [],
     autoplay: [],
     encryptedMedia: [],
-    fullscreen: ["self"],
+    fullscreen: ['self'],
     pictureInPicture: [],
     syncXhr: [],
     webShare: [],
-    xrSpatialTracking: []
+    xrSpatialTracking: [],
   },
-  
+
   // Hide X-Powered-By header
   hidePoweredBy: true,
-  
+
   // HSTS (HTTP Strict Transport Security)
   hsts: {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
-    preload: true
+    preload: true,
   },
-  
+
   // IE No Open
   ieNoOpen: true,
-  
+
   // No Sniff
   noSniff: true,
-  
+
   // Origin Agent Cluster
   originAgentCluster: true,
-  
+
   // Referrer Policy
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-  
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+
   // XSS Filter
   xssFilter: true,
-};
+}
 
 /**
  * Get security middleware configuration
@@ -153,25 +145,30 @@ const securityConfig = {
  * @returns {Object} Helmet configuration
  */
 function getSecurityConfig(options = {}) {
-  const config = { ...securityConfig };
-  
+  const config = { ...securityConfig }
+
   // Override CSP for development
   if (options.development) {
-    config.contentSecurityPolicy.directives.scriptSrc.push("'unsafe-eval'");
-    config.contentSecurityPolicy.directives.connectSrc.push("ws://localhost:*", "wss://localhost:*");
+    config.contentSecurityPolicy.directives.scriptSrc.push("'unsafe-eval'")
+    config.contentSecurityPolicy.directives.connectSrc.push(
+      'ws://localhost:*',
+      'wss://localhost:*'
+    )
   }
-  
+
   // Add custom domains to CSP
   if (options.allowedDomains) {
-    config.contentSecurityPolicy.directives.connectSrc.push(...options.allowedDomains);
+    config.contentSecurityPolicy.directives.connectSrc.push(
+      ...options.allowedDomains
+    )
   }
-  
+
   // Custom RPC URL
   if (options.rpcUrl) {
-    config.contentSecurityPolicy.directives.connectSrc.push(options.rpcUrl);
+    config.contentSecurityPolicy.directives.connectSrc.push(options.rpcUrl)
   }
-  
-  return config;
+
+  return config
 }
 
 /**
@@ -179,22 +176,25 @@ function getSecurityConfig(options = {}) {
  */
 const solanaSecurityMiddleware = (req, res, next) => {
   // Add custom security headers
-  res.setHeader('X-Solana-Wallet-Safe', 'true');
-  res.setHeader('X-Wallet-Integration-Version', '1.0.0');
-  
+  res.setHeader('X-Solana-Wallet-Safe', 'true')
+  res.setHeader('X-Wallet-Integration-Version', '1.0.0')
+
   // Prevent MIME type sniffing for wallet-related files
   if (req.url.includes('.wallet') || req.url.includes('.key')) {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Content-Type-Options', 'nosniff')
   }
-  
+
   // Add CORS headers for wallet connections
-  res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3000');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  next();
-};
+  res.setHeader(
+    'Access-Control-Allow-Origin',
+    process.env.FRONTEND_URL || 'http://localhost:3000'
+  )
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+
+  next()
+}
 
 /**
  * Rate limiting configuration for wallet operations
@@ -208,7 +208,7 @@ const rateLimitConfig = {
     standardHeaders: true,
     legacyHeaders: false,
   },
-  
+
   // Signature verification rate limit
   signature: {
     windowMs: 5 * 60 * 1000, // 5 minutes
@@ -217,7 +217,7 @@ const rateLimitConfig = {
     standardHeaders: true,
     legacyHeaders: false,
   },
-  
+
   // Withdrawal requests rate limit
   withdrawal: {
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -226,7 +226,7 @@ const rateLimitConfig = {
     standardHeaders: true,
     legacyHeaders: false,
   },
-  
+
   // General API rate limit
   general: {
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -234,12 +234,12 @@ const rateLimitConfig = {
     message: 'Too many requests, please try again later',
     standardHeaders: true,
     legacyHeaders: false,
-  }
-};
+  },
+}
 
 module.exports = {
   getSecurityConfig,
   solanaSecurityMiddleware,
   rateLimitConfig,
-  securityConfig
-};
+  securityConfig,
+}

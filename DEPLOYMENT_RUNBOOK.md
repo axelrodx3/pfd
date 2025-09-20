@@ -363,13 +363,14 @@ tail -f /var/log/hilo-casino/alerts.log
 ### **If Phantom Shows "Unsafe Site" Warning:**
 
 1. **Immediate Actions:**
+
    ```bash
    # Check CSP headers
    curl -I https://yourdomain.com
-   
+
    # Verify HTTPS configuration
    openssl s_client -connect yourdomain.com:443
-   
+
    # Check for mixed content
    node tests/security-checker.js https://yourdomain.com
    ```

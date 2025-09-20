@@ -19,11 +19,11 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
   isWin,
   isVisible,
   onComplete,
-  className = ''
+  className = '',
 }) => {
   const isPositive = amount > 0
   const displayAmount = Math.abs(amount)
-  
+
   const getColorClasses = () => {
     if (isWin && isPositive) {
       return 'text-hilo-green bg-hilo-green/20 border-hilo-green/50'
@@ -70,17 +70,18 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
               y: [-20, -40, -60, -80],
               scale: [1, 1.1, 1, 0.9],
               opacity: [1, 0.9, 0.7, 0],
-              rotate: [0, 2, -2, 0]
+              rotate: [0, 2, -2, 0],
             }}
             transition={{
               duration: 2,
-              ease: "easeOut",
-              times: [0, 0.3, 0.7, 1]
+              ease: 'easeOut',
+              times: [0, 0.3, 0.7, 1],
             }}
           >
             <span className="flex items-center gap-2">
               {isPositive ? '🎉' : '💸'}
-              {isPositive ? '+' : '-'}{displayAmount.toLocaleString()} HILO
+              {isPositive ? '+' : '-'}
+              {displayAmount.toLocaleString()} HILO
             </span>
           </motion.div>
 
@@ -95,18 +96,19 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
               z-40
             `}
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
-            animate={{ 
+            animate={{
               opacity: [0, 1, 1, 1, 0],
               scale: [0.8, 1.05, 1, 1, 0.8],
-              y: [10, 0, 0, 0, -5]
+              y: [10, 0, 0, 0, -5],
             }}
             transition={{
               duration: 2.5,
               times: [0, 0.2, 0.3, 0.8, 1],
-              ease: "easeInOut"
+              ease: 'easeInOut',
             }}
           >
-            {isPositive ? '+' : '-'}{displayAmount.toLocaleString()}
+            {isPositive ? '+' : '-'}
+            {displayAmount.toLocaleString()}
           </motion.div>
 
           {/* Enhanced Particle Effects for Wins */}
@@ -131,16 +133,16 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
                     y: [0, -Math.random() * 120 - 60],
                     scale: [1, 1.2, 0],
                     opacity: [1, 0.8, 0],
-                    rotate: [0, 360, 720]
+                    rotate: [0, 360, 720],
                   }}
                   transition={{
                     duration: 2,
                     delay: i * 0.08,
-                    ease: "easeOut"
+                    ease: 'easeOut',
                   }}
                 />
               ))}
-              
+
               {/* Sparkles */}
               {[...Array(20)].map((_, i) => (
                 <motion.div
@@ -154,12 +156,12 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
                     x: [0, (Math.random() - 0.5) * 200],
                     y: [0, -Math.random() * 100 - 50],
                     scale: [0, 1, 0],
-                    opacity: [0, 1, 0]
+                    opacity: [0, 1, 0],
                   }}
                   transition={{
                     duration: 1.5,
                     delay: i * 0.05,
-                    ease: "easeOut"
+                    ease: 'easeOut',
                   }}
                 />
               ))}
@@ -180,14 +182,14 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
                   x: [-3, 3, -3, 3, -2, 2, 0],
                   y: [-2, 2, -2, 2, -1, 1, 0],
                   scale: [1, 1.05, 1, 1.02, 1],
-                  opacity: [0.4, 0.1, 0.4, 0.1, 0.3, 0.1, 0]
+                  opacity: [0.4, 0.1, 0.4, 0.1, 0.3, 0.1, 0],
                 }}
                 transition={{
                   duration: 1.2,
-                  ease: "easeInOut"
+                  ease: 'easeInOut',
                 }}
               />
-              
+
               {/* Loss Particles */}
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -201,12 +203,12 @@ export const FloatingResult: React.FC<FloatingResultProps> = ({
                     x: [0, (Math.random() - 0.5) * 80],
                     y: [0, Math.random() * 60 + 30],
                     scale: [1, 0.5, 0],
-                    opacity: [1, 0.5, 0]
+                    opacity: [1, 0.5, 0],
                   }}
                   transition={{
                     duration: 1,
                     delay: i * 0.1,
-                    ease: "easeOut"
+                    ease: 'easeOut',
                   }}
                 />
               ))}

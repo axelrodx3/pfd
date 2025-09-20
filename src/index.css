@@ -7,13 +7,13 @@
   * {
     @apply border-gray-200;
   }
-  
+
   body {
     @apply bg-hilo-black text-white font-sans antialiased;
-    background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #0D0D0D 100%);
+    background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
     min-height: 100vh;
   }
-  
+
   html {
     scroll-behavior: smooth;
   }
@@ -24,63 +24,63 @@
   .btn-hilo {
     @apply px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95;
   }
-  
+
   .btn-hilo-primary {
     @apply btn-hilo bg-hilo-gold text-hilo-black hover:bg-hilo-gold-dark hover:shadow-hilo-glow-strong;
   }
-  
+
   .btn-hilo-secondary {
     @apply btn-hilo bg-hilo-red text-white hover:bg-hilo-red-dark hover:shadow-hilo-glow-red;
   }
-  
+
   .btn-hilo-success {
     @apply btn-hilo bg-hilo-green text-white hover:bg-hilo-green-dark hover:shadow-hilo-glow-green;
   }
-  
+
   .btn-hilo-outline {
     @apply btn-hilo border-2 border-hilo-gold text-hilo-gold hover:bg-hilo-gold hover:text-hilo-black;
   }
-  
+
   /* Glow Effects */
   .glow-gold {
     @apply shadow-hilo-glow;
   }
-  
+
   .glow-red {
     @apply shadow-hilo-glow-red;
   }
-  
+
   .glow-green {
     @apply shadow-hilo-glow-green;
   }
-  
+
   /* Card Styles */
   .card-hilo {
     @apply bg-hilo-gray border border-hilo-gray-light rounded-xl p-6 backdrop-blur-sm;
   }
-  
+
   .card-hilo-glow {
     @apply card-hilo shadow-hilo-glow;
   }
-  
+
   /* Text Styles - These are already defined in Tailwind config */
-  
+
   /* Dice Animation */
   .dice-container {
     @apply relative w-24 h-24 mx-auto;
   }
-  
+
   .dice-face {
     @apply absolute inset-0 flex items-center justify-center text-4xl font-bold;
     backface-visibility: hidden;
   }
-  
+
   /* Confetti Animation */
   .confetti {
     @apply absolute w-2 h-2 rounded-full;
     animation: confetti 3s ease-out forwards;
   }
-  
+
   /* Loading Spinner */
   .spinner {
     @apply animate-spin rounded-full border-4 border-hilo-gray-light border-t-hilo-gold;
@@ -91,15 +91,15 @@
   .text-shadow-glow {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
-  
+
   .text-shadow-red {
     text-shadow: 0 0 10px rgba(255, 45, 45, 0.5);
   }
-  
+
   .text-shadow-green {
     text-shadow: 0 0 10px rgba(0, 200, 83, 0.5);
   }
-  
+
   .backdrop-blur-custom {
     backdrop-filter: blur(20px);
   }

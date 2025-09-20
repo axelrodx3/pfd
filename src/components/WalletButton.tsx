@@ -11,20 +11,22 @@ interface WalletButtonProps {
 /**
  * Enhanced Wallet Connect Button Component
  * Shows connect/disconnect state with mock wallet functionality, VIP tier, faucet, and HILO token balance
- * 
+ *
  * @param className - Additional CSS classes
  */
-export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) => {
-  const { 
-    isConnected, 
-    walletAddress, 
-    balance, 
+export const WalletButton: React.FC<WalletButtonProps> = ({
+  className = '',
+}) => {
+  const {
+    isConnected,
+    walletAddress,
+    balance,
     hiloTokens,
     vipTier,
     level,
-    connectWallet, 
+    connectWallet,
     disconnectWallet,
-    claimFaucet
+    claimFaucet,
   } = useGameStore()
 
   const [isClaiming, setIsClaiming] = useState(false)
@@ -55,16 +57,20 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) =>
     }
   }
 
-  const shortAddress = walletAddress 
+  const shortAddress = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
     : ''
 
   const getVIPTierColor = (tier: string) => {
     switch (tier) {
-      case 'Diamond': return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-      case 'Gold': return 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black'
-      case 'Silver': return 'bg-gradient-to-r from-gray-300 to-gray-500 text-black'
-      default: return 'bg-gradient-to-r from-orange-400 to-orange-600 text-black'
+      case 'Diamond':
+        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+      case 'Gold':
+        return 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black'
+      case 'Silver':
+        return 'bg-gradient-to-r from-gray-300 to-gray-500 text-black'
+      default:
+        return 'bg-gradient-to-r from-orange-400 to-orange-600 text-black'
     }
   }
 
@@ -74,9 +80,10 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) =>
         onClick={handleClick}
         className={`
           relative px-4 py-2 rounded-lg font-semibold transition-all duration-300
-          ${isConnected 
-            ? 'bg-hilo-green text-white hover:bg-hilo-green-dark hover:shadow-hilo-glow-green' 
-            : 'bg-hilo-gold text-hilo-black hover:bg-hilo-gold-dark hover:shadow-hilo-glow-strong'
+          ${
+            isConnected
+              ? 'bg-hilo-green text-white hover:bg-hilo-green-dark hover:shadow-hilo-glow-green'
+              : 'bg-hilo-gold text-hilo-black hover:bg-hilo-gold-dark hover:shadow-hilo-glow-strong'
           }
         `}
         whileHover={{ scale: 1.05 }}
@@ -100,7 +107,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) =>
               {isConnected ? 'Connected' : 'Connect Wallet'}
             </span>
             {isConnected && (
-              <motion.span 
+              <motion.span
                 className="text-xs opacity-75"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 0.75, y: 0 }}
@@ -150,10 +157,12 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className = '' }) =>
           transition={{ delay: 0.4 }}
         >
           {/* VIP Badge */}
-          <div className={`px-2 py-1 rounded-full text-xs font-bold ${getVIPTierColor(vipTier)}`}>
+          <div
+            className={`px-2 py-1 rounded-full text-xs font-bold ${getVIPTierColor(vipTier)}`}
+          >
             {vipTier}
           </div>
-          
+
           {/* Level Badge */}
           <div className="px-2 py-1 bg-hilo-gold text-black text-xs font-bold rounded-full">
             Lv.{level}

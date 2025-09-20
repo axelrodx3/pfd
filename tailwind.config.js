@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -20,14 +17,14 @@ export default {
         'hilo-gray-light': '#2A2A2A',
       },
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'display': ['Orbitron', 'monospace'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Orbitron', 'monospace'],
       },
       animation: {
         'dice-roll': 'diceRoll 0.8s ease-in-out',
         'glow-pulse': 'glowPulse 2s ease-in-out infinite',
         'bounce-slow': 'bounce 2s infinite',
-        'confetti': 'confetti 3s ease-out',
+        confetti: 'confetti 3s ease-out',
       },
       keyframes: {
         diceRoll: {
@@ -38,18 +35,21 @@ export default {
           '100%': { transform: 'rotate(360deg) scale(1)' },
         },
         glowPulse: {
-          '0%, 100%': { 
+          '0%, 100%': {
             boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
-            transform: 'scale(1)'
+            transform: 'scale(1)',
           },
-          '50%': { 
+          '50%': {
             boxShadow: '0 0 40px rgba(255, 215, 0, 0.6)',
-            transform: 'scale(1.02)'
+            transform: 'scale(1.02)',
           },
         },
         confetti: {
           '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
-          '100%': { transform: 'translateY(-100vh) rotate(720deg)', opacity: '0' },
+          '100%': {
+            transform: 'translateY(-100vh) rotate(720deg)',
+            opacity: '0',
+          },
         },
       },
       boxShadow: {

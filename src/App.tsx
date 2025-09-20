@@ -42,7 +42,7 @@ function AppContent() {
       <div className="min-h-screen bg-hilo-black text-white">
         {/* Navigation */}
         <Navigation />
-        
+
         {/* Main Content */}
         <main className="pt-16">
           <Routes>
@@ -51,15 +51,18 @@ function AppContent() {
             <Route path="/game" element={<EnhancedGamePage />} />
             <Route path="/classic" element={<GamePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/provably-fair" element={<EnhancedProvablyFairPage />} />
+            <Route
+              path="/provably-fair"
+              element={<EnhancedProvablyFairPage />}
+            />
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
-        
+
         {/* Footer */}
         <Footer />
-        
+
         {/* Toast Notifications */}
         <ToastContainer toasts={toasts} onClose={removeToast} />
       </div>
