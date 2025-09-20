@@ -20,7 +20,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
 
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
-    { path: '/game', label: 'Play', icon: '🎲' },
+    { path: '/games', label: 'Games', icon: '🎮' },
     { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
     { path: '/provably-fair', label: 'Provably Fair', icon: '🛡️' },
     { path: '/about', label: 'About', icon: 'ℹ️' },

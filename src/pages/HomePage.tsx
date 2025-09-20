@@ -135,7 +135,7 @@ export const HomePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <Link to="/game">
+            <Link to="/games">
               <motion.button
                 className="btn-hilo-primary text-lg px-8 py-4"
                 whileHover={{ scale: 1.05 }}

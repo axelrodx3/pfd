@@ -7,6 +7,7 @@ import { LiveFeed } from './components/LiveFeed'
 import HomePage from './pages/HomePage'
 import GamePage from './pages/GamePage'
 import { EnhancedGamePage } from './pages/EnhancedGamePage'
+import GamesPage from './pages/GamesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import ProvablyFairPage from './pages/ProvablyFairPage'
 import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
@@ -42,6 +43,7 @@ function AppContent() {
         <main className="pt-16">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/games" element={<GamesPage />} />
             <Route path="/game" element={<EnhancedGamePage />} />
             <Route path="/classic" element={<GamePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />

@@ -408,19 +408,21 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           className="z-50"
         />
 
-        {/* Always Show Current Number */}
-        <motion.div
-          className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center z-40"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-600/50 shadow-xl">
-            <div className="text-lg font-bold text-white">
-              {currentFace}
+        {/* Show Current Number Only After Game */}
+        {won !== null && (
+          <motion.div
+            className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center z-40"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="bg-slate-900/95 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-600/50 shadow-xl">
+              <div className="text-lg font-bold text-white">
+                {currentFace}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
