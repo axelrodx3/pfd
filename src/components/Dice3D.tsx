@@ -172,19 +172,14 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       <div className="relative w-32 h-32 mx-auto mb-4">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
-          {/* Outer Glow Ring */}
-          <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-hilo-gold/40 via-hilo-red/40 to-hilo-green/40 blur-xl" />
-          
-          {/* Inner Glow Edge */}
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-hilo-gold/30 via-hilo-red/30 to-hilo-green/30 blur-sm" />
           
           {/* Floating Grid Pattern */}
-          <div className="absolute inset-3 rounded-2xl border-2 border-hilo-gold/50">
+          <div className="absolute inset-3 rounded-2xl">
             <div className="grid grid-cols-4 grid-rows-4 h-full gap-1 p-3">
               {[...Array(16)].map((_, i) => (
                 <motion.div 
                   key={i} 
-                  className="border border-hilo-gold/30 rounded-sm"
+                  className="border border-gray-600/30 rounded-sm"
                   animate={{
                     opacity: [0.1, 0.4, 0.1],
                     scale: [1, 1.05, 1],
@@ -443,7 +438,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         {/* Result Display - Cloud bubble next to dice */}
         {showResult && won !== null && (
           <motion.div
-            className="absolute -right-48 top-1/2 transform -translate-y-1/2 z-40"
+            className="absolute -right-48 top-1/4 transform -translate-y-1/2 z-40"
             initial={{ opacity: 0, scale: 0.8, x: 20 }}
             animate={{ 
               opacity: [0, 1, 1, 0],
