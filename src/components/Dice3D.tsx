@@ -34,7 +34,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   soundEnabled = true,
   muted = false
 }) => {
-  const [currentFace, setCurrentFace] = useState(targetNumber || 1)
+  const [currentFace, setCurrentFace] = useState(1)
   const [showResult, setShowResult] = useState(false)
   const [animationComplete, setAnimationComplete] = useState(false)
   const [showFloatingResult, setShowFloatingResult] = useState(false)
@@ -98,12 +98,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   // Update currentFace when targetNumber changes (when not rolling)
   useEffect(() => {
-    if (!isRolling && targetNumber) {
+    if (!isRolling && targetNumber && won !== null) {
       setCurrentFace(targetNumber)
-      // Always show result when we have a target number and game result
-      if (won !== null) {
-        setShowResult(true)
-      }
+      setShowResult(true)
     }
   }, [targetNumber, isRolling, won])
 
@@ -142,10 +139,10 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       const rollTimeout = setTimeout(() => {
         clearInterval(rollInterval)
         setCurrentFace(targetNumber)
-        setShowResult(true)
         
         // Quick suspense delay before showing results
         setTimeout(() => {
+          setShowResult(true)
           if (won) {
             playSound('win')
             onWin?.()
@@ -318,9 +315,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             {/* Modern Dice Cube */}
     <div
       className={`absolute inset-0 rounded-2xl shadow-2xl border-2 transition-all duration-700 ${
-        won === true
+        showResult && won === true
           ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 border-emerald-300 shadow-emerald-500/50' 
-          : won === false
+          : showResult && won === false
           ? 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300 shadow-red-500/50'
           : 'bg-gradient-to-br from-slate-100 via-white to-slate-200 border-slate-300 shadow-slate-400/30'
       }`}
@@ -337,9 +334,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                       key={index}
                       className={`w-2 h-2 rounded-full transition-all duration-500 ${
                         dot 
-                          ? won === true
+                          ? showResult && won === true
                             ? 'bg-white shadow-lg drop-shadow-sm'
-                            : won === false
+                            : showResult && won === false
                             ? 'bg-white shadow-md'
                             : 'bg-slate-700 shadow-sm'
                           : 'bg-transparent'
@@ -350,7 +347,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               </div>
 
               {/* Modern Glow Effect */}
-              {won !== null && (
+              {showResult && won !== null && (
                 <motion.div
                   className={`absolute inset-0 rounded-2xl ${
                     won 
@@ -425,7 +422,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         />
 
         {/* Show Current Number on Right Side After Game */}
-        {won !== null && (
+        {showResult && won !== null && (
           <motion.div
             className="absolute -right-20 top-1/2 transform -translate-y-1/2 text-center z-40"
             initial={{ opacity: 0, x: 20 }}
