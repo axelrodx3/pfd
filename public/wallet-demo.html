@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Wallet Demo - HILO Casino</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0D0D0D 0%, #1a1a1a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+
+        .wallet-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wallet-section h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .wallet-button {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .wallet-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .wallet-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .wallet-button.connected {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .wallet-button.disconnect {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+
+        .wallet-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #FFD700;
+        }
+
+        .wallet-info h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .wallet-address {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 4px;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+
+        .balance {
+            color: #10B981;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .form-group {
+            margin: 20px 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10B981;
+            color: #10B981;
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3B82F6;
+            color: #3B82F6;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .qr-code canvas {
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .security-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10B981;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .security-info h3 {
+            color: #10B981;
+            margin-bottom: 15px;
+        }
+
+        .security-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .security-info li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .security-info li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #FFD700;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Solana Wallet Integration</h1>
+            <p>Connect your Phantom, Solflare, or Backpack wallet securely</p>
+        </div>
+
+        <div class="grid">
+            <!-- Wallet Connection -->
+            <div class="wallet-section">
+                <h2>🔗 Wallet Connection</h2>
+                
+                <div id="wallet-connection">
+                    <button id="connect-phantom" class="wallet-button">
+                        Connect Phantom
+                    </button>
+                    <button id="connect-solflare" class="wallet-button">
+                        Connect Solflare
+                    </button>
+                    <button id="connect-backpack" class="wallet-button">
+                        Connect Backpack
+                    </button>
+                </div>
+
+                <div id="wallet-info" class="wallet-info hidden">
+                    <h3>Connected Wallet</h3>
+                    <div class="wallet-address" id="wallet-address"></div>
+                    <div class="balance" id="wallet-balance">Balance: 0 SOL</div>
+                    
+                    <div class="qr-code" id="qr-code-container"></div>
+                    
+                    <button id="disconnect-wallet" class="wallet-button disconnect">
+                        Disconnect Wallet
+                    </button>
+                </div>
+
+                <div id="connection-status"></div>
+            </div>
+
+            <!-- Authentication -->
+            <div class="wallet-section">
+                <h2>🔐 Authentication</h2>
+                
+                <div id="auth-section">
+                    <p>Sign a message to authenticate your wallet:</p>
+                    <button id="sign-message" class="wallet-button" disabled>
+                        Sign Authentication Message
+                    </button>
+                </div>
+
+                <div id="auth-status"></div>
+            </div>
+
+            <!-- SOL Transfer -->
+            <div class="wallet-section">
+                <h2>💸 SOL Transfer</h2>
+                
+                <div class="form-group">
+                    <label for="recipient-address">Recipient Address</label>
+                    <input type="text" id="recipient-address" placeholder="Enter Solana address">
+                </div>
+
+                <div class="form-group">
+                    <label for="transfer-amount">Amount (SOL)</label>
+                    <input type="number" id="transfer-amount" step="0.001" min="0" placeholder="0.001">
+                </div>
+
+                <button id="send-sol" class="wallet-button" disabled>
+                    Send SOL
+                </button>
+
+                <button id="request-withdrawal" class="wallet-button" disabled>
+                    Request Withdrawal
+                </button>
+
+                <div id="transfer-status"></div>
+            </div>
+        </div>
+
+        <!-- Security Information -->
+        <div class="security-info">
+            <h3>🛡️ Security & Trust</h3>
+            <ul>
+                <li>Connecting your wallet only proves ownership</li>
+                <li>No funds can be accessed without your confirmation</li>
+                <li>We only request minimal permissions (signMessage)</li>
+                <li>All transactions require explicit user approval</li>
+                <li>Your private keys never leave your wallet</li>
+                <li>Uses HTTPS and security headers for all communications</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let wallet = null;
+        let publicKey = null;
+        let isAuthenticated = false;
+
+        // DOM elements
+        const elements = {
+            connectPhantom: document.getElementById('connect-phantom'),
+            connectSolflare: document.getElementById('connect-solflare'),
+            connectBackpack: document.getElementById('connect-backpack'),
+            disconnectWallet: document.getElementById('disconnect-wallet'),
+            signMessage: document.getElementById('sign-message'),
+            sendSol: document.getElementById('send-sol'),
+            requestWithdrawal: document.getElementById('request-withdrawal'),
+            walletInfo: document.getElementById('wallet-info'),
+            walletAddress: document.getElementById('wallet-address'),
+            walletBalance: document.getElementById('wallet-balance'),
+            qrCodeContainer: document.getElementById('qr-code-container'),
+            connectionStatus: document.getElementById('connection-status'),
+            authStatus: document.getElementById('auth-status'),
+            transferStatus: document.getElementById('transfer-status'),
+            recipientAddress: document.getElementById('recipient-address'),
+            transferAmount: document.getElementById('transfer-amount')
+        };
+
+        // Utility functions
+        function showStatus(element, message, type = 'info') {
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function clearStatus(element) {
+            element.innerHTML = '';
+        }
+
+        function generateQRCode(text) {
+            // Simple QR code generation using a library
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create a simple QR-like pattern (in production, use a proper QR library)
+            const size = 200;
+            canvas.width = size;
+            canvas.height = size;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            
+            ctx.fillStyle = '#000000';
+            const gridSize = 8;
+            const modules = size / gridSize;
+            
+            for (let i = 0; i < modules; i++) {
+                for (let j = 0; j < modules; j++) {
+                    if ((i + j) % 3 === 0 || (i * j) % 7 === 0) {
+                        ctx.fillRect(i * gridSize, j * gridSize, gridSize, gridSize);
+                    }
+                }
+            }
+            
+            return canvas;
+        }
+
+        async function updateBalance() {
+            if (!publicKey) return;
+            
+            try {
+                // In a real implementation, you would call your backend API
+                // For demo purposes, we'll simulate a balance
+                const balance = (Math.random() * 10).toFixed(4);
+                elements.walletBalance.textContent = `Balance: ${balance} SOL`;
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+                showStatus(elements.connectionStatus, 'Error fetching balance', 'error');
+            }
+        }
+
+        // Wallet connection handlers
+        async function connectWallet(walletName) {
+            try {
+                showStatus(elements.connectionStatus, `Connecting to ${walletName}...`, 'info');
+                
+                // Check if wallet is available
+                if (!window[walletName]) {
+                    throw new Error(`${walletName} wallet not found. Please install the extension.`);
+                }
+
+                // Connect to wallet
+                const response = await window[walletName].connect();
+                publicKey = response.publicKey;
+                wallet = window[walletName];
+
+                // Update UI
+                elements.walletAddress.textContent = publicKey.toString();
+                elements.walletInfo.classList.remove('hidden');
+                elements.signMessage.disabled = false;
+                elements.sendSol.disabled = false;
+                elements.requestWithdrawal.disabled = false;
+
+                // Generate QR code
+                const qrCanvas = generateQRCode(publicKey.toString());
+                elements.qrCodeContainer.innerHTML = '';
+                elements.qrCodeContainer.appendChild(qrCanvas);
+
+                // Update balance
+                await updateBalance();
+
+                showStatus(elements.connectionStatus, `Successfully connected to ${walletName}`, 'success');
+
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                showStatus(elements.connectionStatus, `Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function disconnectWallet() {
+            try {
+                if (wallet && wallet.disconnect) {
+                    await wallet.disconnect();
+                }
+                
+                // Reset state
+                wallet = null;
+                publicKey = null;
+                isAuthenticated = false;
+
+                // Update UI
+                elements.walletInfo.classList.add('hidden');
+                elements.signMessage.disabled = true;
+                elements.sendSol.disabled = true;
+                elements.requestWithdrawal.disabled = true;
+                elements.signMessage.textContent = 'Sign Authentication Message';
+                
+                clearStatus(elements.connectionStatus);
+                clearStatus(elements.authStatus);
+                clearStatus(elements.transferStatus);
+
+            } catch (error) {
+                console.error('Disconnect error:', error);
+                showStatus(elements.connectionStatus, 'Error disconnecting wallet', 'error');
+            }
+        }
+
+        async function signAuthMessage() {
+            if (!wallet || !publicKey) return;
+
+            try {
+                showStatus(elements.authStatus, 'Signing message...', 'info');
+                elements.signMessage.disabled = true;
+                elements.signMessage.innerHTML = '<span class="loading"></span> Signing...';
+
+                const message = `Please sign this message to authenticate with HILO Casino.\n\nNonce: ${Date.now()}\nTimestamp: ${new Date().toISOString()}\n\nThis signature proves ownership of your wallet and cannot be used to access your funds.`;
+                
+                const signature = await wallet.signMessage(new TextEncoder().encode(message));
+                
+                isAuthenticated = true;
+                elements.signMessage.textContent = '✅ Authenticated';
+                elements.signMessage.classList.add('connected');
+                
+                showStatus(elements.authStatus, 'Authentication successful!', 'success');
+
+            } catch (error) {
+                console.error('Signing error:', error);
+                showStatus(elements.authStatus, `Signing failed: ${error.message}`, 'error');
+                elements.signMessage.disabled = false;
+                elements.signMessage.textContent = 'Sign Authentication Message';
+            }
+        }
+
+        async function sendSOL() {
+            if (!wallet || !publicKey || !isAuthenticated) return;
+
+            const recipient = elements.recipientAddress.value.trim();
+            const amount = parseFloat(elements.transferAmount.value);
+
+            if (!recipient || !amount || amount <= 0) {
+                showStatus(elements.transferStatus, 'Please enter valid recipient and amount', 'error');
+                return;
+            }
+
+            try {
+                showStatus(elements.transferStatus, 'Sending transaction...', 'info');
+                elements.sendSol.disabled = true;
+                elements.sendSol.innerHTML = '<span class="loading"></span> Sending...';
+
+                // In a real implementation, you would create and send the transaction
+                // For demo purposes, we'll simulate the transaction
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                showStatus(elements.transferStatus, `Successfully sent ${amount} SOL to ${recipient.slice(0, 8)}...`, 'success');
+                
+                // Clear form
+                elements.recipientAddress.value = '';
+                elements.transferAmount.value = '';
+                
+                // Update balance
+                await updateBalance();
+
+            } catch (error) {
+                console.error('Transfer error:', error);
+                showStatus(elements.transferStatus, `Transfer failed: ${error.message}`, 'error');
+            } finally {
+                elements.sendSol.disabled = false;
+                elements.sendSol.textContent = 'Send SOL';
+            }
+        }
+
+        async function requestWithdrawal() {
+            if (!wallet || !publicKey || !isAuthenticated) return;
+
+            const amount = parseFloat(elements.transferAmount.value);
+
+            if (!amount || amount <= 0) {
+                showStatus(elements.transferStatus, 'Please enter a valid amount', 'error');
+                return;
+            }
+
+            try {
+                showStatus(elements.transferStatus, 'Processing withdrawal request...', 'info');
+                elements.requestWithdrawal.disabled = true;
+                elements.requestWithdrawal.innerHTML = '<span class="loading"></span> Processing...';
+
+                // In a real implementation, you would call your backend API
+                // For demo purposes, we'll simulate the request
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                showStatus(elements.transferStatus, `Withdrawal request submitted for ${amount} SOL`, 'success');
+                elements.transferAmount.value = '';
+
+            } catch (error) {
+                console.error('Withdrawal error:', error);
+                showStatus(elements.transferStatus, `Withdrawal failed: ${error.message}`, 'error');
+            } finally {
+                elements.requestWithdrawal.disabled = false;
+                elements.requestWithdrawal.textContent = 'Request Withdrawal';
+            }
+        }
+
+        // Event listeners
+        elements.connectPhantom.addEventListener('click', () => connectWallet('phantom'));
+        elements.connectSolflare.addEventListener('click', () => connectWallet('solflare'));
+        elements.connectBackpack.addEventListener('click', () => connectWallet('backpack'));
+        elements.disconnectWallet.addEventListener('click', disconnectWallet);
+        elements.signMessage.addEventListener('click', signAuthMessage);
+        elements.sendSol.addEventListener('click', sendSOL);
+        elements.requestWithdrawal.addEventListener('click', requestWithdrawal);
+
+        // Check for wallet availability on page load
+        window.addEventListener('load', () => {
+            const wallets = ['phantom', 'solflare', 'backpack'];
+            wallets.forEach(walletName => {
+                if (window[walletName]) {
+                    console.log(`${walletName} wallet detected`);
+                } else {
+                    console.log(`${walletName} wallet not found`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

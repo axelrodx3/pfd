@@ -12,8 +12,10 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import ProvablyFairPage from './pages/ProvablyFairPage'
 import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
 import AboutPage from './pages/AboutPage'
+import WalletPage from './pages/WalletPage'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeProvider } from './contexts/ThemeContext'
+import WalletContextProvider from './contexts/WalletContext'
 import { ToastContainer, useToast } from './components/Toast'
 
 /**
@@ -24,7 +26,9 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AppContent />
+        <WalletContextProvider>
+          <AppContent />
+        </WalletContextProvider>
       </ThemeProvider>
     </ErrorBoundary>
   )
@@ -48,6 +52,7 @@ function AppContent() {
             <Route path="/classic" element={<GamePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/provably-fair" element={<EnhancedProvablyFairPage />} />
+            <Route path="/wallet" element={<WalletPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>

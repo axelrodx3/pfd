@@ -1,0 +1,36 @@
+{
+  "name": "solana-wallet-api",
+  "version": "1.0.0",
+  "description": "Solana wallet integration API server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.87.6",
+    "bcryptjs": "^2.4.3",
+    "bs58": "^5.0.0",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "solana",
+    "wallet",
+    "api",
+    "blockchain",
+    "crypto"
+  ],
+  "author": "HILO Casino Development Team",
+  "license": "MIT"
+}
