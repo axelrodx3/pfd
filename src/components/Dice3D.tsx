@@ -170,7 +170,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     <div className={`relative ${className}`}>
       {/* Win/Loss Probability Scale */}
       <div className="mb-6">
-        <div className="relative w-64 h-8 mx-auto">
+        <div className="relative w-56 h-8 mx-auto">
           {/* Scale Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-hilo-red via-gray-600 to-hilo-green rounded-full shadow-inner border border-gray-500/30">
             {/* Center Line */}
@@ -184,7 +184,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           <motion.div
             className="absolute top-1/2 transform -translate-y-1/2 w-8 h-8 z-10"
             animate={{
-              x: won === null ? 0 : won ? 128 : -128, // Move to green (win) or red (loss) side
+              x: won === null ? 0 : won ? 112 : -112, // Move to green (win) or red (loss) side
             }}
             transition={{
               duration: 1.5,
@@ -219,7 +219,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       </div>
 
       {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-32 h-32 mx-auto mb-6">
+      <div className="relative w-32 h-32 mx-auto mb-8">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
           
@@ -324,7 +324,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           <motion.div
             className="relative w-16 h-16"
             style={{
-              transformStyle: 'preserve-3d'
+              transformStyle: 'preserve-3d',
+              opacity: 1
             }}
             animate={isRolling ? {
               rotateX: [0, 180, 360, 540, 720, 900, 1080, 1260, 1440],
@@ -340,10 +341,6 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               scale: 1,
               y: 0,
               x: 0
-            }}
-            style={{
-              transformStyle: 'preserve-3d',
-              opacity: 1
             }}
             transition={isRolling ? {
               duration: 1.8,
