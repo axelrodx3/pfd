@@ -11,11 +11,27 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>HILO - Premium Gaming Platform</title>
-        <meta name="description" content="HILO - Premium gaming platform with dice, slots, and more" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
+  <title>HILO - Premium Gaming Platform</title>
+  <meta name="description" content="HILO - Premium gaming platform with dice, slots, and more" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <style dangerouslySetInnerHTML={{
+    __html: `
+      body {
+        background: #0f0f0f !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      html {
+        background: #0f0f0f !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    `
+  }} />
+</Head>
       
       <div className="app">
         {/* Sidebar */}
