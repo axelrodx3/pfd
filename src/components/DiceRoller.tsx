@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { getDiceEmoji } from '../lib/utils'
+import { Dice3D } from './Dice3D'
 
 interface DiceRollerProps {
   className?: string
@@ -19,6 +20,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
     isRolling, 
     lastResult, 
     lastWin,
+    currentBet,
     selectedDiceSkin,
     autoRollEnabled,
     autoRollCount,
@@ -99,20 +101,6 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
     }
   }, [isRolling])
 
-  // Handle win/lose sounds, confetti, and result modal
-  useEffect(() => {
-    if (lastWin !== null && !isRolling) {
-      setShowResultModal(true)
-      if (lastWin) {
-        playSound('win')
-        setShowConfetti(true)
-        setTimeout(() => setShowConfetti(false), 3000)
-      } else {
-        playSound('lose')
-      }
-    }
-  }, [lastWin, isRolling])
-
   const getDiceSkinStyles = (skin: string) => {
     switch (skin) {
       case 'neon':
@@ -184,63 +172,29 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
         </motion.div>
       )}
 
-      {/* Dice Display */}
-      {!showResultModal && (
-        <motion.div
-          className={`relative w-24 h-24 mx-auto mb-4 rounded-lg border-2 ${getDiceSkinStyles(selectedDiceSkin)}`}
-          variants={diceVariants}
-          initial="initial"
-          animate={isRolling ? "rolling" : "landed"}
-        >
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center text-6xl"
-            animate={isRolling ? {
-              rotate: [0, 90, 180, 270, 360],
-            } : false}
-            transition={{
-              duration: 0.2,
-              repeat: isRolling ? Infinity : 0,
-              ease: 'linear'
-            }}
-          >
-            {displayRoll ? getDiceEmoji(displayRoll) : '🎲'}
-          </motion.div>
-
-          {/* Glow Effect */}
-          {isRolling && (
-            <motion.div
-              className={`absolute inset-0 rounded-lg opacity-20 ${
-                selectedDiceSkin === 'neon' ? 'bg-cyan-500' :
-                selectedDiceSkin === 'gold' ? 'bg-yellow-400' :
-                'bg-hilo-gold'
-              }`}
-              animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            />
-          )}
-        </motion.div>
-      )}
-
-      {/* Final Dice Result (when modal is showing) */}
-      {showResultModal && lastRoll && (
-        <motion.div
-          className="flex justify-center mb-4"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        >
-          <div className="text-8xl">
-            {getDiceEmoji(lastRoll)}
-          </div>
-        </motion.div>
-      )}
+      {/* 3D Dice Display */}
+      <Dice3D
+        targetNumber={lastRoll || 1}
+        isRolling={isRolling}
+        onRollEnd={() => {
+          // Show result modal after dice animation completes
+          if (lastWin !== null) {
+            setShowResultModal(true)
+          }
+        }}
+        onWin={() => {
+          playSound('win')
+          setShowConfetti(true)
+          setTimeout(() => setShowConfetti(false), 3000)
+        }}
+        onLoss={() => {
+          playSound('lose')
+        }}
+        won={lastWin}
+        betAmount={currentBet}
+        winnings={lastWin ? currentBet * 1.98 : 0}
+        className="mb-4"
+      />
 
       {/* Confetti Animation */}
       <AnimatePresence>

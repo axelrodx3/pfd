@@ -284,16 +284,25 @@ export const useGameStore = create<GameState & GameActions>()(
         
         set({ isRolling: true })
         
-        // Simulate dice roll delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // Generate the roll result immediately (for 3D dice target)
+        const roll = rollDice()
+        const result = getDiceResult(roll)
         
         // Apply house edge (49% win chance for player)
         const random = Math.random()
         const playerWinChance = 0.49
-        const won = random < playerWinChance && state.selectedSide === getDiceResult(rollDice())
+        const won = random < playerWinChance && state.selectedSide === result
         
-        const roll = rollDice()
-        const result = getDiceResult(roll)
+        // Set the roll result immediately for 3D dice
+        set((prevState) => ({
+          lastRoll: roll,
+          lastResult: result,
+          lastWin: won,
+        }))
+        
+        // Wait for 3D dice animation to complete (2 seconds)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
         const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
         
         // Generate hash for provably fair
@@ -308,9 +317,6 @@ export const useGameStore = create<GameState & GameActions>()(
         
         // Update game state
         set((prevState) => ({
-          lastRoll: roll,
-          lastResult: result,
-          lastWin: won,
           isRolling: false,
           nonce: prevState.nonce + 1,
           hiloTokens: prevState.hiloTokens + netChange,
