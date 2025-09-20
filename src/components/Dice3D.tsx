@@ -219,7 +219,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       </div>
 
       {/* 3D Environment - Enhanced Glowing Table */}
-      <div className="relative w-28 h-28 mx-auto mb-6">
+      <div className="relative w-40 h-40 mx-auto mb-8">
         {/* Table Surface with Enhanced Glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl">
           
@@ -322,7 +322,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           }}
         >
           <motion.div
-            className="relative w-14 h-14"
+            className="relative w-20 h-20"
             style={{
               transformStyle: 'preserve-3d',
               opacity: 1
@@ -370,7 +370,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     >
               {/* Modern Dice Dots */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="grid grid-cols-3 grid-rows-3 gap-1 w-10 h-10">
+                <div className="grid grid-cols-3 grid-rows-3 gap-2 w-16 h-16">
                   {getDiceDots(currentFace).map((dot, index) => (
                     <div
                       key={index}

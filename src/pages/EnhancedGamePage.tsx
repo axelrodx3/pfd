@@ -188,8 +188,8 @@ export const EnhancedGamePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-hilo-black text-white p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-hilo-black text-white p-6">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <div className="text-center lg:text-left">
@@ -239,12 +239,12 @@ export const EnhancedGamePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-12">
           {/* Game Area */}
-          <div className="lg:col-span-2">
-            <div className="bg-gray-900 rounded-lg p-8 mb-6">
+          <div className="xl:col-span-3">
+            <div className="bg-gray-900 rounded-lg p-12 mb-8">
               {/* Balance & Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8 md:mb-12">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-hilo-gold">{hiloTokens.toLocaleString()}</div>
                   <div className="text-sm text-gray-400">HILO Tokens</div>
@@ -268,42 +268,42 @@ export const EnhancedGamePage: React.FC = () => {
               </div>
 
               {/* Dice Roller */}
-              <div className="flex justify-center items-center mb-16">
+              <div className="flex justify-center items-center mb-20">
                 <div className="relative">
                   <DiceRoller />
                 </div>
               </div>
 
               {/* Bet Controls */}
-              <div className="space-y-6 md:space-y-8 max-w-2xl mx-auto">
+              <div className="space-y-10 max-w-4xl mx-auto">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-4 text-center">
                     Bet Amount (HILO Tokens)
                   </label>
-                  <div className="flex gap-3 justify-center items-center">
+                  <div className="flex gap-4 justify-center items-center">
                     <input
                       type="number"
                       value={currentBet}
                       onChange={(e) => handleBetChange(Number(e.target.value))}
-                      className="flex-1 px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white text-center font-semibold"
+                      className="flex-1 px-6 py-4 bg-gray-800 border border-gray-600 rounded-lg text-white text-center font-semibold text-lg"
                       min="1"
                       max={hiloTokens}
                     />
                     <button
                       onClick={() => handleBetChange(currentBet * 2)}
-                      className="px-6 py-3 bg-hilo-gold text-black rounded-lg hover:bg-hilo-gold/80 transition-colors font-bold"
+                      className="px-8 py-4 bg-hilo-gold text-black rounded-lg hover:bg-hilo-gold/80 transition-colors font-bold text-lg"
                     >
                       2x
                     </button>
                     <button
                       onClick={() => handleBetChange(Math.floor(hiloTokens / 2))}
-                      className="px-6 py-3 bg-hilo-red text-white rounded-lg hover:bg-hilo-red/80 transition-colors font-bold"
+                      className="px-8 py-4 bg-hilo-red text-white rounded-lg hover:bg-hilo-red/80 transition-colors font-bold text-lg"
                     >
                       Half
                     </button>
                     <button
                       onClick={() => handleBetChange(hiloTokens)}
-                      className="px-6 py-3 bg-hilo-green text-white rounded-lg hover:bg-hilo-green/80 transition-colors font-bold"
+                      className="px-8 py-4 bg-hilo-green text-white rounded-lg hover:bg-hilo-green/80 transition-colors font-bold text-lg"
                     >
                       Max
                     </button>
@@ -311,10 +311,10 @@ export const EnhancedGamePage: React.FC = () => {
                 </div>
 
                 {/* Side Selection */}
-                <div className="flex gap-6 justify-center">
+                <div className="flex gap-8 justify-center">
                   <button
                     onClick={() => handleSideSelect('high')}
-                    className={`flex-1 max-w-sm py-5 px-8 rounded-xl font-bold text-xl transition-all duration-300 ${
+                    className={`flex-1 max-w-md py-8 px-12 rounded-xl font-bold text-2xl transition-all duration-300 ${
                       selectedSide === 'high'
                         ? 'bg-hilo-green text-white shadow-hilo-glow-green transform scale-105'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-105'
@@ -324,7 +324,7 @@ export const EnhancedGamePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleSideSelect('low')}
-                    className={`flex-1 max-w-sm py-5 px-8 rounded-xl font-bold text-xl transition-all duration-300 ${
+                    className={`flex-1 max-w-md py-8 px-12 rounded-xl font-bold text-2xl transition-all duration-300 ${
                       selectedSide === 'low'
                         ? 'bg-hilo-red text-white shadow-hilo-glow-red transform scale-105'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-105'
@@ -335,11 +335,11 @@ export const EnhancedGamePage: React.FC = () => {
                 </div>
 
                 {/* Roll Button */}
-                <div className="flex justify-center pt-4">
+                <div className="flex justify-center pt-8">
                   <button
                     onClick={handleRoll}
                     disabled={isRolling || !selectedSide || currentBet > hiloTokens}
-                    className="w-full max-w-lg py-6 px-8 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-2xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
+                    className="w-full max-w-2xl py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
                   >
                     {isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
                   </button>
