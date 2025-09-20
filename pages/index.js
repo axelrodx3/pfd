@@ -10,6 +10,7 @@ export default function Home() {
 
   return (
     <>
+    
       <Head>
   <title>HILO - Premium Gaming Platform</title>
   <meta name="description" content="HILO - Premium gaming platform with dice, slots, and more" />
@@ -18,14 +19,13 @@ export default function Home() {
   
   <style dangerouslySetInnerHTML={{
     __html: `
-      body {
+      * {
         background: #0f0f0f !important;
         color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
       }
-      html {
+      html, body {
         background: #0f0f0f !important;
+        color: #ffffff !important;
         margin: 0 !important;
         padding: 0 !important;
       }
