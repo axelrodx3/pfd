@@ -169,8 +169,8 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   return (
     <div className={`relative ${className}`}>
       {/* Win/Loss Probability Scale */}
-      <div className="mb-6">
-        <div className="relative w-80 h-10 mx-auto">
+      <div className="mb-6 md:mb-8">
+        <div className="relative w-80 md:w-96 h-10 md:h-12 mx-auto">
           {/* Scale Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-hilo-red via-gray-600 to-hilo-green rounded-full shadow-inner border border-gray-500/30">
             {/* Center Line */}
@@ -182,7 +182,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           
           {/* Dice Indicator */}
           <motion.div
-            className="absolute top-1/2 transform -translate-y-1/2 w-10 h-10 z-10"
+            className="absolute top-1/2 transform -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 z-10"
             animate={{
               x: won === null ? 0 : won ? 160 : -160, // Move to green (win) or red (loss) side
             }}
@@ -201,7 +201,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               w-full h-full bg-white rounded-lg shadow-xl border-2 flex items-center justify-center
               ${won === null ? 'border-gray-300' : won ? 'border-green-400 shadow-green-500/50' : 'border-red-400 shadow-red-500/50'}
             `}>
-              <div className="text-sm font-bold text-gray-800">
+              <div className="text-base font-bold text-gray-800">
                 {currentFace}
               </div>
             </div>
