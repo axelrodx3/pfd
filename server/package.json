@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@solana/web3.js": "^1.87.6",
+    "aws-sdk": "^2.1490.0",
     "bcryptjs": "^2.4.3",
     "bs58": "^5.0.0",
     "cors": "^2.8.5",
@@ -19,6 +20,7 @@
     "express-rate-limit": "^8.1.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.6",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

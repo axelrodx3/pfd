@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
 import { HiloLogo } from './HiloLogo'
-import { WalletButton } from './WalletButton'
+import { RealWalletButton } from './RealWalletButton'
 
 interface NavigationProps {
   className?: string
@@ -74,7 +74,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
 
           {/* Wallet Button */}
           <div className="hidden md:block">
-            <WalletButton />
+            <RealWalletButton />
           </div>
 
           {/* Mobile Menu Button */}
@@ -140,7 +140,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
               }}
               transition={{ delay: 0.5 }}
             >
-              <WalletButton className="w-full justify-center" />
+              <RealWalletButton className="w-full justify-center" />
             </motion.div>
           </div>
         </motion.div>

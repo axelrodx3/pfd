@@ -9,7 +9,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      buffer: 'buffer',
     },
+  },
+  define: {
+    global: 'globalThis',
+    'process.env': {},
+  },
+  optimizeDeps: {
+    include: ['buffer'],
   },
   test: {
     globals: true,
@@ -23,5 +31,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      external: [],
+    },
   },
 })

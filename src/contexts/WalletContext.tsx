@@ -19,7 +19,7 @@ import {
 } from '@solana/web3.js'
 
 // Default styles that can be overridden by your app
-require('@solana/wallet-adapter-react-ui/styles.css')
+import '@solana/wallet-adapter-react-ui/styles.css'
 
 interface WalletContextType {
   connection: any
@@ -54,7 +54,7 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const endpoint = useMemo(() => clusterApiUrl(network), [network])
 
   const wallets = useMemo(
-    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    () => [new SolflareWalletAdapter()], // Removed PhantomWalletAdapter as it's now registered as Standard Wallet
     [network]
   )
 
