@@ -168,55 +168,6 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Win/Loss Probability Scale */}
-      <div className="mb-8">
-        <div className="relative w-48 h-6 mx-auto">
-          {/* Scale Background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-hilo-red via-gray-600 to-hilo-green rounded-full shadow-inner border border-gray-500/30">
-            {/* Center Line */}
-            <div className="absolute left-1/2 top-1 w-0.5 h-8 bg-white/70 transform -translate-x-1/2 rounded-full" />
-            {/* Scale Marks */}
-            <div className="absolute left-1/4 top-2 w-0.5 h-6 bg-white/40 transform -translate-x-1/2 rounded-full" />
-            <div className="absolute right-1/4 top-2 w-0.5 h-6 bg-white/40 transform -translate-x-1/2 rounded-full" />
-          </div>
-          
-          {/* Dice Indicator */}
-          <motion.div
-            className="absolute top-1/2 transform -translate-y-1/2 w-6 h-6 z-10"
-            animate={{
-              x: won === null ? 0 : won ? 96 : -96, // Move to green (win) or red (loss) side
-            }}
-            transition={{
-              duration: 1.5,
-              ease: "easeInOut",
-              delay: showResult ? 0.5 : 0
-            }}
-            style={{
-              left: '50%',
-              marginLeft: '-12px' // Center the dice initially
-            }}
-          >
-            {/* Mini Dice with Glow */}
-            <div className={`
-              w-full h-full bg-white rounded-lg shadow-xl border-2 flex items-center justify-center
-              ${won === null ? 'border-gray-300' : won ? 'border-green-400 shadow-green-500/50' : 'border-red-400 shadow-red-500/50'}
-            `}>
-              <div className="text-xs font-bold text-gray-800">
-                {currentFace}
-              </div>
-            </div>
-          </motion.div>
-          
-          {/* Labels */}
-          <div className="absolute -top-8 left-0 text-sm text-hilo-red font-bold">LOW (1-3)</div>
-          <div className="absolute -top-8 right-0 text-sm text-hilo-green font-bold">HIGH (4-6)</div>
-          
-          {/* Probability Text */}
-          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-medium">
-            {won === null ? '50/50' : won ? 'WIN!' : 'LOSS'}
-          </div>
-        </div>
-      </div>
 
       {/* 3D Environment - Enhanced Glowing Table */}
       <div className="relative w-40 h-40 mx-auto mb-6">
