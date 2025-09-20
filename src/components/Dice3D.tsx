@@ -107,6 +107,13 @@ export const Dice3D: React.FC<Dice3DProps> = ({
     }
   }, [targetNumber, isRolling, won])
 
+  // Ensure dice stays on the correct number after landing
+  useEffect(() => {
+    if (!isRolling && targetNumber && won !== null) {
+      setCurrentFace(targetNumber)
+    }
+  }, [isRolling, targetNumber, won])
+
   // Reset dice state when a new game starts (isRolling becomes true)
   useEffect(() => {
     if (isRolling) {
@@ -400,7 +407,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             opacity: [0.2, 0.4, 0.1, 0.3, 0.2]
           } : {
             scale: 1,
-            opacity: 0.2
+            opacity: 1
           }}
           transition={{
             duration: 2,
@@ -447,7 +454,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               x: [20, 0, 0, -10]
             }}
             transition={{ 
-              duration: 3.5,
+              duration: 6,
               times: [0, 0.1, 0.8, 1],
               ease: "easeInOut"
             }}
