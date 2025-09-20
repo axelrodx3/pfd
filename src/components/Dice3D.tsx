@@ -133,15 +133,18 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       // Random dice faces during rolling
       const rollInterval = setInterval(() => {
         setCurrentFace(Math.floor(Math.random() * 6) + 1)
-      }, 100)
+      }, 80) // Slightly faster for smoother animation
 
       // Stop rolling after 1.8 seconds and land on target
       const rollTimeout = setTimeout(() => {
         clearInterval(rollInterval)
-        setCurrentFace(targetNumber)
         
-        // Quick suspense delay before showing results
+        // Small delay to let the motion animation finish smoothly
         setTimeout(() => {
+          // Smoothly transition to target number
+          setCurrentFace(targetNumber)
+          
+          // Show results immediately after dice lands
           setShowResult(true)
           if (won) {
             playSound('win')
@@ -153,7 +156,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           setAnimationComplete(true)
           setShowFloatingResult(true)
           onRollEnd()
-        }, 800) // 0.8 second suspense delay
+        }, 100) // Small delay for smooth transition
       }, 1800) // 1.8 second roll duration
 
       return () => {
@@ -294,11 +297,11 @@ export const Dice3D: React.FC<Dice3DProps> = ({
               ease: [0.23, 1, 0.32, 1],
               times: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
             } : {
-              duration: 0.8,
+              duration: 0.3,
               ease: "easeOut",
               type: "spring",
-              stiffness: 400,
-              damping: 30
+              stiffness: 600,
+              damping: 40
             }}
             style={{
               transformStyle: 'preserve-3d',
@@ -307,7 +310,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           >
             {/* Modern Dice Cube */}
     <div
-      className={`absolute inset-0 rounded-2xl shadow-2xl transition-all duration-700 ${
+      className={`absolute inset-0 rounded-2xl shadow-2xl transition-all duration-400 ${
         showResult && won === true
           ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-emerald-500/50' 
           : showResult && won === false
@@ -325,7 +328,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                   {getDiceDots(currentFace).map((dot, index) => (
                     <div
                       key={index}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                         dot 
                           ? showResult && won === true
                             ? 'bg-white shadow-lg drop-shadow-sm'
