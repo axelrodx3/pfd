@@ -223,38 +223,54 @@ export default function Home() {
       </div>
 
       <style jsx>{`
-                * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-      :root {
-          --bg-primary: ${isDarkMode ? '#0f0f0f' : '#ffffff'};
-          --bg-secondary: ${isDarkMode ? '#1a1a1a' : '#f8f9fa'};
-          --bg-tertiary: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
-          --text-primary: ${isDarkMode ? '#ffffff' : '#000000'};
-          --text-secondary: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
-          --text-muted: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
-          --border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
-          --shadow-color: ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
-        }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: ${isDarkMode ? 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%)'} !important;
+    color: ${isDarkMode ? '#ffffff' : '#000000'} !important;
+    overflow-x: hidden;
+    transition: all 0.3s ease;
+    min-height: 100vh;
+  }
 
-        /* FORCE DARK MODE - NUCLEAR OPTION */
-        html, body {
-          background: #0f0f0f !important;
-          color: #ffffff !important;
-        }
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
 
-        body {
-          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%) !important;
-          color: #ffffff !important;
-        }
+  /* Theme Toggle Button */
+  .theme-toggle {
+    background: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+    border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+    color: ${isDarkMode ? '#ffffff' : '#000000'};
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin-right: 16px;
+  }
 
-        .app {
-          display: flex;
-          min-height: 100vh;
-        }
+  .theme-toggle:hover {
+    background: ${isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+    transform: scale(1.05);
+  }
+
+  /* THEN KEEP ALL YOUR EXISTING CSS BELOW - sidebar, header, etc. */
+  .sidebar {
+    // ... all your existing sidebar styles
+  }
+  // ... everything else stays the same
+`}</style>
 
         /* Theme Toggle Styles */
         .theme-toggle {
