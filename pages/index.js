@@ -5,6 +5,8 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState('landing')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [accountDropdown, setAccountDropdown] = useState(false)
+  // ADD THIS LINE:
+  const [isDarkMode, setIsDarkMode] = useState(true) // Start in dark mode
 
   return (
     <>
@@ -154,11 +156,15 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="header-right">
+              <div className="header-right">
               <div className="balance-display">
                 <span className="balance-label">Balance</span>
                 <span className="balance-amount">$<span id="balance">1000</span></span>
               </div>
+
+              <button className="theme-toggle" onClick={() => setIsDarkMode(!isDarkMode)}>
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
 
               <div className="account-dropdown">
                 <button className="account-btn" onClick={() => setAccountDropdown(!accountDropdown)}>
@@ -217,17 +223,29 @@ export default function Home() {
       </div>
 
       <style jsx>{`
-        * {
+                * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
         }
 
+        :root {
+          --bg-primary: ${isDarkMode ? '#0f0f0f' : '#ffffff'};
+          --bg-secondary: ${isDarkMode ? '#1a1a1a' : '#f8f9fa'};
+          --bg-tertiary: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
+          --text-primary: ${isDarkMode ? '#ffffff' : '#000000'};
+          --text-secondary: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'};
+          --text-muted: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+          --border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+          --shadow-color: ${isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'};
+        }
+
         body {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
-          color: #ffffff;
+          background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+          color: var(--text-primary);
           overflow-x: hidden;
+          transition: all 0.3s ease;
         }
 
         .app {
@@ -235,12 +253,11 @@ export default function Home() {
           min-height: 100vh;
         }
 
-        /* Sidebar Styles */
         .sidebar {
           width: 280px;
-          background: rgba(0, 0, 0, 0.8);
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'};
           backdrop-filter: blur(20px);
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          border-right: 1px solid var(--border-color);
           transition: all 0.3s ease;
           position: fixed;
           height: 100vh;
@@ -311,7 +328,7 @@ export default function Home() {
         }
 
         .sidebar-section h3 {
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--text-muted);
           font-size: 0.8rem;
           font-weight: 600;
           text-transform: uppercase;
@@ -351,7 +368,7 @@ export default function Home() {
         }
 
         .sidebar-item:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--bg-tertiary);
         }
 
         .sidebar-item.active {
@@ -392,8 +409,8 @@ export default function Home() {
         .recent-game {
           padding: 8px 16px;
           border-radius: 8px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
           margin-bottom: 8px;
         }
 
@@ -439,9 +456,9 @@ export default function Home() {
         }
 
         .header {
-          background: rgba(0, 0, 0, 0.6);
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.95)'};
           backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          border-bottom: 1px solid var(--border-color);
           padding: 20px 32px;
           display: flex;
           align-items: center;
@@ -459,9 +476,9 @@ export default function Home() {
 
         .mobile-menu-btn {
           display: none;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          color: #ffffff;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
           width: 40px;
           height: 40px;
           border-radius: 10px;
@@ -474,11 +491,11 @@ export default function Home() {
           align-items: center;
           gap: 8px;
           font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--text-secondary);
         }
 
-        .separator {
-          color: rgba(255, 255, 255, 0.4);
+         .separator {
+          color: var(--text-muted);
         }
 
         .header-right {
@@ -495,7 +512,7 @@ export default function Home() {
 
         .balance-label {
           font-size: 0.8rem;
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--text-muted);
           margin-bottom: 2px;
         }
 
@@ -509,13 +526,13 @@ export default function Home() {
           position: relative;
         }
 
-        .account-btn {
+         .account-btn {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #ffffff;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
           padding: 12px 20px;
           border-radius: 12px;
           cursor: pointer;
@@ -550,13 +567,13 @@ export default function Home() {
           position: absolute;
           top: 100%;
           right: 0;
-          background: rgba(0, 0, 0, 0.9);
+          background: ${isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.95)'};
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--border-color);
           border-radius: 12px;
           padding: 8px;
           min-width: 200px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 20px 40px var(--shadow-color);
           z-index: 1000;
         }
 
