@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useWalletContext } from '../contexts/WalletContext'
+import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { PublicKey } from '@solana/web3.js'
 
 interface SOLTransferProps {

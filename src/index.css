@@ -54,6 +54,10 @@
     @apply shadow-hilo-glow-green;
   }
 
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+  }
+
   /* Card Styles */
   .card-hilo {
     @apply bg-hilo-gray border border-hilo-gray-light rounded-xl p-6 backdrop-blur-sm;
@@ -102,5 +106,20 @@
 
   .backdrop-blur-custom {
     backdrop-filter: blur(20px);
+  }
+
+  /* Gradient Animation */
+  .animate-gradient-x {
+    animation: gradient-x 3s ease infinite;
+    background-size: 200% 200%;
+  }
+
+  @keyframes gradient-x {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 }

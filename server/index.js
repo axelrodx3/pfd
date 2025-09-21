@@ -55,7 +55,7 @@ const PORT = process.env.PORT || 3001
 // Security middleware with comprehensive CSP
 const securityConfig = getSecurityConfig({
   development: process.env.NODE_ENV === 'development',
-  rpcUrl: SOLANA_RPC_URL,
+  rpcUrl: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
 })
 
 app.use(helmet(securityConfig))
@@ -181,6 +181,7 @@ async function initializeServices() {
     monitoringService.start()
 
     // Initialize balance sync service
+    const connection = treasuryService.connection
     balanceSyncService = new BalanceSyncService(connection)
     balanceSyncService.start()
 
@@ -312,20 +313,69 @@ app.get(
     try {
       const { publicKey } = req.params
 
+      // Validate public key format
+      if (!publicKey || typeof publicKey !== 'string' || publicKey.length < 32) {
+        return res.status(400).json({ 
+          message: 'Invalid public key format',
+          error: 'INVALID_PUBLIC_KEY'
+        })
+      }
+
       if (req.user.publicKey !== publicKey) {
         return res.status(403).json({ message: 'Unauthorized' })
       }
 
-      const balance = await connection.getBalance(new PublicKey(publicKey))
+      // Validate Solana public key
+      let solanaPublicKey
+      try {
+        solanaPublicKey = new PublicKey(publicKey)
+      } catch (error) {
+        console.error('Invalid Solana public key:', publicKey, error)
+        return res.status(400).json({ 
+          message: 'Invalid Solana public key format',
+          error: 'INVALID_SOLANA_PUBLIC_KEY'
+        })
+      }
+
+      // Check if RPC connection is available
+      if (!connection) {
+        console.error('Solana connection not available')
+        return res.status(503).json({ 
+          message: 'Blockchain connection unavailable',
+          error: 'RPC_CONNECTION_ERROR'
+        })
+      }
+
+      const balance = await connection.getBalance(solanaPublicKey)
       const solBalance = balance / 1e9 // Convert lamports to SOL
+
+      console.log(`Balance fetched for ${publicKey}: ${solBalance} SOL`)
 
       res.json({
         balance: solBalance,
         lamports: balance,
+        address: publicKey
       })
     } catch (error) {
-      console.error('Error fetching balance:', error)
-      res.status(500).json({ message: 'Internal server error' })
+      console.error('Error fetching balance for', req.params.publicKey, ':', error.message)
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to fetch balance'
+      let statusCode = 500
+      
+      if (error.message.includes('Invalid public key')) {
+        errorMessage = 'Invalid public key format'
+        statusCode = 400
+      } else if (error.message.includes('fetch')) {
+        errorMessage = 'Network error while fetching balance'
+        statusCode = 503
+      }
+      
+      res.status(statusCode).json({ 
+        message: errorMessage,
+        error: 'BALANCE_FETCH_ERROR',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      })
     }
   }
 )

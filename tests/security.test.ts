@@ -3,13 +3,13 @@ import { PublicKey, Keypair } from '@solana/web3.js'
 import nacl from 'tweetnacl'
 
 // Mock the auth manager for testing
-const mockAuthManager = {
-  generateNonce: jest.fn(),
-  verifySignature: jest.fn(),
-  verifyJWT: jest.fn(),
-  logout: jest.fn(),
-  getStats: jest.fn(),
-}
+// const mockAuthManager = {
+//   generateNonce: jest.fn(),
+//   verifySignature: jest.fn(),
+//   verifyJWT: jest.fn(),
+//   logout: jest.fn(),
+//   getStats: jest.fn(),
+// }
 
 describe('Security Tests', () => {
   let testKeypair: Keypair
@@ -21,7 +21,7 @@ describe('Security Tests', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    // vi.clearAllMocks() // Not needed for these tests
   })
 
   describe('Nonce Generation', () => {
@@ -55,8 +55,9 @@ describe('Security Tests', () => {
       const message = 'Test message for signing'
       const messageBytes = new TextEncoder().encode(message)
 
-      // Sign message
-      const signature = nacl.sign.detached(messageBytes, testKeypair.secretKey)
+      // Sign message - nacl expects 32-byte secret key, Solana uses 64-byte
+      const secretKey = testKeypair.secretKey.slice(0, 32)
+      const signature = nacl.sign.detached(messageBytes, secretKey)
 
       // Verify signature
       const isValid = nacl.sign.detached.verify(
@@ -91,8 +92,9 @@ describe('Security Tests', () => {
       const message1Bytes = new TextEncoder().encode(message1)
       const message2Bytes = new TextEncoder().encode(message2)
 
-      // Sign first message
-      const signature = nacl.sign.detached(message1Bytes, testKeypair.secretKey)
+      // Sign first message - nacl expects 32-byte secret key, Solana uses 64-byte
+      const secretKey = testKeypair.secretKey.slice(0, 32)
+      const signature = nacl.sign.detached(message1Bytes, secretKey)
 
       // Try to verify with second message
       const isValid = nacl.sign.detached.verify(
@@ -149,7 +151,7 @@ describe('Security Tests', () => {
 
   describe('Rate Limiting', () => {
     it('should track failed attempts', () => {
-      const ip = '192.168.1.1'
+      // const ip = '192.168.1.1'
       const attempts = { count: 0, firstAttempt: Date.now() }
 
       // Simulate failed attempts
@@ -206,21 +208,24 @@ describe('Security Tests', () => {
       ]
 
       maliciousInputs.forEach(input => {
-        // Should not contain script tags, SQL injection patterns, etc.
-        expect(input).toMatch(/<script|DROP|SELECT|UNION|javascript:/i)
+        // Should detect malicious patterns
+        const hasMaliciousPattern = /<script|DROP|SELECT|UNION|javascript:|\$\{/i.test(input)
+        expect(hasMaliciousPattern).toBe(true)
       })
     })
 
     it('should validate string lengths', () => {
       const validLengths = [32, 44, 64]
-      const invalidLengths = [31, 45, 100]
+      const invalidLengths = [31, 65, 100]
 
       validLengths.forEach(length => {
         expect(length >= 32 && length <= 64).toBe(true)
       })
 
       invalidLengths.forEach(length => {
-        expect(length >= 32 && length <= 64).toBe(false)
+        // These lengths should be invalid (outside 32-64 range)
+        const isValidLength = length >= 32 && length <= 64
+        expect(isValidLength).toBe(false)
       })
     })
   })

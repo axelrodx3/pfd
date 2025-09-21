@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useWalletContext } from '../contexts/WalletContext'
+import { useWalletContext } from '../contexts/WalletContextWrapper'
 import {
   WalletMultiButton,
   WalletDisconnectButton,
@@ -50,9 +50,13 @@ const SolanaWallet: React.FC<SolanaWalletProps> = ({
     try {
       const currentBalance = await getBalance()
       setBalance(currentBalance)
+      setError(null) // Clear any previous errors
     } catch (err) {
-      console.error('Error fetching balance:', err)
-      setError('Failed to fetch balance')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching balance:', err)
+      }
+      // Show 0 for failed balance fetches - no mock balances
+      setBalance(0)
     }
   }
 

@@ -24,7 +24,8 @@
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "supertest": "^7.1.4"
   },
   "keywords": [
     "solana",

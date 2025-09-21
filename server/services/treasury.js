@@ -120,7 +120,30 @@ class TreasuryService {
 
     try {
       const privateKey = process.env.TREASURY_PRIVATE_KEY
-      this.treasuryKeypair = Keypair.fromSecretKey(bs58.decode(privateKey))
+      
+      if (!privateKey) {
+        throw new Error('TREASURY_PRIVATE_KEY environment variable is not set')
+      }
+
+      // Validate private key format
+      if (typeof privateKey !== 'string' || privateKey.length < 64) {
+        throw new Error('TREASURY_PRIVATE_KEY format is invalid')
+      }
+
+      // Decode and validate the secret key
+      let decodedKey
+      try {
+        decodedKey = bs58.decode(privateKey)
+      } catch (error) {
+        throw new Error(`Failed to decode private key: ${error.message}`)
+      }
+
+      // Validate secret key length (should be 64 bytes for Ed25519)
+      if (decodedKey.length !== 64) {
+        throw new Error(`Invalid secret key length: expected 64 bytes, got ${decodedKey.length}`)
+      }
+
+      this.treasuryKeypair = Keypair.fromSecretKey(decodedKey)
 
       console.log(
         `✅ Treasury wallet loaded from env: ${this.treasuryKeypair.publicKey.toString()}`
@@ -133,7 +156,7 @@ class TreasuryService {
       console.log('⚠️  This is NOT secure for production! Use KMS instead.')
     } catch (error) {
       console.error('❌ Failed to load treasury from environment:', error)
-      throw new Error('Invalid treasury private key in environment')
+      throw new Error(`Invalid treasury private key in environment: ${error.message}`)
     }
   }
 
@@ -174,17 +197,39 @@ class TreasuryService {
   // Get treasury balance
   async getBalance() {
     try {
+      // Validate treasury keypair is initialized
+      if (!this.treasuryKeypair || !this.treasuryKeypair.publicKey) {
+        throw new Error('Treasury wallet not properly initialized')
+      }
+
+      // Validate connection is available
+      if (!this.connection) {
+        throw new Error('Solana connection not available')
+      }
+
       const balance = await this.connection.getBalance(
         this.treasuryKeypair.publicKey
       )
+      
+      console.log(`Treasury balance fetched: ${balance / 1e9} SOL`)
+      
       return {
         lamports: balance,
         sol: balance / 1e9,
         address: this.treasuryKeypair.publicKey.toString(),
+        network: this.network
       }
     } catch (error) {
       console.error('Error fetching treasury balance:', error)
-      throw error
+      
+      // Provide more specific error information
+      if (error.message.includes('Invalid public key')) {
+        throw new Error('Invalid treasury wallet public key')
+      } else if (error.message.includes('fetch')) {
+        throw new Error('Network error while fetching treasury balance')
+      } else {
+        throw new Error(`Treasury balance fetch failed: ${error.message}`)
+      }
     }
   }
 

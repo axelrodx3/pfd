@@ -40,13 +40,15 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   const [showFloatingResult, setShowFloatingResult] = useState(false)
   const [isLanding, setIsLanding] = useState(false)
 
-  // Sound effects
-  const playSound = (sound: 'roll' | 'win' | 'lose') => {
+  // Sound effects with proper error handling
+  const playSound = React.useCallback((sound: 'roll' | 'win' | 'lose') => {
     if (!soundEnabled || muted) return
 
     try {
-      const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)()
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContext) return
+
+      const audioContext = new AudioContext()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
 
@@ -108,33 +110,24 @@ export const Dice3D: React.FC<Dice3DProps> = ({
           break
       }
     } catch (error) {
-      console.log('Audio not supported')
+      // Silently fail for audio - not critical functionality
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Audio playback failed:', error)
+      }
     }
-  }
+  }, [soundEnabled, muted])
 
   // Simple dice face display
 
   // Update currentFace when targetNumber changes (when not rolling)
   useEffect(() => {
-    if (!isRolling && targetNumber && won !== null) {
+    if (!isRolling && targetNumber) {
       setCurrentFace(targetNumber)
-      setShowResult(true)
+      if (won !== null && won !== undefined) {
+        setShowResult(true)
+      }
     }
   }, [targetNumber, isRolling, won])
-
-  // Ensure dice face is always set to prevent disappearing
-  useEffect(() => {
-    if (targetNumber && !isRolling) {
-      setCurrentFace(targetNumber)
-    }
-  }, [targetNumber, isRolling])
-
-  // Ensure dice stays on the correct number after landing
-  useEffect(() => {
-    if (!isRolling && targetNumber && won !== null) {
-      setCurrentFace(targetNumber)
-    }
-  }, [isRolling, targetNumber, won])
 
   // Reset dice state when a new game starts (isRolling becomes true)
   useEffect(() => {
@@ -148,50 +141,53 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   // Handle rolling animation
   useEffect(() => {
-    if (isRolling) {
-      setShowResult(false)
-      setAnimationComplete(false)
-      setShowFloatingResult(false)
+    if (!isRolling) return
 
-      // Play roll sound
-      playSound('roll')
+    setShowResult(false)
+    setAnimationComplete(false)
+    setShowFloatingResult(false)
 
-      // Random dice faces during rolling
-      const rollInterval = setInterval(() => {
-        setCurrentFace(Math.floor(Math.random() * 6) + 1)
-      }, 80) // Slightly faster for smoother animation
+    // Play roll sound
+    playSound('roll')
 
-      // Stop rolling after 1.8 seconds and land on target
-      const rollTimeout = setTimeout(() => {
-        clearInterval(rollInterval)
-        // Set landing state for smooth transition
-        setIsLanding(true)
-        // Immediately set the target number to prevent dice from disappearing
-        setCurrentFace(targetNumber)
+    // Random dice faces during rolling
+    const rollInterval = setInterval(() => {
+      setCurrentFace(Math.floor(Math.random() * 6) + 1)
+    }, 80) // Slightly faster for smoother animation
 
-        // Small delay to let the motion animation finish smoothly
-        setTimeout(() => {
-          // Show results after dice lands
-          setShowResult(true)
-          if (won) {
-            playSound('win')
-            onWin?.()
-          } else {
-            playSound('lose')
-            onLoss?.()
-          }
-          setAnimationComplete(true)
-          setShowFloatingResult(true)
-          onRollEnd()
-        }, 200) // Small delay for smooth transition
-      }, 1800) // 1.8 second roll duration
+    // Stop rolling after 1.8 seconds and land on target
+    const rollTimeout = setTimeout(() => {
+      clearInterval(rollInterval)
+      // Set landing state for smooth transition
+      setIsLanding(true)
+      // Immediately set the target number to prevent dice from disappearing
+      setCurrentFace(targetNumber)
 
-      return () => {
-        clearInterval(rollInterval)
-        clearTimeout(rollTimeout)
-      }
+      // Small delay to let the motion animation finish smoothly
+      const resultTimeout = setTimeout(() => {
+        // Show results after dice lands
+        setShowResult(true)
+        if (won === true) {
+          playSound('win')
+          onWin?.()
+        } else if (won === false) {
+          playSound('lose')
+          onLoss?.()
+        }
+        setAnimationComplete(true)
+        setShowFloatingResult(true)
+        onRollEnd()
+      }, 200) // Small delay for smooth transition
+
+      // Cleanup result timeout on unmount
+      return () => clearTimeout(resultTimeout)
+    }, 1800) // 1.8 second roll duration
+
+    return () => {
+      clearInterval(rollInterval)
+      clearTimeout(rollTimeout)
     }
-  }, [isRolling, targetNumber, won, onWin, onLoss, onRollEnd])
+  }, [isRolling, targetNumber, won, onWin, onLoss, onRollEnd, playSound])
 
   // Simple dice display
 
@@ -240,7 +236,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             >
               {/* Dice Dots */}
               <div className="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
-                {getDiceDots(currentFace || 1).map((dot, index) => (
+                {getDiceDots(Math.max(1, Math.min(6, currentFace))).map((dot, index) => (
                   <div
                     key={index}
                     className={`w-3 h-3 rounded-full ${
@@ -252,7 +248,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             </div>
 
             {/* Simple Result Glow */}
-            {showResult && won !== null && (
+            {showResult && (won === true || won === false) && (
               <motion.div
                 className={`absolute inset-0 rounded-lg ${
                   won ? 'bg-green-400/20' : 'bg-red-400/20'
@@ -285,7 +281,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         />
 
         {/* Result Display - Cloud bubble next to dice */}
-        {showResult && won !== null && (
+        {showResult && (won === true || won === false) && (
           <motion.div
             className="absolute -right-52 top-1/4 transform -translate-y-1/2 z-40"
             initial={{ opacity: 0, scale: 0.8, x: 20 }}

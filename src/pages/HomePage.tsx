@@ -69,24 +69,26 @@ export const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_50%)]" />
 
         {/* Floating Dice */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(6)].map((_, i) => (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute text-6xl opacity-10"
+              className="absolute text-4xl md:text-6xl opacity-5"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
               }}
               animate={{
-                y: [0, -20, 0],
-                rotate: [0, 360],
+                y: [0, -30, 0],
+                rotate: [0, 180, 360],
+                scale: [1, 1.1, 1],
               }}
               transition={{
-                duration: 3 + i,
+                duration: 8 + i * 2,
                 repeat: Infinity,
                 repeatType: 'reverse',
-                delay: i * 0.5,
+                delay: i * 1.5,
+                ease: "easeInOut"
               }}
             >
               🎲
@@ -107,14 +109,14 @@ export const HomePage: React.FC = () => {
 
           {/* Tagline */}
           <motion.h1
-            className="text-4xl md:text-6xl font-bold mb-6"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <span className="text-hilo-gold">Bet High.</span>{' '}
-            <span className="text-hilo-red">Bet Low.</span>{' '}
-            <span className="text-hilo-green">Win Big.</span>
+            <span className="bg-gradient-to-r from-hilo-gold via-hilo-red to-hilo-green bg-clip-text text-transparent animate-gradient-x">
+              Bet High. Bet Low. Win Big.
+            </span>
           </motion.h1>
 
           {/* Description */}
@@ -130,27 +132,42 @@ export const HomePage: React.FC = () => {
 
           {/* CTA Buttons */}
           <motion.div
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
             <Link to="/games">
               <motion.button
-                className="btn-hilo-primary text-lg px-8 py-4"
-                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-3 px-8 py-4 bg-hilo-gold text-hilo-black rounded-lg font-bold text-lg shadow-lg hover:shadow-hilo-glow-strong transition-all duration-300"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                🎲 Start Playing
+                <span className="text-xl">🎲</span>
+                <span>Start Playing</span>
               </motion.button>
             </Link>
 
-            <WalletButton className="text-lg px-8 py-4" />
+            <motion.button
+              onClick={() => {
+                // Trigger wallet connection
+                const walletButton = document.querySelector('[data-wallet-button]') as HTMLButtonElement;
+                if (walletButton) {
+                  walletButton.click();
+                }
+              }}
+              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold text-lg shadow-lg hover:glow-purple transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-xl">🔗</span>
+              <span>Connect Wallet</span>
+            </motion.button>
           </motion.div>
 
           {/* Warning */}
           <motion.div
-            className="mt-8 p-4 bg-hilo-red/10 border border-hilo-red/30 rounded-lg max-w-md mx-auto"
+            className="mt-12 p-4 bg-hilo-red/10 border border-hilo-red/30 rounded-lg max-w-md mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
@@ -163,7 +180,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-hilo-gray">
+      <section className="py-16 bg-gradient-to-r from-hilo-gray/50 via-hilo-black to-hilo-gray/50 border-y border-hilo-gray-light/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="grid grid-cols-2 md:grid-cols-4 gap-8"
@@ -175,16 +192,17 @@ export const HomePage: React.FC = () => {
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
-                className="text-center"
+                className="text-center p-4 rounded-xl bg-hilo-gray/30 border border-hilo-gray-light/20 hover:border-hilo-gold/30 transition-all duration-300"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
+                whileHover={{ scale: 1.05, y: -2 }}
               >
-                <div className="text-3xl md:text-4xl font-bold text-hilo-gold mb-2">
+                <div className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-hilo-gold to-hilo-gold-dark bg-clip-text text-transparent mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-400 text-sm">{stat.label}</div>
+                <div className="text-gray-300 text-sm md:text-base font-medium">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -192,8 +210,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 bg-gradient-to-b from-hilo-black to-hilo-gray/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
@@ -210,22 +228,22 @@ export const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
-                className="card-hilo text-center"
+                className="card-hilo text-center group hover:shadow-hilo-glow transition-all duration-300"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -5 }}
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-hilo-gold mb-2">
+                <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                <h3 className="text-xl font-bold text-hilo-gold mb-3 group-hover:text-hilo-gold-dark transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-gray-400 text-sm">{feature.description}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -233,8 +251,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Live Feed Section */}
-      <section className="py-20 bg-hilo-gray">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 bg-gradient-to-b from-hilo-gray/20 via-hilo-gray to-hilo-gray/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}

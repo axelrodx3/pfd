@@ -1,4 +1,4 @@
-const { AntiAbuseService } = require('../services/antiAbuse')
+const AntiAbuseService = require('../services/antiAbuse')
 const { User } = require('../models/database')
 
 /**

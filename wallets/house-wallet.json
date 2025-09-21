@@ -1,1 +1,7 @@
-[88,43,151,23,95,59,135,64,236,84,186,67,153,98,31,230,182,172,52,133,9,81,238,71,248,89,0,162,69,136,197,44,131,87,101,154,243,233,143,74,169,105,53,131,88,20,184,171,128,0,22,29,181,129,95,85,131,36,126,144,78,204,76,100]
+{
+  "privateKey": "3jzpL28gsnAYG1tNEz2DRguYLktvwuYdzKWpC4sMXd4ubkH7BBPnc9KmpwuGYtrwAqyMAoqc7nMrS9jQo93x2Wv6",
+  "publicKey": "AGZv76ZGgHmqUMJLKKqoXPgS8DkRdxqUvwkQrACsid4E",
+  "network": "devnet",
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "description": "House wallet for HILO Casino - Devnet only"
+}

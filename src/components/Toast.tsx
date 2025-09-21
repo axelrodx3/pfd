@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import * as React from 'react'
+import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertCircle, Info, XCircle } from 'lucide-react'
 
@@ -20,6 +21,8 @@ export const Toast: React.FC<ToastProps> = ({
   onClose,
 }) => {
   useEffect(() => {
+    if (duration <= 0) return // Don't auto-close if duration is 0 or negative
+
     const timer = setTimeout(() => {
       onClose(id)
     }, duration)
@@ -105,38 +108,112 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   )
 }
 
-// Toast hook for easy usage
-export const useToast = () => {
+// Toast Context
+interface ToastContextType {
+  toasts: ToastProps[]
+  addToast: (toast: Omit<ToastProps, 'id' | 'onClose'>) => void
+  removeToast: (id: string) => void
+  success: (title: string, message?: string) => void
+  error: (title: string, message?: string) => void
+  warning: (title: string, message?: string) => void
+  info: (title: string, message?: string) => void
+}
+
+const ToastContext = React.createContext<ToastContextType | null>(null)
+
+// Toast Provider
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = React.useState<ToastProps[]>([])
 
-  const addToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
-    const id = Math.random().toString(36).substr(2, 9)
-    setToasts(prev => [...prev, { ...toast, id, onClose: removeToast }])
-  }
+  const addToast = React.useCallback((toast: Omit<ToastProps, 'id' | 'onClose'>) => {
+    const id = Math.random().toString(36).substring(2, 11)
+    setToasts(prev => {
+      const newToasts = [...prev, { ...toast, id, onClose: removeToast }]
+      // Limit to maximum 5 toasts to prevent memory issues
+      return newToasts.slice(-5)
+    })
+  }, [])
 
-  const removeToast = (id: string) => {
+  const removeToast = React.useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
-  }
+  }, [])
 
-  const success = (title: string, message?: string) =>
-    addToast({ type: 'success', title, message })
+  const success = React.useCallback((title: string, message?: string) => {
+    try {
+      addToast({ type: 'success', title, message })
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to show success toast:', err)
+      }
+    }
+  }, [addToast])
 
-  const error = (title: string, message?: string) =>
-    addToast({ type: 'error', title, message })
+  const error = React.useCallback((title: string, message?: string) => {
+    try {
+      addToast({ type: 'error', title, message })
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to show error toast:', err)
+      }
+    }
+  }, [addToast])
 
-  const warning = (title: string, message?: string) =>
-    addToast({ type: 'warning', title, message })
+  const warning = React.useCallback((title: string, message?: string) => {
+    try {
+      addToast({ type: 'warning', title, message })
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to show warning toast:', err)
+      }
+    }
+  }, [addToast])
 
-  const info = (title: string, message?: string) =>
-    addToast({ type: 'info', title, message })
+  const info = React.useCallback((title: string, message?: string) => {
+    try {
+      addToast({ type: 'info', title, message })
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to show info toast:', err)
+      }
+    }
+  }, [addToast])
 
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    success,
-    error,
-    warning,
-    info,
+  return (
+    <ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, warning, info }}>
+      {children}
+    </ToastContext.Provider>
+  )
+}
+
+// Toast hook for easy usage
+export const useToast = () => {
+  try {
+    const context = React.useContext(ToastContext)
+    if (!context) {
+      // Return a fallback context instead of throwing an error
+      console.warn('useToast called outside of ToastProvider, returning fallback context')
+      return {
+        toasts: [],
+        addToast: () => {},
+        removeToast: () => {},
+        success: () => {},
+        error: () => {},
+        warning: () => {},
+        info: () => {}
+      }
+    }
+    return context
+  } catch (error) {
+    console.error('Error in useToast hook:', error)
+    // Return a fallback context
+    return {
+      toasts: [],
+      addToast: () => {},
+      removeToast: () => {},
+      success: () => {},
+      error: () => {},
+      warning: () => {},
+      info: () => {}
+    }
   }
 }

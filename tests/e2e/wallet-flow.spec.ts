@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test'
 
+// Extend window interface for wallet objects
+declare global {
+  interface Window {
+    phantom?: any
+    solflare?: any
+  }
+}
+
 /**
  * End-to-end tests for Solana wallet integration
  * Tests the complete wallet connection, authentication, and transaction flow

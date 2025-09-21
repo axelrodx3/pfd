@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useWalletContext } from '../contexts/WalletContext'
+import { useWalletContext } from '../contexts/WalletContextWrapper'
 import {
   WalletMultiButton,
   WalletDisconnectButton,
@@ -18,8 +18,7 @@ interface RealWalletButtonProps {
 export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
   className = '',
 }) => {
-  const { publicKey, connected, connecting, connect, disconnect, getBalance } =
-    useWalletContext()
+  const { publicKey, connected, connecting, connect, disconnect, getBalance } = useWalletContext()
 
   const [balance, setBalance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -39,7 +38,9 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
       const currentBalance = await getBalance()
       setBalance(currentBalance)
     } catch (error) {
-      console.error('Error fetching balance:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching balance:', error)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +58,10 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <WalletMultiButton className="!bg-hilo-gold hover:!bg-hilo-gold-dark !text-hilo-black !font-semibold !px-4 !py-2 !rounded-lg !transition-all !duration-300 hover:!shadow-hilo-glow-strong" />
+          <WalletMultiButton 
+            className="!bg-hilo-gold hover:!bg-hilo-gold-dark !text-hilo-black !font-semibold !px-4 !py-2 !rounded-lg !transition-all !duration-300 hover:!shadow-hilo-glow-strong"
+            data-wallet-button="true"
+          />
         </motion.div>
       ) : (
         <motion.div

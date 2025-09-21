@@ -274,7 +274,7 @@ export const EnhancedProvablyFairPage: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {game.timestamp.toLocaleTimeString()}
+                      {new Date(game.timestamp || Date.now()).toLocaleTimeString()}
                     </span>
                   </div>
 

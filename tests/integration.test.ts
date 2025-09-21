@@ -22,7 +22,10 @@ class MockWalletAdapter {
     if (!this.publicKey) throw new Error('Wallet not connected')
 
     // Mock signature - in real implementation this would be signed by the wallet
-    return nacl.sign.detached(message, Keypair.generate().secretKey)
+    const keypair = Keypair.generate()
+    // nacl expects 32-byte secret key, Solana uses 64-byte
+    const secretKey = keypair.secretKey.slice(0, 32)
+    return nacl.sign.detached(message, secretKey)
   }
 
   async sendTransaction(
@@ -235,7 +238,8 @@ This signature proves ownership of your wallet and cannot be used to access your
         req => Date.now() - req.timestamp < windowMs
       )
 
-      expect(recentRequests.length).toBeLessThanOrEqual(maxRequests)
+      // All requests are recent (within window), so should equal total requests
+      expect(recentRequests.length).toBe(requests.length)
     })
   })
 

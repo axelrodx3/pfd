@@ -29,7 +29,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
     muted,
   } = useGameStore()
 
-  const [displayRoll, setDisplayRoll] = useState<number | null>(null)
+  const [displayRoll, setDisplayRoll] = useState<number>(1)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -96,13 +96,16 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           break
       }
     } catch (error) {
-      console.log('Audio not supported')
+      // Silently fail for audio - not critical functionality
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Audio playback failed:', error)
+      }
     }
   }
 
   // Update display roll when game state changes
   useEffect(() => {
-    if (lastRoll !== null) {
+    if (lastRoll && lastRoll >= 1 && lastRoll <= 6) {
       setDisplayRoll(lastRoll)
     }
   }, [lastRoll])
@@ -184,6 +187,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
   return (
     <div
       className={`dice-container relative flex flex-col items-center justify-center ${className}`}
+      data-testid="dice-container"
     >
       {/* Auto-roll indicator */}
       {autoRollEnabled && (
@@ -203,7 +207,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           isRolling={isRolling}
           onRollEnd={() => {
             // Show result modal after dice animation completes
-            if (lastWin !== null) {
+            if (lastWin === true || lastWin === false) {
               setShowResultModal(true)
             }
           }}
@@ -214,7 +218,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           onLoss={() => {
             // Loss effects handled by Dice3D
           }}
-          won={lastWin || undefined}
+          won={lastWin === true || lastWin === false ? lastWin : undefined}
           betAmount={currentBet}
           winnings={lastWin ? currentBet * 1.98 : 0}
           soundEnabled={soundEnabled}
