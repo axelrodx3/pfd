@@ -7,6 +7,7 @@ import {
   rollDice,
   getDiceResult,
 } from '../lib/utils'
+import { reportGameStateError } from '../lib/errorReporting'
 
 export interface GameState {
   // Wallet & Balance
@@ -117,6 +118,8 @@ export interface GameActions {
   selectSide: (side: 'high' | 'low') => void
   rollDice: () => Promise<void>
   resetGame: () => void
+  validateGameState: () => boolean
+  recoverGameState: () => void
 
   // Auto-roll actions
   toggleAutoRoll: () => void
@@ -309,119 +312,245 @@ export const useGameStore = create<GameState & GameActions>()(
 
       rollDice: async () => {
         const state = get()
+        
+        // Enhanced validation with detailed logging
+        console.log('🎲 Rolling dice with state:', {
+          isRolling: state.isRolling,
+          selectedSide: state.selectedSide,
+          currentBet: state.currentBet,
+          hiloTokens: state.hiloTokens,
+          autoRollEnabled: state.autoRollEnabled,
+          autoRollCount: state.autoRollCount,
+          autoRollMax: state.autoRollMax
+        })
+
         if (
           state.isRolling ||
           !state.selectedSide ||
           state.currentBet > state.hiloTokens
         ) {
+          console.warn('🚫 Roll dice blocked:', {
+            isRolling: state.isRolling,
+            hasSelectedSide: !!state.selectedSide,
+            sufficientFunds: state.currentBet <= state.hiloTokens
+          })
           return
         }
 
-        set({ isRolling: true })
+        try {
+          set({ isRolling: true })
 
-        // Generate the roll result immediately (for 3D dice target)
-        const roll = Math.floor(Math.random() * 6) + 1
-        const result = getDiceResult(roll)
+          // Generate the roll result immediately (for 3D dice target)
+          const roll = Math.floor(Math.random() * 6) + 1
+          const result = getDiceResult(roll)
 
-        // Player wins if their selected side matches the dice result
-        // House edge is built into the 1.98x multiplier (instead of 2x)
-        const won = state.selectedSide === result
+          // Player wins if their selected side matches the dice result
+          // House edge is built into the 1.98x multiplier (instead of 2x)
+          const won = state.selectedSide === result
 
-        // Set the roll result immediately for 3D dice
-        set(prevState => ({
-          lastRoll: roll,
-          lastResult: result,
-          lastWin: won,
-        }))
+          console.log('🎯 Dice result:', { roll, result, selectedSide: state.selectedSide, won })
 
-        // Wait for 3D dice animation to complete (2.6 seconds total: 1.8s roll + 0.8s suspense)
-        await new Promise(resolve => setTimeout(resolve, 2600))
+          // Set the roll result immediately for 3D dice
+          set(prevState => ({
+            lastRoll: roll,
+            lastResult: result,
+            lastWin: won,
+          }))
 
-        const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
+          // Wait for 3D dice animation to complete (2.6 seconds total: 1.8s roll + 0.8s suspense)
+          await new Promise(resolve => setTimeout(resolve, 2600))
 
-        // Generate hash for provably fair
-        const hash = generateMockHash(
-          state.serverSeed,
-          state.clientSeed,
-          state.nonce
-        )
+          const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
 
-        // Update streaks
-        get().updateStreaks(won)
+          // Generate hash for provably fair
+          const hash = generateMockHash(
+            state.serverSeed,
+            state.clientSeed,
+            state.nonce
+          )
 
-        // Calculate winnings
-        const winnings = won ? state.currentBet * multiplier : 0
-        const netChange = winnings - state.currentBet
+          // Update streaks
+          get().updateStreaks(won)
 
-        // Update game state
-        set(prevState => ({
-          isRolling: false,
-          nonce: prevState.nonce + 1,
-          hiloTokens: prevState.hiloTokens + netChange,
-          totalWagered: prevState.totalWagered + state.currentBet,
-          totalWon: prevState.totalWon + winnings,
-          totalGames: prevState.totalGames + 1,
-          autoRollCount: prevState.autoRollEnabled
-            ? prevState.autoRollCount + 1
-            : 0,
-        }))
+          // Calculate winnings
+          const winnings = won ? state.currentBet * multiplier : 0
+          const netChange = winnings - state.currentBet
 
-        // Add XP
-        get().addXP(won ? 10 : 5)
+          // Update game state with enhanced logging
+          set(prevState => ({
+            isRolling: false,
+            nonce: prevState.nonce + 1,
+            hiloTokens: prevState.hiloTokens + netChange,
+            totalWagered: prevState.totalWagered + state.currentBet,
+            totalWon: prevState.totalWon + winnings,
+            totalGames: prevState.totalGames + 1,
+            autoRollCount: prevState.autoRollEnabled
+              ? prevState.autoRollCount + 1
+              : 0,
+          }))
 
-        // Add to history
-        get().addToHistory({
-          timestamp: new Date(),
-          bet: state.currentBet,
-          side: state.selectedSide,
-          roll,
-          result,
-          won,
-          hash,
-          multiplier,
-        })
-
-        // Add to live feed if won
-        if (won && winnings > 100) {
-          get().addToLiveFeed({
-            username: 'You',
-            amount: winnings,
-            game: 'Dice High/Low',
-            timestamp: new Date(),
-            avatar: '🎲',
+          console.log('💰 Game completed:', {
+            won,
+            winnings,
+            netChange,
+            newBalance: state.hiloTokens + netChange
           })
-        }
 
-        // Update challenges
-        // Update challenges if needed
-        // get().updateChallenges(won, state.currentBet)
+          // Add XP
+          get().addXP(won ? 10 : 5)
 
-        // Reset selection for next game
-        set({ selectedSide: null })
+          // Add to history
+          get().addToHistory({
+            timestamp: new Date(),
+            bet: state.currentBet,
+            side: state.selectedSide,
+            roll,
+            result,
+            won,
+            hash,
+            multiplier,
+          })
 
-        // Auto-roll logic
-        if (state.autoRollEnabled && state.autoRollCount < state.autoRollMax) {
-          const shouldContinue =
-            (!state.autoRollStopOnWin || !won) &&
-            (!state.autoRollStopOnLoss || won)
-
-          if (shouldContinue) {
-            set({ autoRollCount: state.autoRollCount + 1 })
-            setTimeout(() => get().rollDice(), 1000)
-          } else {
-            set({ autoRollEnabled: false, autoRollCount: 0 })
+          // Add to live feed if won
+          if (won && winnings > 100) {
+            get().addToLiveFeed({
+              username: 'You',
+              amount: winnings,
+              game: 'Dice High/Low',
+              timestamp: new Date(),
+              avatar: '🎲',
+            })
           }
+
+          // Update challenges
+          get().updateChallenges(won, state.currentBet)
+
+          // Reset selection for next game
+          set({ selectedSide: null })
+
+          // Enhanced auto-roll logic with better state management
+          const currentState = get()
+          if (currentState.autoRollEnabled && currentState.autoRollCount < currentState.autoRollMax) {
+            const shouldContinue =
+              (!currentState.autoRollStopOnWin || !won) &&
+              (!currentState.autoRollStopOnLoss || won)
+
+            console.log('🔄 Auto-roll check:', {
+              enabled: currentState.autoRollEnabled,
+              count: currentState.autoRollCount,
+              max: currentState.autoRollMax,
+              stopOnWin: currentState.autoRollStopOnWin,
+              stopOnLoss: currentState.autoRollStopOnLoss,
+              won,
+              shouldContinue
+            })
+
+            if (shouldContinue) {
+              setTimeout(() => {
+                try {
+                  get().rollDice()
+                } catch (error) {
+                  console.error('🚨 Auto-roll error:', error)
+                  // Disable auto-roll on error to prevent infinite loops
+                  set({ autoRollEnabled: false, autoRollCount: 0 })
+                }
+              }, 1000)
+            } else {
+              set({ autoRollEnabled: false, autoRollCount: 0 })
+              console.log('🛑 Auto-roll stopped')
+            }
+          }
+        } catch (error) {
+          console.error('🚨 Error in rollDice:', error)
+          // Reset rolling state on error
+          set({ isRolling: false })
+          throw error
         }
       },
 
       resetGame: () => {
+        console.log('🔄 Resetting game state')
         set({
           selectedSide: null,
           isRolling: false,
           lastRoll: null,
           lastResult: null,
           lastWin: null,
+          autoRollEnabled: false,
+          autoRollCount: 0,
         })
+      },
+
+      // Add game state validation method
+      validateGameState: () => {
+        const state = get()
+        const issues: string[] = []
+
+        // Check for invalid game states
+        if (state.isRolling && !state.selectedSide) {
+          issues.push('Game is rolling but no side selected')
+        }
+
+        if (state.currentBet <= 0) {
+          issues.push('Invalid bet amount')
+        }
+
+        if (state.hiloTokens < 0) {
+          issues.push('Negative token balance')
+        }
+
+        if (state.autoRollEnabled && state.autoRollCount > state.autoRollMax) {
+          issues.push('Auto-roll count exceeds maximum')
+        }
+
+        if (issues.length > 0) {
+          console.warn('🚨 Game state validation issues:', issues)
+          
+          // Report the game state error
+          reportGameStateError(`Game state validation failed: ${issues.join(', ')}`, {
+            issues,
+            gameState: {
+              isRolling: state.isRolling,
+              selectedSide: state.selectedSide,
+              currentBet: state.currentBet,
+              hiloTokens: state.hiloTokens,
+              autoRollEnabled: state.autoRollEnabled,
+              autoRollCount: state.autoRollCount,
+              autoRollMax: state.autoRollMax
+            }
+          })
+          
+          return false
+        }
+
+        console.log('✅ Game state validation passed')
+        return true
+      },
+
+      // Add recovery method for corrupted state
+      recoverGameState: () => {
+        console.log('🔧 Attempting game state recovery')
+        const state = get()
+        
+        // Reset potentially problematic states
+        set({
+          isRolling: false,
+          autoRollEnabled: false,
+          autoRollCount: 0,
+          selectedSide: null,
+        })
+
+        // Validate and fix token balance
+        if (state.hiloTokens < 0) {
+          set({ hiloTokens: 1000 }) // Reset to safe minimum
+        }
+
+        // Validate and fix bet amount
+        if (state.currentBet <= 0 || state.currentBet > state.hiloTokens) {
+          set({ currentBet: Math.min(10, state.hiloTokens) })
+        }
+
+        console.log('✅ Game state recovery completed')
       },
 
       // Auto-roll actions
