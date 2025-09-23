@@ -1,0 +1,6 @@
+{
+  "css.validate": false,
+  "stylelint.enable": true,
+  "css.customData": [".vscode/css_custom_data.json"]
+}
+

@@ -35,9 +35,10 @@ export default defineConfig({
     exclude: ['@solana/wallet-adapter-wallets']
   },
   server: {
-    port: 3000,
+    port: 5173,
+    strictPort: true,
     host: '0.0.0.0', // Bind to all interfaces (IPv4 and IPv6)
-    open: true,
+    open: false,
   },
   build: {
     outDir: 'dist',
@@ -46,9 +47,9 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+        drop_console: false,
+        drop_debugger: false,
+        // pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
         passes: 2,
         unsafe: true,
         unsafe_comps: true,

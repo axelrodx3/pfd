@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HILO Casino Debug</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0d0d0d;
+            color: white;
+            padding: 20px;
+        }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .warning { color: #ffaa44; }
+        pre { background: #222; padding: 10px; border-radius: 4px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🎲 HILO Casino Debug Page</h1>
+    <div id="status">Checking...</div>
+    <div id="errors"></div>
+    <div id="info"></div>
+
+    <script>
+        const status = document.getElementById('status');
+        const errors = document.getElementById('errors');
+        const info = document.getElementById('info');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toISOString()}] ${message}`;
+            if (type === 'error') {
+                errors.appendChild(div);
+            } else {
+                info.appendChild(div);
+            }
+        }
+
+        // Check if we can load the main app
+        status.innerHTML = '<span class="warning">Loading main application...</span>';
+
+        // Try to load the main script
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/assets/index-o4U5Qt5S.js';
+        
+        script.onload = () => {
+            log('✅ Main script loaded successfully', 'success');
+            status.innerHTML = '<span class="success">✅ Main script loaded</span>';
+        };
+        
+        script.onerror = (e) => {
+            log('❌ Failed to load main script: ' + e.message, 'error');
+            status.innerHTML = '<span class="error">❌ Failed to load main script</span>';
+        };
+
+        document.head.appendChild(script);
+
+        // Check for CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/assets/index-T6rdD_75.css';
+        link.onload = () => log('✅ CSS loaded successfully', 'success');
+        link.onerror = () => log('❌ Failed to load CSS', 'error');
+        document.head.appendChild(link);
+
+        // Monitor for errors
+        window.addEventListener('error', (e) => {
+            log(`❌ JavaScript Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ Unhandled Promise Rejection: ${e.reason}`, 'error');
+        });
+
+        // Check if React root exists
+        setTimeout(() => {
+            const root = document.getElementById('root');
+            if (root) {
+                log('✅ React root element found', 'success');
+                if (root.innerHTML.trim()) {
+                    log('✅ React root has content', 'success');
+                } else {
+                    log('⚠️ React root is empty', 'warning');
+                }
+            } else {
+                log('❌ React root element not found', 'error');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

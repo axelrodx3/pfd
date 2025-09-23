@@ -1,0 +1,20 @@
+[33m4138667[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m docs: Add comprehensive documentation and deployment scripts
+[33ma179944[m[33m ([m[1;31morigin/security/audit-fixes[m[33m, [m[1;32msecurity/audit-fixes[m[33m)[m fix: Remove deprecated apple-mobile-web-app-capable meta tag and update Vite config for localhost access
+[33m617983c[m feat: Implement advanced user accounts, casino economics & anti-abuse
+[33m383e00a[m feat: Implement comprehensive security & trust layer
+[33m133761b[m docs: Add comprehensive security audit report
+[33m5b7fb47[m fix: Resolve TypeScript errors and formatting issues
+[33m714d0b4[m sec: Apply security hardening fixes
+[33mef1fc90[m Update build assets and fix deployment configuration
+[33m91addf9[m feat: implement parallel security check system and fix all linting issues
+[33m2ae6a04[m  Comprehensive security audit and hardening
+[33m49a82e6[m Improve Vercel configuration - add explicit build config and vercel-build script
+[33m64666dc[m Configure for Vercel deployment - remove GitHub Pages config, add vercel.json
+[33m8c14138[m Fix build issues - Add tsconfig.json and fix TypeScript errors for Vercel deployment
+[33m2719cc6[m Trigger Vercel deployment update
+[33m3557ffe[m Remove LOSE text and fix autoroll delays - Wins show WIN! text with 2s delay, losses are immediate with no text
+[33m6b0d44d[m Fix autoroll functionality and dice animations - Complete overhaul with Apple-style toggle, continuous play, and bug fixes
+[33m667f003[m Fix dice going flat by adding smooth landing transition and maintaining 3D appearance
+[33md191ea1[m Fix dice disappearing issue by ensuring dice face is always set
+[33m8d930f6[m Fix dice animation lag and improve smoothness of result transition
+[33mbbbb9d8[m Change loss notifications to show 'Amount Lost' instead of 'Rolled'

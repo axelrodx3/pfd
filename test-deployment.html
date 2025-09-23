@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HILO Casino - Deployment Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0d0d0d;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #1a4d1a; border: 1px solid #4a9d4a; }
+        .error { background: #4d1a1a; border: 1px solid #9d4a4a; }
+        .warning { background: #4d3d1a; border: 1px solid #9d7d4a; }
+        pre { background: #222; padding: 10px; border-radius: 4px; overflow: auto; max-height: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🎲 HILO Casino - Deployment Test</h1>
+    <div id="status">Testing deployment...</div>
+    <div id="results"></div>
+
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `[${new Date().toISOString()}] ${message}`;
+            results.appendChild(div);
+        }
+
+        // Test 1: Check if we can load the main script
+        addResult('Testing main script loading...', 'warning');
+        
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/assets/index-o4U5Qt5S.js';
+        
+        script.onload = () => {
+            addResult('✅ Main script loaded successfully', 'success');
+            status.innerHTML = '<div class="status success">✅ Main script loaded</div>';
+        };
+        
+        script.onerror = (e) => {
+            addResult(`❌ Failed to load main script: ${e.message || 'Unknown error'}`, 'error');
+            status.innerHTML = '<div class="status error">❌ Failed to load main script</div>';
+        };
+
+        document.head.appendChild(script);
+
+        // Test 2: Check CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/assets/index-T6rdD_75.css';
+        link.onload = () => addResult('✅ CSS loaded successfully', 'success');
+        link.onerror = () => addResult('❌ Failed to load CSS', 'error');
+        document.head.appendChild(link);
+
+        // Test 3: Monitor for errors
+        window.addEventListener('error', (e) => {
+            addResult(`❌ JavaScript Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+            console.error('JavaScript Error:', e);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            addResult(`❌ Unhandled Promise Rejection: ${e.reason}`, 'error');
+            console.error('Promise Rejection:', e);
+        });
+
+        // Test 4: Check React root after a delay
+        setTimeout(() => {
+            const root = document.getElementById('root');
+            if (root) {
+                addResult('✅ React root element found', 'success');
+                if (root.innerHTML.trim()) {
+                    addResult('✅ React root has content', 'success');
+                    addResult(`Content preview: ${root.innerHTML.substring(0, 100)}...`, 'info');
+                } else {
+                    addResult('⚠️ React root is empty - this indicates a React rendering issue', 'warning');
+                }
+            } else {
+                addResult('❌ React root element not found', 'error');
+            }
+        }, 3000);
+
+        // Test 5: Check for common issues
+        setTimeout(() => {
+            addResult('Checking for common issues...', 'warning');
+            
+            // Check if React is loaded
+            if (typeof React !== 'undefined') {
+                addResult('✅ React is available', 'success');
+            } else {
+                addResult('❌ React is not available', 'error');
+            }
+            
+            // Check if the app is trying to render
+            if (window.location.hash.includes('test=wallet')) {
+                addResult('ℹ️ Wallet test mode detected', 'info');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

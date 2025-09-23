@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3'
+const CACHE_VERSION = 'v4'
 const CACHE_NAME = `hilo-casino-${CACHE_VERSION}`
 const STATIC_CACHE = `hilo-casino-static-${CACHE_VERSION}`
 const DYNAMIC_CACHE = `hilo-casino-dynamic-${CACHE_VERSION}`
