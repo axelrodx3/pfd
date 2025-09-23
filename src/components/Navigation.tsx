@@ -104,9 +104,8 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
   const navItems: NavItem[] = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/games', label: 'Games', icon: Gamepad2 },
-    { path: '/provably-fair', label: 'Provably Fair', icon: ShieldCheck },
-    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { path: '/about', label: 'About', icon: Info },
+    { path: '/provably-fair', label: 'Provably Fair', icon: ShieldCheck },
   ]
 
   const isActive = (path: string) => {
@@ -287,6 +286,15 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         </Link>
 
                         <Link
+                          to="/leaderboard"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Trophy className="w-4 h-4" />
+                          <span>Leaderboard</span>
+                        </Link>
+
+                        <Link
                           to="/game?open=daily-wheel"
                           onClick={() => setIsDropdownOpen(false)}
                           className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
@@ -455,6 +463,15 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                 >
                   <Target className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Challenges</span>
+                </Link>
+
+                <Link
+                  to="/leaderboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <Trophy className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Leaderboard</span>
                 </Link>
 
                 <Link
