@@ -68,6 +68,21 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
     }).format(safe)
   }
 
+  // Compact formatter for large values (e.g., 12,345,678 -> 12.3M)
+  const formatCompact = (value: number, maxFractionDigits: number = 2) => {
+    const safe = Number.isFinite(value) ? value : 0
+    // Use compact for values >= 10000; otherwise keep standard formatting
+    if (Math.abs(safe) >= 10000) {
+      return new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        compactDisplay: 'short',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maxFractionDigits,
+      }).format(safe)
+    }
+    return formatAmount(safe, Math.min(4, Math.max(0, maxFractionDigits)))
+  }
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -138,7 +153,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
             {/* Balance Dropdown */}
             <div className="relative" ref={balanceRef}>
               <button
-                onClick={() => setIsBalanceOpen(prev => !prev)}
+                onClick={() => {
+                  if (!connected) return
+                  setIsBalanceOpen(prev => !prev)
+                }}
                 className="flex items-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
                 title="View balances"
               >
@@ -147,19 +165,19 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                 </span>
                 <span className="text-sm text-gray-300">Balance:</span>
                 <span className="text-sm font-medium text-hilo-gold">
-                  {formatAmount(gameWalletBalance || 0, 4)} SOL
+                  {connected ? `${formatAmount(gameWalletBalance || 0, 4)} SOL` : '—'}
                 </span>
                 <span className="text-gray-400">▾</span>
               </button>
 
               <AnimatePresence>
-                {isBalanceOpen && (
+                {isBalanceOpen && connected && (
                   <motion.div
                     initial={{ opacity: 0, y: -6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full right-0 mt-2 w-56 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
+                    className="absolute top-full right-0 mt-2 w-64 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
                   >
                     <div className="py-2">
                       <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
@@ -168,14 +186,24 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         </span>
                         <div className="flex-1 flex items-center justify-between">
                           <span>SOL</span>
-                          <span className="text-hilo-gold font-medium">{formatAmount(gameWalletBalance || 0, 4)} SOL</span>
+                          <span
+                            className="text-hilo-gold font-medium font-mono tabular-nums whitespace-nowrap text-right max-w-[9rem] overflow-hidden text-ellipsis"
+                            title={`${formatAmount(gameWalletBalance || 0, 9)} SOL`}
+                          >
+                            {formatCompact(gameWalletBalance || 0, 2)}
+                          </span>
                         </div>
                       </div>
                       <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
                         <span className="w-6 h-6 flex items-center justify-center shrink-0 text-[16px] leading-none">🎲</span>
                         <div className="flex-1 flex items-center justify-between">
                           <span>HILO</span>
-                          <span className="text-hilo-gold font-medium">{formatAmount(hiloTokens || 0, 4)} HILO</span>
+                          <span
+                            className="text-hilo-gold font-medium font-mono tabular-nums whitespace-nowrap text-right max-w-[9rem] overflow-hidden text-ellipsis"
+                            title={`${formatAmount(hiloTokens || 0, 9)} HILO`}
+                          >
+                            {formatCompact(hiloTokens || 0, 2)}
+                          </span>
                         </div>
                       </div>
                       <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
@@ -184,7 +212,12 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         </span>
                         <div className="flex-1 flex items-center justify-between">
                           <span>USDC</span>
-                          <span className="text-hilo-gold font-medium">{formatAmount(0, 4)} USDC</span>
+                          <span
+                            className="text-hilo-gold font-medium font-mono tabular-nums whitespace-nowrap text-right max-w-[9rem] overflow-hidden text-ellipsis"
+                            title={`${formatAmount(0, 9)} USDC`}
+                          >
+                            {formatCompact(0, 2)}
+                          </span>
                         </div>
                       </div>
                     </div>
