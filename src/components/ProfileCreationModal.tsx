@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Upload, User, Image as ImageIcon, Check, AlertCircle } from 'lucide-react'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
@@ -20,6 +20,16 @@ export const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen])
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -96,7 +106,7 @@ export const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={handleClose}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -112,6 +122,7 @@ export const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-md bg-hilo-gray border border-hilo-gray-light rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-hilo-gray-light">

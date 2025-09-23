@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { formatCurrency } from '../lib/utils'
 import DiceRoller from '../components/DiceRoller'
+import { useWalletContext } from '../contexts/WalletContextWrapper'
+import { WalletRequiredModal } from '../components/WalletRequiredModal'
 
 /**
  * Game Page Component
@@ -23,6 +25,8 @@ export const GamePage: React.FC = () => {
   } = useGameStore()
 
   const [betAmount, setBetAmount] = useState(currentBet.toString())
+  const { connected } = useWalletContext() as any
+  const [showWalletRequired, setShowWalletRequired] = useState(false)
 
   const handleBetChange = (value: string) => {
     const numValue = parseInt(value) || 0
@@ -37,6 +41,10 @@ export const GamePage: React.FC = () => {
   }
 
   const handleRoll = async () => {
+    if (!connected) {
+      setShowWalletRequired(true)
+      return
+    }
     if (selectedSide && currentBet > 0 && currentBet <= balance && !isRolling) {
       await rollDice()
     }
@@ -186,6 +194,7 @@ export const GamePage: React.FC = () => {
                 onClick={handleRoll}
                 disabled={
                   !selectedSide ||
+                  !connected ||
                   currentBet <= 0 ||
                   currentBet > balance ||
                   isRolling
@@ -193,7 +202,7 @@ export const GamePage: React.FC = () => {
                 className={`
                   w-full py-4 rounded-xl font-bold text-lg transition-all duration-300
                   ${
-                    selectedSide &&
+                    selectedSide && connected &&
                     currentBet > 0 &&
                     currentBet <= balance &&
                     !isRolling
@@ -202,7 +211,7 @@ export const GamePage: React.FC = () => {
                   }
                 `}
                 whileHover={
-                  selectedSide &&
+                  selectedSide && connected &&
                   currentBet > 0 &&
                   currentBet <= balance &&
                   !isRolling
@@ -210,7 +219,7 @@ export const GamePage: React.FC = () => {
                     : {}
                 }
                 whileTap={
-                  selectedSide &&
+                  selectedSide && connected &&
                   currentBet > 0 &&
                   currentBet <= balance &&
                   !isRolling
@@ -218,7 +227,7 @@ export const GamePage: React.FC = () => {
                     : {}
                 }
               >
-                {isRolling ? 'Rolling...' : '🎲 Roll Dice'}
+                {!connected ? 'Connect Wallet to Play' : isRolling ? 'Rolling...' : '🎲 Roll Dice'}
               </motion.button>
 
               {/* Reset Button */}
@@ -355,6 +364,12 @@ export const GamePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <WalletRequiredModal
+        isOpen={showWalletRequired}
+        onClose={() => setShowWalletRequired(false)}
+        featureName="playing the Dice game"
+      />
     </div>
   )
 }

@@ -13,7 +13,6 @@ import WalletPage from './pages/WalletPage'
 
 // Lazy-load heavy Territory Wars pages to reduce initial bundle
 const TerritoryWarsPage = React.lazy(() => import('./pages/TerritoryWarsPage'))
-const ModernTerritoryWarsPage = React.lazy(() => import('./pages/ModernTerritoryWarsPage'))
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 import { SolanaWalletDetector } from './components/SolanaWalletDetector'
@@ -108,7 +107,6 @@ function AppContent() {
               <Route path="/games" element={<GamesPage />} />
               <Route path="/game" element={<EnhancedGamePage />} />
               <Route path="/territory-wars" element={<TerritoryWarsPage />} />
-              <Route path="/modern-territory-wars" element={<ModernTerritoryWarsPage />} />
               <Route path="/classic" element={<GamePage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route

@@ -15,6 +15,7 @@ interface Dice3DProps {
   className?: string
   soundEnabled?: boolean
   muted?: boolean
+  skin?: 'classic' | 'neon' | 'gold'
 }
 
 /**
@@ -33,6 +34,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   className = '',
   soundEnabled = true,
   muted = false,
+  skin = 'classic',
 }) => {
   const [currentFace, setCurrentFace] = useState(1)
   const [showResult, setShowResult] = useState(false)
@@ -191,6 +193,20 @@ export const Dice3D: React.FC<Dice3DProps> = ({
 
   // Simple dice display
 
+  const getSkinClasses = (skinType: 'classic' | 'neon' | 'gold') => {
+    switch (skinType) {
+      case 'neon':
+        return 'bg-gradient-to-br from-cyan-500 to-blue-600 border-cyan-400 shadow-cyan-500/50'
+      case 'gold':
+        return 'bg-gradient-to-br from-yellow-400 to-yellow-600 border-yellow-400 shadow-yellow-500/50'
+      default:
+        return 'bg-hilo-black border-hilo-gold shadow-hilo-glow'
+    }
+  }
+
+  const neutralSkinClasses = getSkinClasses(skin)
+  const dotColorDefault = skin === 'classic' ? 'bg-white' : 'bg-black'
+
   return (
     <div className={`relative ${className}`}>
       {/* Simple Dice Container */}
@@ -231,7 +247,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                   ? 'bg-green-500 border-green-600 shadow-green-500/30'
                   : showResult && won === false
                     ? 'bg-red-500 border-red-600 shadow-red-500/30'
-                    : 'bg-white border-gray-300 shadow-gray-400/20'
+                    : neutralSkinClasses
               }`}
             >
               {/* Dice Dots */}
@@ -240,7 +256,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
                   <div
                     key={index}
                     className={`w-3 h-3 rounded-full ${
-                      dot ? 'bg-black' : 'bg-transparent'
+                      dot ? (showResult ? 'bg-black' : dotColorDefault) : 'bg-transparent'
                     }`}
                   />
                 ))}

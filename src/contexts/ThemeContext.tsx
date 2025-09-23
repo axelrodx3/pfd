@@ -76,8 +76,6 @@ export const ThemeSelector: React.FC = () => {
   const themes = [
     { id: 'dark', name: 'Dark', icon: '🌙' },
     { id: 'light', name: 'Light', icon: '☀️' },
-    { id: 'neon', name: 'Neon', icon: '⚡' },
-    { id: 'classic', name: 'Classic', icon: '🎰' },
   ] as const
 
   const colorSchemes = [

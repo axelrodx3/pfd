@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, Settings, HelpCircle, ArrowUpDown } from 'lucide-react'
+import { Menu, X, User, Settings, HelpCircle, ArrowUpDown, Home, Gamepad2, ShieldCheck, Info, Trophy } from 'lucide-react'
 import { HiloLogo } from './HiloLogo'
 import { RealWalletButton } from './RealWalletButton'
 import { AdminPanel } from './AdminPanel'
@@ -9,11 +9,23 @@ import { SettingsModal } from './SettingsModal'
 import { SupportModal } from './SupportModal'
 import { AccountModal } from './AccountModal'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
-import { useTheme } from '../contexts/ThemeContext'
+import { useGameStore } from '../store/gameStore'
+// Image assets
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - declared in src/types/images.d.ts
+import solanaLogo from '../../solanalogo.png'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - declared in src/types/images.d.ts
+import usdcLogo from '../../usdclogo.png'
 import { WalletRequiredModal } from './WalletRequiredModal'
 
 interface NavigationProps {
   className?: string
+}
+interface NavItem {
+  path: string
+  label: string
+  icon: React.ElementType
 }
 
 /**
@@ -32,15 +44,39 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
   const [showWalletRequired, setShowWalletRequired] = useState(false)
   const [walletRequiredFeature, setWalletRequiredFeature] = useState('')
   const { userProfile, gameWalletBalance, connected } = useWalletContext()
-  const { theme, toggleTheme } = useTheme()
+  const { hiloTokens } = useGameStore()
   const location = useLocation()
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const balanceRef = useRef<HTMLDivElement>(null)
+  const [isBalanceOpen, setIsBalanceOpen] = useState(false)
+  // Global listener to open wallet-required modal for gameplay guards
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as any
+      setWalletRequiredFeature(detail?.feature || 'this feature')
+      setShowWalletRequired(true)
+    }
+    window.addEventListener('request-wallet-for-feature', handler as EventListener)
+    return () => window.removeEventListener('request-wallet-for-feature', handler as EventListener)
+  }, [])
+
+  const formatAmount = (value: number, maxFractionDigits: number = 4) => {
+    const safe = Number.isFinite(value) ? value : 0
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: maxFractionDigits,
+    }).format(safe)
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const targetNode = event.target as Node
+      if (dropdownRef.current && !dropdownRef.current.contains(targetNode)) {
         setIsDropdownOpen(false)
+      }
+      if (balanceRef.current && !balanceRef.current.contains(targetNode)) {
+        setIsBalanceOpen(false)
       }
     }
 
@@ -50,11 +86,12 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
     }
   }, [])
 
-  const navItems = [
-    { path: '/', label: 'Home', icon: '🏠' },
-    { path: '/games', label: 'Games', icon: '🎮' },
-    { path: '/provably-fair', label: 'Provably Fair', icon: '🛡️' },
-    { path: '/about', label: 'About', icon: 'ℹ️' },
+  const navItems: NavItem[] = [
+    { path: '/', label: 'Home', icon: Home },
+    { path: '/games', label: 'Games', icon: Gamepad2 },
+    { path: '/provably-fair', label: 'Provably Fair', icon: ShieldCheck },
+    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { path: '/about', label: 'About', icon: Info },
   ]
 
   const isActive = (path: string) => {
@@ -85,172 +122,199 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <HiloLogo size="md" animated={false} />
-          </Link>
+      <div className="w-full">
+        <div className="flex items-center justify-between w-full h-16 px-6">
+          {/* Left: Logo + text */}
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <HiloLogo size="md" animated={false} />
+            </Link>
+          </div>
 
-                  {/* Desktop Navigation - Empty space for logo centering */}
-                  <div className="hidden md:flex items-center justify-center flex-1">
-                  </div>
-
-          {/* Wallet and SOL Balance */}
-          <div className="hidden md:flex items-center gap-4">
-            {/* SOL Balance Display */}
-            {gameWalletBalance !== undefined && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg">
+          {/* Right: Balance, Wallet, Hamburger */}
+          <div className="flex items-center gap-6">
+            {/* Wallet and SOL Balance (desktop) */}
+            <div className="hidden md:flex items-center gap-4">
+            {/* Balance Dropdown */}
+            <div className="relative" ref={balanceRef}>
+              <button
+                onClick={() => setIsBalanceOpen(prev => !prev)}
+                className="flex items-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                title="View balances"
+              >
+                <span className="w-6 h-6 flex items-center justify-center shrink-0">
+                  <img src={solanaLogo} alt="Solana" className="w-full h-full object-contain scale-110" />
+                </span>
                 <span className="text-sm text-gray-300">Balance:</span>
                 <span className="text-sm font-medium text-hilo-gold">
-                  {gameWalletBalance.toFixed(4)} SOL
+                  {formatAmount(gameWalletBalance || 0, 4)} SOL
                 </span>
-              </div>
-            )}
-            
-            {/* Admin Panel Button */}
-            {userProfile?.isAdmin && (
-              <button
-                onClick={() => setShowAdminPanel(true)}
-                className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
-              >
-                <span className="text-sm">🛡️</span>
-                <span className="text-sm font-medium">Admin</span>
+                <span className="text-gray-400">▾</span>
               </button>
-            )}
-            
-            {/* Wallet Connect Button */}
-            <RealWalletButton />
-            
-            {/* Dark/Light Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
-            
-            {/* Hamburger Menu Button */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              
-              {/* Dropdown Menu */}
+
               <AnimatePresence>
-                {isDropdownOpen && (
+                {isBalanceOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-56 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
                   >
                     <div className="py-2">
-                      {/* Navigation Items */}
-                      {navItems.map(item => (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <span className="text-lg">{item.icon}</span>
-                          <span>{item.label}</span>
-                        </Link>
-                      ))}
-                      
-                      {/* Separator */}
-                      <div className="border-t border-hilo-gray-light my-2"></div>
-                      
-                      <button
-                        onClick={() => {
-                          if (handleWalletRequiredFeature('Account')) {
-                            setShowAccount(true)
-                            setIsDropdownOpen(false)
-                          }
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <User className="w-4 h-4" />
-                        <span>Account</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          if (handleWalletRequiredFeature('Settings')) {
-                            setShowSettings(true)
-                            setIsDropdownOpen(false)
-                          }
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Settings</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          if (handleWalletRequiredFeature('Support')) {
-                            setShowSupport(true)
-                            setIsDropdownOpen(false)
-                          }
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        <span>Support</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          if (handleWalletRequiredFeature('Wallet')) {
-                            setIsDropdownOpen(false)
-                            // Navigate to wallet page
-                            window.location.href = '/wallet'
-                          }
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <ArrowUpDown className="w-4 h-4" />
-                        <span>Wallet</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          if (handleWalletRequiredFeature('Leaderboard')) {
-                            setIsDropdownOpen(false)
-                            // Navigate to leaderboard page
-                            window.location.href = '/leaderboard'
-                          }
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <span>Leaderboard</span>
-                      </button>
+                      <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
+                        <span className="w-6 h-6 flex items-center justify-center shrink-0">
+                          <img src={solanaLogo} alt="Solana" className="w-full h-full object-contain scale-110" />
+                        </span>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span>SOL</span>
+                          <span className="text-hilo-gold font-medium">{formatAmount(gameWalletBalance || 0, 4)} SOL</span>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
+                        <span className="w-6 h-6 flex items-center justify-center shrink-0 text-[16px] leading-none">🎲</span>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span>HILO</span>
+                          <span className="text-hilo-gold font-medium">{formatAmount(hiloTokens || 0, 4)} HILO</span>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2 flex items-center gap-3 text-gray-200">
+                        <span className="w-6 h-6 flex items-center justify-center shrink-0">
+                          <img src={usdcLogo} alt="USDC" className="w-full h-full object-contain" />
+                        </span>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span>USDC</span>
+                          <span className="text-hilo-gold font-medium">{formatAmount(0, 4)} USDC</span>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-          </div>
+            
+              {/* Admin Panel Button */}
+              {userProfile?.isAdmin && (
+                <button
+                  onClick={() => setShowAdminPanel(true)}
+                  className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                >
+                  <span className="text-sm">🛡️</span>
+                  <span className="text-sm font-medium">Admin</span>
+                </button>
+              )}
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
-          >
-            <motion.div
-              animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
+              {/* Wallet Connect Button */}
+              <RealWalletButton />
+
+              {/* Hamburger Menu Button */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-48 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
+                    >
+                      <div className="py-2">
+                        {/* Navigation Items */}
+                        {navItems.map(item => (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                          >
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        ))}
+
+                        {/* Separator */}
+                        <div className="border-t border-hilo-gray-light my-2"></div>
+
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Account')) {
+                              setShowAccount(true)
+                              setIsDropdownOpen(false)
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <User className="w-4 h-4" />
+                          <span>Account</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Settings')) {
+                              setShowSettings(true)
+                              setIsDropdownOpen(false)
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Settings</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Support')) {
+                              setShowSupport(true)
+                              setIsDropdownOpen(false)
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                          <span>Support</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Wallet')) {
+                              setIsDropdownOpen(false)
+                              // Navigate to wallet page
+                              window.location.href = '/wallet'
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <ArrowUpDown className="w-4 h-4" />
+                          <span>Wallet</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Mobile Menu Button (separate icon when desktop actions hidden) */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
             >
-              {isMobileMenuOpen ? '✕' : '☰'}
-            </motion.div>
-          </button>
+              <motion.div
+                animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isMobileMenuOpen ? '✕' : '☰'}
+              </motion.div>
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -286,7 +350,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                     }
                   `}
                 >
-                  <span className="text-xl">{item.icon}</span>
+                  <item.icon className="w-5 h-5" />
                   <span>{item.label}</span>
                 </Link>
               </motion.div>

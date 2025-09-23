@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { X, Upload, User, Image as ImageIcon, Check, AlertCircle, Calendar } from 'lucide-react'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { useToast } from './Toast'
+import Modal from './Modal'
 
 interface EditProfileModalProps {
   isOpen: boolean
@@ -112,50 +113,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={handleClose}
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md bg-hilo-gray border border-hilo-gray-light rounded-2xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-hilo-gray-light">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-hilo-gold/20 rounded-lg">
-                  <User className="w-6 h-6 text-hilo-gold" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Edit Profile</h2>
-                  <p className="text-sm text-gray-400">Update your profile information</p>
-                </div>
-              </div>
-              <button
-                onClick={handleClose}
-                disabled={isUpdating}
-                className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+    <Modal isOpen={isOpen} onClose={handleClose} maxWidth="md" title="Edit Profile" zIndexClass="z-[130]">
+      <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Profile Picture */}
                 <div>
                   <label className="block text-sm font-medium text-white mb-3">
@@ -272,20 +232,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     )}
                   </button>
                 </div>
-              </form>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-hilo-gray-light">
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                <span>Profile changes are saved automatically</span>
-              </div>
-            </div>
-          </motion.div>
+        </form>
+        {/* Footer */}
+        <div className="pt-4 border-t border-hilo-gray-light">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="w-2 h-2 bg-blue-400 rounded-full" />
+            <span>Profile changes are saved automatically</span>
+          </div>
         </div>
-      )}
-    </AnimatePresence>
+      </div>
+    </Modal>
   )
 }
 

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useToast } from '../components/Toast'
 import { useGameStore } from '../store/gameStore'
 import Phaser from 'phaser'
-import UnitsLayer, { Unit } from '../components/UnitsLayer'
+// UnitsLayer overlay is used only on the modern page; keep classic Phaser-only
 
 /**
  * Territory Wars (prototype)
@@ -29,9 +29,9 @@ export const TerritoryWarsPage: React.FC = () => {
   const turnColorRef = useRef<'blue' | 'red'>('blue')
   const [useBoot, setUseBoot] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [stepsRemaining, setStepsRemaining] = useState(8)
+  const [stepsRemaining, setStepsRemaining] = useState(10)
   const [stepsUsed, setStepsUsed] = useState(0)
-  const maxSteps = 8
+  const maxSteps = 10
   const [weaponAmmo, setWeaponAmmo] = useState({ grenade: 3, rifle: 10, bazooka: 2, boot: 999 })
   const [isPlayerTurn, setIsPlayerTurn] = useState(true)
   const [showEndTurn, setShowEndTurn] = useState(false)
@@ -39,55 +39,243 @@ export const TerritoryWarsPage: React.FC = () => {
   const [playerScore, setPlayerScore] = useState(0)
   const [cpuScore, setCpuScore] = useState(0)
   const [roundNumber, setRoundNumber] = useState(1)
-  const [weatherType, setWeatherType] = useState<'clear'|'rain'|'fog'|'storm'>('clear')
   const [showTutorial, setShowTutorial] = useState(false)
   const [tutorialStep, setTutorialStep] = useState(0)
-  const [bugReports, setBugReports] = useState<Array<{id: string, message: string, timestamp: number, severity: 'low' | 'medium' | 'high' | 'critical'}>>([])
+  // Enhanced bug report structure
+  interface EnhancedBugReport {
+    id: string
+    message: string
+    timestamp: number
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    category: 'ui' | 'gameplay' | 'performance' | 'network' | 'system'
+    context: {
+      gameState: any
+      playerActions: string[]
+      systemInfo: any
+      stackTrace?: string
+      screenshot?: string
+    }
+    resolved: boolean
+    userNotes?: string
+  }
+
+  const [bugReports, setBugReports] = useState<EnhancedBugReport[]>([])
   const [showBugReport, setShowBugReport] = useState(false)
   const [errorCount, setErrorCount] = useState(0)
   const [lastErrorTime, setLastErrorTime] = useState<Date | null>(null)
-  const [currentMap, setCurrentMap] = useState(0)
-  const [showMapSelector, setShowMapSelector] = useState(false)
+  const [filterSeverity, setFilterSeverity] = useState<'all' | 'low' | 'medium' | 'high' | 'critical'>('all')
+  const [filterCategory, setFilterCategory] = useState<'all' | 'ui' | 'gameplay' | 'performance' | 'network' | 'system'>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showResolved, setShowResolved] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const minimalHUD = true
 
   // Units overlay (ensure visibility on classic page too)
-  const [viewport, setViewport] = useState(() => ({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
-    height: typeof window !== 'undefined' ? window.innerHeight : 720,
-  }))
-  const [units, setUnits] = useState<Unit[]>(() => {
-    if (typeof window === 'undefined') return []
-    const w = window.innerWidth
-    const h = window.innerHeight
-    return [
-      { id: 'p1', team: 'player', x: w * 0.25, y: h * 0.75, facing: 'right' },
-      { id: 'p2', team: 'player', x: w * 0.30, y: h * 0.75, facing: 'right' },
-      { id: 'p3', team: 'player', x: w * 0.35, y: h * 0.75, facing: 'right' },
-      { id: 'c1', team: 'cpu', x: w * 0.65, y: h * 0.75, facing: 'left' },
-      { id: 'c2', team: 'cpu', x: w * 0.70, y: h * 0.75, facing: 'left' },
-      { id: 'c3', team: 'cpu', x: w * 0.75, y: h * 0.75, facing: 'left' },
-    ]
-  })
-  const showUnitsDebug = (import.meta as any).env?.VITE_TW_DEBUG === 'true'
+  // Classic uses Phaser drawing; no SVG overlay needed
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight })
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
+  // Persistent storage functions
+  const saveBugReportsToStorage = (reports: EnhancedBugReport[]) => {
+    try {
+      localStorage.setItem('territoryWars_bugReports', JSON.stringify(reports))
+    } catch (error) {
+      console.error('Failed to save bug reports to storage:', error)
+    }
+  }
 
-  // Bug reporting system
-  const addBugReport = (message: string, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
-    const newReport = {
-      id: Date.now().toString(),
+  const loadBugReportsFromStorage = (): EnhancedBugReport[] => {
+    try {
+      const stored = localStorage.getItem('territoryWars_bugReports')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // Ensure all reports have the new structure
+        return parsed.map((report: any) => ({
+          ...report,
+          category: report.category || 'system',
+          context: report.context || { gameState: {}, playerActions: [], systemInfo: {} },
+          resolved: report.resolved || false
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load bug reports from storage:', error)
+    }
+    return []
+  }
+
+  // Enhanced bug reporting system
+  const addBugReport = (
+    message: string, 
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium',
+    category: 'ui' | 'gameplay' | 'performance' | 'network' | 'system' = 'system',
+    stackTrace?: string
+  ) => {
+    const newReport: EnhancedBugReport = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       message,
       timestamp: Date.now(),
-      severity
+      severity,
+      category,
+      context: {
+        gameState: {
+          turnColor: turnColorRef.current,
+          gameState,
+          playerScore,
+          cpuScore,
+          roundNumber,
+          stepsRemaining,
+          stepsUsed,
+          maxSteps,
+          isPlayerTurn,
+          weaponAmmo
+        },
+        playerActions: [], // Could be enhanced to track recent actions
+        systemInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          screenResolution: `${window.screen.width}x${window.screen.height}`,
+          viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+          timestamp: new Date().toISOString()
+        },
+        stackTrace
+      },
+      resolved: false
     }
-    setBugReports(prev => [newReport, ...prev.slice(0, 9)]) // Keep last 10 reports
+
+    setBugReports(prev => {
+      const updated = [newReport, ...prev].slice(0, 50) // Keep last 50 reports
+      saveBugReportsToStorage(updated)
+      return updated
+    })
+    
     setErrorCount(prev => prev + 1)
     setLastErrorTime(new Date())
     console.error(`[BUG REPORT] ${severity.toUpperCase()}: ${message}`)
+
+    // Auto-capture screenshot for critical errors
+    if (severity === 'critical') {
+      captureScreenshot(newReport.id)
+    }
+  }
+
+  // Screenshot capture function
+  const captureScreenshot = async (bugId: string) => {
+    try {
+      if (phaserGameRef.current && phaserGameRef.current.canvas) {
+        const canvas = phaserGameRef.current.canvas
+        const dataURL = canvas.toDataURL('image/png')
+        
+        // Update the bug report with screenshot
+        setBugReports(prev => {
+          const updated = prev.map(report => 
+            report.id === bugId 
+              ? { ...report, context: { ...report.context, screenshot: dataURL } }
+              : report
+          )
+          saveBugReportsToStorage(updated)
+          return updated
+        })
+      }
+    } catch (error) {
+      console.error('Failed to capture screenshot:', error)
+    }
+  }
+
+  // Load bug reports from storage on mount
+  useEffect(() => {
+    const storedReports = loadBugReportsFromStorage()
+    setBugReports(storedReports)
+    
+    // Calculate error count from stored reports
+    const unresolvedCount = storedReports.filter(report => !report.resolved).length
+    setErrorCount(unresolvedCount)
+    
+    if (storedReports.length > 0) {
+      const lastError = storedReports[0]
+      setLastErrorTime(new Date(lastError.timestamp))
+    }
+  }, [])
+
+  // State validation function
+  const validateGameState = () => {
+    if (stepsRemaining > maxSteps) {
+      addBugReport(`Steps remaining (${stepsRemaining}) exceeds max steps (${maxSteps})`, 'high', 'gameplay')
+      setStepsRemaining(maxSteps)
+    }
+    if (stepsRemaining < 0) {
+      addBugReport(`Steps remaining is negative: ${stepsRemaining}`, 'high', 'gameplay')
+      setStepsRemaining(0)
+    }
+    if (stepsUsed < 0) {
+      addBugReport(`Steps used is negative: ${stepsUsed}`, 'high', 'gameplay')
+      setStepsUsed(0)
+    }
+    if (stepsUsed + stepsRemaining !== maxSteps) {
+      addBugReport(`Steps math error: used (${stepsUsed}) + remaining (${stepsRemaining}) ≠ max (${maxSteps})`, 'medium', 'gameplay')
+      setStepsUsed(maxSteps - stepsRemaining)
+    }
+  }
+
+  // Validate state periodically
+  useEffect(() => {
+    const validationInterval = setInterval(validateGameState, 1000)
+    return () => clearInterval(validationInterval)
+  }, [stepsRemaining, stepsUsed, maxSteps])
+
+  // Fullscreen functionality
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen()
+        setIsFullscreen(true)
+      } else {
+        await document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    } catch (error) {
+      addBugReport(`Fullscreen Error: ${error}`, 'medium', 'ui')
+    }
+  }
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
+  // Filter and search functions
+  const filteredBugReports = bugReports.filter(report => {
+    const matchesSeverity = filterSeverity === 'all' || report.severity === filterSeverity
+    const matchesCategory = filterCategory === 'all' || report.category === filterCategory
+    const matchesSearch = searchTerm === '' || 
+      report.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesResolved = showResolved || !report.resolved
+    
+    return matchesSeverity && matchesCategory && matchesSearch && matchesResolved
+  })
+
+  const getAnalyticsData = () => {
+    const total = bugReports.length
+    const unresolved = bugReports.filter(r => !r.resolved).length
+    const bySeverity = {
+      critical: bugReports.filter(r => r.severity === 'critical').length,
+      high: bugReports.filter(r => r.severity === 'high').length,
+      medium: bugReports.filter(r => r.severity === 'medium').length,
+      low: bugReports.filter(r => r.severity === 'low').length
+    }
+    const byCategory = {
+      ui: bugReports.filter(r => r.category === 'ui').length,
+      gameplay: bugReports.filter(r => r.category === 'gameplay').length,
+      performance: bugReports.filter(r => r.category === 'performance').length,
+      network: bugReports.filter(r => r.category === 'network').length,
+      system: bugReports.filter(r => r.category === 'system').length
+    }
+    
+    return { total, unresolved, bySeverity, byCategory }
   }
 
   // Generate comprehensive bug report for sharing
@@ -100,8 +288,6 @@ export const TerritoryWarsPage: React.FC = () => {
         playerScore,
         cpuScore,
         roundNumber,
-        weatherType,
-        currentMap,
         stepsRemaining,
         stepsUsed,
         maxSteps,
@@ -149,8 +335,6 @@ export const TerritoryWarsPage: React.FC = () => {
           playerScore,
           cpuScore,
           roundNumber,
-          weatherType,
-          currentMap,
           stepsRemaining,
           stepsUsed,
           maxSteps,
@@ -190,65 +374,149 @@ export const TerritoryWarsPage: React.FC = () => {
     }
   }
 
-  // Real-time error detection and bug reporting
+  // Real-time bug detection and monitoring system
   useEffect(() => {
     // Global error handler for uncaught errors
     const handleGlobalError = (event: ErrorEvent) => {
-      addBugReport(`Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}`, 'critical')
+      addBugReport(`JavaScript Error: ${event.message} at ${event.filename}:${event.lineno}`, 'critical', 'system', event.error?.stack)
     }
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      addBugReport(`Unhandled Promise Rejection: ${event.reason}`, 'high')
+      addBugReport(`Promise Rejection: ${event.reason}`, 'high', 'system')
     }
 
     // Add global error listeners
     window.addEventListener('error', handleGlobalError)
     window.addEventListener('unhandledrejection', handleUnhandledRejection)
 
-    // Game state monitoring
+    // Real-time game state monitoring
     const gameStateMonitor = setInterval(() => {
-      // Check for common game issues
+      // Check for invalid game states
       if (stepsRemaining < 0) {
-        addBugReport(`Steps remaining is negative: ${stepsRemaining}`, 'medium')
+        addBugReport(`Invalid Steps: ${stepsRemaining} (negative value)`, 'high', 'gameplay')
       }
       
       if (turnMs < 0) {
-        addBugReport(`Turn timer is negative: ${turnMs}`, 'medium')
+        addBugReport(`Invalid Timer: ${turnMs}ms (negative value)`, 'high', 'gameplay')
       }
 
-      // Check for UI inconsistencies
+      // Check for game logic inconsistencies
       if (gameState === 'playing' && !isPlayerTurn && stepsRemaining > 0) {
-        addBugReport('Player has steps remaining but it\'s not their turn', 'medium')
+        addBugReport('Logic Error: Player has steps but not their turn', 'medium', 'gameplay')
       }
 
       if (gameState === 'playing' && isPlayerTurn && stepsRemaining <= 0) {
-        addBugReport('Player turn but no steps remaining - possible turn logic issue', 'medium')
+        addBugReport('Logic Error: Player turn but no steps remaining', 'medium', 'gameplay')
       }
-    }, 2000) // Check every 2 seconds
 
-    // Performance monitoring
+      // Check for invalid weapon states
+      if (weaponAmmo.grenade < 0 || weaponAmmo.rifle < 0 || weaponAmmo.bazooka < 0) {
+        addBugReport('Invalid Ammo: Negative ammo count detected', 'high', 'gameplay')
+      }
+
+      // Check for score inconsistencies
+      if (playerScore < 0 || cpuScore < 0) {
+        addBugReport('Invalid Score: Negative score detected', 'medium', 'gameplay')
+      }
+
+      // Check for round number issues
+      if (roundNumber < 1) {
+        addBugReport('Invalid Round: Round number is less than 1', 'medium', 'gameplay')
+      }
+    }, 1000) // Check every second for real-time detection
+
+    // Real-time performance monitoring
     const performanceMonitor = setInterval(() => {
+      // Memory usage monitoring
       if ((performance as any).memory) {
         const memoryUsage = (performance as any).memory.usedJSHeapSize / 1024 / 1024 // MB
-        if (memoryUsage > 100) {
-          addBugReport(`High memory usage: ${memoryUsage.toFixed(2)}MB`, 'low')
+        const memoryLimit = (performance as any).memory.jsHeapSizeLimit / 1024 / 1024 // MB
+        const memoryPercent = (memoryUsage / memoryLimit) * 100
+
+        if (memoryPercent > 80) {
+          addBugReport(`Memory Warning: ${memoryPercent.toFixed(1)}% used (${memoryUsage.toFixed(1)}MB/${memoryLimit.toFixed(1)}MB)`, 'high', 'performance')
+        } else if (memoryPercent > 60) {
+          addBugReport(`Memory Alert: ${memoryPercent.toFixed(1)}% used`, 'medium', 'performance')
         }
       }
-    }, 5000) // Check every 5 seconds
+
+      // FPS monitoring
+      let lastTime = performance.now()
+      let frameCount = 0
+      const fpsMonitor = () => {
+        frameCount++
+        const currentTime = performance.now()
+        if (currentTime - lastTime >= 1000) {
+          const fps = Math.round((frameCount * 1000) / (currentTime - lastTime))
+          if (fps < 30) {
+            addBugReport(`Low FPS: ${fps} frames per second`, 'medium', 'performance')
+          }
+          frameCount = 0
+          lastTime = currentTime
+        }
+        requestAnimationFrame(fpsMonitor)
+      }
+      fpsMonitor()
+    }, 2000)
+
+    // Real-time Phaser scene monitoring
+    const phaserMonitor = setInterval(() => {
+      if (phaserGameRef.current?.scene?.scenes[0]) {
+        const scene = phaserGameRef.current.scene.scenes[0] as any
+        
+        // Check for null/undefined critical objects
+        if (!scene.player) {
+          addBugReport('Critical Error: Player object is null/undefined', 'critical', 'gameplay')
+        }
+        if (!scene.enemy) {
+          addBugReport('Critical Error: Enemy object is null/undefined', 'critical', 'gameplay')
+        }
+
+        // Check for invalid positions
+        if (scene.player && (isNaN(scene.player.x) || isNaN(scene.player.y))) {
+          addBugReport('Position Error: Player has invalid coordinates', 'critical', 'gameplay')
+        }
+        if (scene.enemy && (isNaN(scene.enemy.x) || isNaN(scene.enemy.y))) {
+          addBugReport('Position Error: Enemy has invalid coordinates', 'critical', 'gameplay')
+        }
+
+        // Check for infinite values
+        if (scene.player && (!isFinite(scene.player.x) || !isFinite(scene.player.y))) {
+          addBugReport('Position Error: Player has infinite coordinates', 'critical', 'gameplay')
+        }
+        if (scene.enemy && (!isFinite(scene.enemy.x) || !isFinite(scene.enemy.y))) {
+          addBugReport('Position Error: Enemy has infinite coordinates', 'critical', 'gameplay')
+        }
+      }
+    }, 500) // Check every 500ms for critical issues
 
     return () => {
       window.removeEventListener('error', handleGlobalError)
       window.removeEventListener('unhandledrejection', handleUnhandledRejection)
       clearInterval(gameStateMonitor)
       clearInterval(performanceMonitor)
+      clearInterval(phaserMonitor)
     }
-  }, [stepsRemaining, turnMs, gameState, isPlayerTurn])
+  }, [stepsRemaining, turnMs, gameState, isPlayerTurn, weaponAmmo, playerScore, cpuScore, roundNumber])
 
-  // Handle Escape key to close bug report panel
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Escape key to close bug report panel
       if (event.key === 'Escape' && showBugReport) {
         setShowBugReport(false)
+      }
+      
+      // F11 key to toggle fullscreen
+      if (event.key === 'F11') {
+        event.preventDefault()
+        toggleFullscreen()
+      }
+      
+      // Alt + Enter to toggle fullscreen (alternative shortcut)
+      if (event.altKey && event.key === 'Enter') {
+        event.preventDefault()
+        toggleFullscreen()
       }
     }
 
@@ -262,9 +530,18 @@ export const TerritoryWarsPage: React.FC = () => {
 
   useEffect(() => {
     turnColorRef.current = turnColor
-    // Reset steps when turn changes
+    // Reset steps when turn changes - sync with Phaser scene
     setStepsRemaining(maxSteps)
     setStepsUsed(0)
+    
+    // Ensure Phaser scene is also updated
+    if (phaserGameRef.current?.scene?.scenes[0]) {
+      const scene = phaserGameRef.current.scene.scenes[0] as any
+      if (scene.stepsRemaining !== undefined) {
+        scene.stepsRemaining = maxSteps
+        scene.stepsUsed = 0
+      }
+    }
   }, [turnColor, maxSteps])
 
   // Turn timer countdown
@@ -295,6 +572,7 @@ export const TerritoryWarsPage: React.FC = () => {
       playerFacing: -1 | 1 = 1
       keyA!: Phaser.Input.Keyboard.Key
       keyD!: Phaser.Input.Keyboard.Key
+      keyW!: Phaser.Input.Keyboard.Key
       keyQ!: Phaser.Input.Keyboard.Key
       keyE!: Phaser.Input.Keyboard.Key
       keyT!: Phaser.Input.Keyboard.Key
@@ -302,6 +580,8 @@ export const TerritoryWarsPage: React.FC = () => {
       ground!: Phaser.GameObjects.Rectangle
       platforms: Phaser.GameObjects.Rectangle[] = []
       enemy!: Phaser.GameObjects.Rectangle
+      stickLayer?: Phaser.GameObjects.Layer
+      stepDistanceAcc: number = 0
       teamA!: any[]
       teamB!: any[]
       teamAHP: number[] = [100, 100, 100]
@@ -311,10 +591,10 @@ export const TerritoryWarsPage: React.FC = () => {
       playerIdx = 0
       enemyIdx = 0
       lastTurn: 'blue' | 'red' = 'blue'
-      stepsRemaining = 8
-      maxSteps = 8
+      stepsRemaining = 10
+      maxSteps = 10
       stepsUsed = 0
-      cpuStepsRemaining = 8
+      cpuStepsRemaining = 10
       cpuStepsUsed = 0
       isPlayerTurn = true
       weaponAmmo = { grenade: 3, rifle: 10, bazooka: 2, boot: 999 }
@@ -330,11 +610,6 @@ export const TerritoryWarsPage: React.FC = () => {
       roundWinner: 'A'|'B'|null = null
       powerUps: Array<{x: number, y: number, type: 'health'|'ammo', collected: boolean, sprite: any}> = []
       powerUpSpawnTimer = 0
-      weatherType: 'clear'|'rain'|'fog'|'storm' = 'clear'
-      weatherTimer = 0
-      rainDrops: Array<{x: number, y: number, speed: number}> = []
-      currentMap = 0
-      availableMaps = ['classic', 'canyon', 'islands', 'urban']
       grenades: Array<{ g: Phaser.GameObjects.Arc & { body: Phaser.Physics.Arcade.Body }, lastBounceTs: number }> = []
       bullets: Array<{ b: Phaser.GameObjects.Rectangle & { body: Phaser.Physics.Arcade.Body }, ric: number }> = []
       playerHP = 100
@@ -342,7 +617,6 @@ export const TerritoryWarsPage: React.FC = () => {
       ac?: AudioContext
       lastKickAt = 0
       activeTimerText?: Phaser.GameObjects.Text
-      terrainRT?: Phaser.GameObjects.RenderTexture
       clouds: Phaser.GameObjects.Graphics[] = []
       groundTop = 0
       playSfx(type: 'jump' | 'shot' | 'explosion' | 'hit' | 'collect' | 'heal') {
@@ -875,72 +1149,6 @@ export const TerritoryWarsPage: React.FC = () => {
         setTurnMs(30000)
       }
 
-      // Unit selection system
-      selectUnit(unitIndex: number) {
-        if (unitIndex >= 0 && unitIndex < this.teamA.length && this.teamAHP[unitIndex] > 0) {
-          this.selectedUnitIndex = unitIndex
-          this.playerIdx = unitIndex
-          // Move camera to selected unit
-          this.cameras.main.pan(this.teamA[unitIndex].x, this.teamA[unitIndex].y, 500)
-        }
-      }
-
-      showUnitSelectionMenu() {
-        this.showUnitSelection = true
-        // Create unit selection UI
-        const menu = this.add.graphics()
-        menu.fillStyle(0x000000, 0.8)
-        menu.fillRect(0, 0, this.scale.width, this.scale.height)
-        menu.setData('tag', 'unitSelection')
-        
-        const title = this.add.text(this.scale.width/2, 100, 'Select Unit', {
-          fontSize: '32px',
-          color: '#ffffff',
-          stroke: '#000000',
-          strokeThickness: 2
-        }).setOrigin(0.5).setData('tag', 'unitSelection')
-        
-        // Show available units
-        this.teamA.forEach((unit, i) => {
-          if (this.teamAHP[i] > 0) {
-            const unitText = this.add.text(unit.x, unit.y - 50, `Unit ${i + 1}`, {
-              fontSize: '16px',
-              color: '#ffff00',
-              stroke: '#000000',
-              strokeThickness: 2
-            }).setOrigin(0.5).setData('tag', 'unitSelection')
-            
-            // Make unit clickable
-            unit.setInteractive()
-            unit.on('pointerdown', () => {
-              this.selectUnit(i)
-              this.hideUnitSelectionMenu()
-            })
-          }
-        })
-        
-        // Close button
-        const closeText = this.add.text(this.scale.width/2, this.scale.height - 100, 'Press ESC to close', {
-          fontSize: '20px',
-          color: '#ffffff',
-          stroke: '#000000',
-          strokeThickness: 2
-        }).setOrigin(0.5).setData('tag', 'unitSelection')
-        
-        this.input.keyboard?.on('keydown-ESC', () => {
-          this.hideUnitSelectionMenu()
-        })
-      }
-
-      hideUnitSelectionMenu() {
-        this.showUnitSelection = false
-        this.children.getAll().forEach(o => {
-          const go = o as any
-          if (go.getData && go.getData('tag') === 'unitSelection') {
-            o.destroy()
-          }
-        })
-      }
 
       // Power-up system
       spawnPowerUp() {
@@ -1023,110 +1231,6 @@ export const TerritoryWarsPage: React.FC = () => {
         this.playSfx('explosion') // Reuse explosion sound for collection
       }
 
-      // Weather system
-      updateWeather() {
-        this.weatherTimer++
-        
-        // Change weather every 10 seconds
-        if (this.weatherTimer > 600) {
-          const weatherTypes: Array<'clear'|'rain'|'fog'|'storm'> = ['clear', 'rain', 'fog', 'storm']
-          this.weatherType = Phaser.Math.RND.pick(weatherTypes)
-          this.weatherTimer = 0
-          
-          // Clear existing weather effects
-          this.rainDrops = []
-          this.children.getAll().forEach(o => {
-            const go = o as any
-            if (go.getData && go.getData('tag') === 'weather') {
-              o.destroy()
-            }
-          })
-        }
-        
-        // Apply weather effects
-        if (this.weatherType === 'rain') {
-          this.updateRain()
-        } else if (this.weatherType === 'fog') {
-          this.updateFog()
-        } else if (this.weatherType === 'storm') {
-          this.updateStorm()
-        }
-      }
-
-      updateRain() {
-        // Spawn rain drops
-        if (Math.random() < 0.3) {
-          this.rainDrops.push({
-            x: Phaser.Math.Between(0, this.scale.width),
-            y: -10,
-            speed: Phaser.Math.Between(3, 8)
-          })
-        }
-        
-        // Update and draw rain drops
-        this.rainDrops = this.rainDrops.filter(drop => {
-          drop.y += drop.speed
-          if (drop.y > this.scale.height) return false
-          
-          // Draw rain drop as a simple line (no collision)
-          const g = this.add.graphics()
-          g.lineStyle(1, 0x87CEEB, 0.6)
-          g.beginPath()
-          g.moveTo(drop.x, drop.y)
-          g.lineTo(drop.x - 2, drop.y + 10)
-          g.strokePath()
-          g.setData('tag', 'weather')
-          g.setDepth(-1000) // Put rain behind everything
-          
-          return true
-        })
-      }
-
-      updateFog() {
-        // Create fog overlay
-        if (Math.random() < 0.1) {
-          const fog = this.add.graphics()
-          fog.fillStyle(0x808080, 0.1)
-          fog.fillCircle(
-            Phaser.Math.Between(0, this.scale.width),
-            Phaser.Math.Between(0, this.scale.height),
-            Phaser.Math.Between(50, 150)
-          )
-          fog.setData('tag', 'weather')
-        }
-      }
-
-      updateStorm() {
-        // Lightning flashes
-        if (Math.random() < 0.02) {
-          const flash = this.add.graphics()
-          flash.fillStyle(0xffffff, 0.8)
-          flash.fillRect(0, 0, this.scale.width, this.scale.height)
-          flash.setData('tag', 'weather')
-          this.tweens.add({
-            targets: flash,
-            alpha: 0,
-            duration: 100,
-            onComplete: () => flash.destroy()
-          })
-          
-          // Screen shake for thunder
-          this.cameras.main.shake(200, 0.01)
-        }
-        
-        // Heavy rain
-        this.updateRain()
-      }
-
-      getWeatherAccuracyModifier(): number {
-        switch (this.weatherType) {
-          case 'clear': return 1.0
-          case 'rain': return 0.9
-          case 'fog': return 0.7
-          case 'storm': return 0.6
-          default: return 1.0
-        }
-      }
 
       // Unit class system
       getUnitClass(team: 'A'|'B', index: number): 'soldier'|'sniper'|'heavy'|'medic' {
@@ -1169,110 +1273,6 @@ export const TerritoryWarsPage: React.FC = () => {
         }
       }
 
-      // Map generation system
-      generateMap(mapType: string) {
-        const w = this.scale.width
-        const h = this.scale.height
-        
-        // Clear existing platforms
-        if (this.platforms && this.platforms.length > 0) {
-          this.platforms.forEach(platform => {
-            const gfx = platform.getData('gfx')
-            if (gfx) gfx.destroy()
-            platform.destroy()
-          })
-        }
-        this.platforms = []
-        
-        const pfColor = 0x6b4c1f
-        const mkPlatform = (x:number,y:number,wid:number,hei:number) => {
-          const g = this.add.graphics()
-          
-          // 3D platform effect with depth and shading
-          const shadowOffset = 3
-          
-          // Shadow
-          g.fillStyle(0x000000, 0.3)
-          g.fillRoundedRect(x-wid/2 + shadowOffset, y-hei/2 + shadowOffset, wid, hei, 6)
-          
-          // Main platform
-          g.fillStyle(pfColor, 1)
-          g.fillRoundedRect(x-wid/2, y-hei/2, wid, hei, 6)
-          
-          // 3D highlight on top edge
-          g.fillStyle(0xffffff, 0.2)
-          g.fillRoundedRect(x-wid/2 + 1, y-hei/2 + 1, wid - 2, 4, 6)
-          
-          // 3D shadow on bottom edge
-          g.fillStyle(0x000000, 0.2)
-          g.fillRoundedRect(x-wid/2 + 1, y+hei/2 - 4, wid - 2, 4, 6)
-          
-          // Border with 3D effect
-          g.lineStyle(3, 0x4e3616, 1)
-          g.strokeRoundedRect(x-wid/2, y-hei/2, wid, hei, 6)
-          
-          // Inner highlight
-          g.lineStyle(1, 0xffffff, 0.3)
-          g.strokeRoundedRect(x-wid/2 + 2, y-hei/2 + 2, wid - 4, hei - 4, 4)
-          
-          const platform = this.add.rectangle(x, y, wid, hei, 0x000000, 0).setData('gfx', g)
-          platform.setData('health', 100)
-          return platform
-        }
-        
-        switch (mapType) {
-          case 'classic':
-            // Original layout
-            this.platforms = [
-              mkPlatform(w*0.35, h-170, 140, 16),
-              mkPlatform(w*0.65, h-210, 180, 16),
-              mkPlatform(w*0.55, h-135, 120, 12),
-            ]
-            break
-            
-          case 'canyon':
-            // Narrow canyon with high walls
-            this.platforms = [
-              mkPlatform(w*0.2, h-200, 80, 20),
-              mkPlatform(w*0.8, h-200, 80, 20),
-              mkPlatform(w*0.5, h-150, 200, 15),
-              mkPlatform(w*0.3, h-100, 60, 12),
-              mkPlatform(w*0.7, h-100, 60, 12),
-            ]
-            break
-            
-          case 'islands':
-            // Multiple small islands
-            this.platforms = [
-              mkPlatform(w*0.15, h-180, 60, 12),
-              mkPlatform(w*0.35, h-220, 80, 12),
-              mkPlatform(w*0.5, h-160, 100, 12),
-              mkPlatform(w*0.65, h-200, 70, 12),
-              mkPlatform(w*0.85, h-180, 60, 12),
-              mkPlatform(w*0.25, h-120, 50, 10),
-              mkPlatform(w*0.75, h-120, 50, 10),
-            ]
-            break
-            
-          case 'urban':
-            // Urban ruins with buildings
-            this.platforms = [
-              mkPlatform(w*0.1, h-250, 100, 20),
-              mkPlatform(w*0.3, h-180, 80, 15),
-              mkPlatform(w*0.5, h-220, 120, 18),
-              mkPlatform(w*0.7, h-160, 90, 15),
-              mkPlatform(w*0.9, h-200, 100, 20),
-              mkPlatform(w*0.2, h-100, 60, 10),
-              mkPlatform(w*0.8, h-100, 60, 10),
-            ]
-            break
-        }
-      }
-
-      nextMap() {
-        this.currentMap = (this.currentMap + 1) % this.availableMaps.length
-        this.generateMap(this.availableMaps[this.currentMap])
-      }
       // HUD text removed in favor of React overlay
 
       create() {
@@ -1282,13 +1282,13 @@ export const TerritoryWarsPage: React.FC = () => {
         
         // Report scene creation
         if (typeof addBugReport === 'function') {
-          addBugReport('Phaser scene created successfully', 'low')
+          addBugReport('Phaser scene created successfully', 'low', 'system')
         }
         
         // Add Phaser-specific error detection
         this.events.on('error', (error: any) => {
           if (typeof addBugReport === 'function') {
-            addBugReport(`Phaser Error: ${error.message || error}`, 'high')
+            addBugReport(`Phaser Error: ${error.message || error}`, 'high', 'system')
           }
         })
         const w = this.scale.width
@@ -1318,94 +1318,39 @@ export const TerritoryWarsPage: React.FC = () => {
 
         // Ground island (render texture for simple destructible visuals)
         this.ground = this.add.rectangle(w/2, h-40, w, 80, 0x1a2230).setOrigin(0.5)
-        this.terrainRT = this.add.renderTexture(0, h-80, w, 160).setOrigin(0,0)
-        const g = this.add.graphics()
-        g.fillStyle(0x247a23, 1).fillRoundedRect(0, h-100, w, 60, 24)
-        g.fillStyle(0x3a9a2f, 1).fillRoundedRect(40, h-120, w-80, 40, 16)
-        this.terrainRT.draw(g)
-        g.destroy()
-        // Generate initial map
-        this.generateMap(this.availableMaps[this.currentMap])
         // Create teams (3 per side) - Make them visible
         // Create simple invisible placeholder units with required methods
         const marginX = 120
         const groundY = h - 100
         const spacing = 80
+
+        // Helper to create a placeholder unit with working data store
+        const makeUnit = (x:number, y:number) => {
+          const store: Record<string, any> = {}
+          return {
+            x, y,
+            getData: (k?: string) => (k ? store[k] : null),
+            setData: (k: string, v: any) => { store[k] = v; return this as any },
+            setFillStyle: () => this as any,
+            setStrokeStyle: () => this as any,
+            setScale: () => this as any,
+            setAlpha: () => this as any,
+            setDepth: () => this as any,
+            setRotation: () => this as any,
+            setInteractive: () => this as any,
+            visible: true,
+          } as any
+        }
+
         this.teamA = [
-          { 
-            x: marginX, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
-          { 
-            x: marginX + spacing, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
-          { 
-            x: marginX + spacing * 2, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
+          makeUnit(marginX, groundY),
+          makeUnit(marginX + spacing, groundY),
+          makeUnit(marginX + spacing * 2, groundY),
         ]
         this.teamB = [
-          { 
-            x: w - marginX - spacing * 2, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
-          { 
-            x: w - marginX - spacing, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
-          { 
-            x: w - marginX, y: groundY, 
-            getData: () => null, 
-            setData: () => null as any,
-            setFillStyle: () => null as any,
-            setStrokeStyle: () => null as any,
-            setScale: () => null as any,
-            setAlpha: () => null as any,
-            setDepth: () => null as any,
-            setRotation: () => null as any,
-            setInteractive: () => null as any
-          },
+          makeUnit(w - marginX - spacing * 2, groundY),
+          makeUnit(w - marginX - spacing, groundY),
+          makeUnit(w - marginX, groundY),
         ]
         
         // Apply class abilities to units (now safe since we have all required methods)
@@ -1435,16 +1380,12 @@ export const TerritoryWarsPage: React.FC = () => {
         this.keyE = this.input.keyboard!.addKey('E')
         this.keyT = this.input.keyboard!.addKey('T')
         this.keySpace = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+        this.keyW = this.input.keyboard!.addKey('W')
         this.input.keyboard!.on('keydown-ONE', () => { this.weapon = 'grenade'; setUiWeapon('grenade'); setUseBoot(false) })
         this.input.keyboard!.on('keydown-TWO', () => { this.weapon = 'rifle'; setUiWeapon('rifle'); setUseBoot(false) })
         this.input.keyboard!.on('keydown-THREE', () => { setUseBoot(true) })
         this.input.keyboard!.on('keydown-FIVE', () => { this.weapon = 'bazooka'; setUiWeapon('bazooka'); setUseBoot(false) })
         this.input.keyboard!.on('keydown-FOUR', () => { setTurnColor(turnColorRef.current==='blue'?'red':'blue'); setTurnMs(30000) })
-        this.input.keyboard!.on('keydown-T', () => { 
-          if (this.gameState === 'playing' && this.isPlayerTurn) {
-            this.showUnitSelectionMenu()
-          }
-        })
         // Mouse: hold to charge, release to fire
         this.input.on('pointerdown', () => { this.charging = true })
         this.input.on('pointerup', () => { this.fire() })
@@ -1471,14 +1412,12 @@ export const TerritoryWarsPage: React.FC = () => {
         // Static clouds - no parallax movement
         // Clouds stay in fixed positions for proper background effect
 
-        // Movement model with accel/decel & friction (applies to player only)
+        // Territory Wars style: fixed-speed walking and per-step distance cost
         // sync weapon from React UI
         this.weapon = weaponRef.current
-        const maxSpeed = 3.2
-        const accel = 0.35
-        const airAccel = 0.18
-        const friction = 0.85
-        let vx = this.player.getData('vx') ?? 0
+        const walkSpeed = 2.2 // closer to TW pace
+        const stepPixels = 70 // TW-like step consumption
+        let vx = 0
         const wantLeft = this.cursors.left?.isDown || this.keyA.isDown
         const wantRight = this.cursors.right?.isDown || this.keyD.isDown
 
@@ -1500,8 +1439,8 @@ export const TerritoryWarsPage: React.FC = () => {
         
         // Store groundTop for use in other parts of update
         this.groundTop = groundTop
-        const jumpVelocity = -9.0
-        this.player.setData('vy', (this.player.getData('vy') ?? 0) + 0.32)
+        const jumpVelocity = -13.8
+        this.player.setData('vy', (this.player.getData('vy') ?? 0) + 0.42)
         let vy = this.player.getData('vy')
         this.player.y += vy
         grounded = false
@@ -1528,51 +1467,34 @@ export const TerritoryWarsPage: React.FC = () => {
           this.player.setData('vy', 0)
           grounded = true
         }
-        // jump on Space when grounded
-        if (grounded && Phaser.Input.Keyboard.JustDown(this.keySpace)) {
+        // jump on Space/W when grounded
+        if (grounded && (Phaser.Input.Keyboard.JustDown(this.keySpace) || Phaser.Input.Keyboard.JustDown(this.keyW))) {
           this.player.setData('vy', jumpVelocity)
           this.playSfx('jump')
         }
 
         // Player turn movement (only if game is playing)
         if (this.gameState === 'playing' && this.isPlayerTurn && this.stepsRemaining > 0) {
-          let movedThisFrame = false
-          
-          if (wantLeft) { 
-            vx -= (grounded ? accel : airAccel)
-            this.playerFacing = -1
-            movedThisFrame = true
+          const moving = (wantLeft || wantRight)
+          if (moving) {
+            vx = (wantLeft ? -walkSpeed : 0) + (wantRight ? walkSpeed : 0)
+            this.playerFacing = wantLeft ? -1 : (wantRight ? 1 : this.playerFacing)
           }
-          if (wantRight) { 
-            vx += (grounded ? accel : airAccel)
-            this.playerFacing = 1
-            movedThisFrame = true
-          }
-          
-          if (!wantLeft && !wantRight) {
-            // Apply friction stronger on ground
-            vx *= grounded ? friction : 0.98
-          }
-          
-          // Clamp
-          if (vx > maxSpeed) vx = maxSpeed
-          if (vx < -maxSpeed) vx = -maxSpeed
-          
-          // Move character
           const oldX = this.player.x
           this.player.x += vx
-          
-          // Territory Wars style step counting - only count when actually moving a significant distance
-          const moveDistance = Math.abs(this.player.x - oldX)
-          if (movedThisFrame && moveDistance > 2.0) {
-            this.stepsRemaining = Math.max(0, this.stepsRemaining - 1)
-            this.stepsUsed = this.maxSteps - this.stepsRemaining
-            
-            // Start walking animation
+          const dx = Math.abs(this.player.x - oldX)
+          // Accumulate distance and spend steps per stepPixels
+          if (moving && dx > 0) {
+            this.stepDistanceAcc += dx
+            while (this.stepDistanceAcc >= stepPixels && this.stepsRemaining > 0) {
+              this.stepsRemaining = Math.max(0, this.stepsRemaining - 1)
+              this.stepsUsed = this.maxSteps - this.stepsRemaining
+              this.stepDistanceAcc -= stepPixels
+            }
+            // Walking anim tick
             this.player.setData('walking', true)
-            this.player.setData('walkCycle', (this.player.getData('walkCycle') + 0.2) % (Math.PI * 2))
-          } else if (moveDistance <= 0.5) {
-            // Stop walking animation when barely moving
+            this.player.setData('walkCycle', (this.player.getData('walkCycle') + 0.25) % (Math.PI * 2))
+          } else {
             this.player.setData('walking', false)
           }
         } else if (this.isPlayerTurn) {
@@ -1615,6 +1537,40 @@ export const TerritoryWarsPage: React.FC = () => {
           this.enemy.y = enemyGroundY
           this.enemy.setData('vy', 0)
         }
+
+        // Minimal overlay rendering: draw only active player and enemy stick figures
+        if (!this.stickLayer) {
+          this.stickLayer = this.add.layer().setDepth(1000)
+        }
+        this.stickLayer.removeAll(true)
+        const drawSimpleStick = (x:number, y:number, color:number, highlight:boolean) => {
+          const g = this.add.graphics().setData('tag','stick')
+          // Classic outline style: no fill, thinner lines, no shadow
+          const headY = y - 28
+          const lineW = 2
+          g.lineStyle(lineW, color, 1)
+          // head (outline only)
+          g.strokeCircle(x, headY, 6)
+          // torso
+          g.lineBetween(x, headY + 6, x, y)
+          // arms
+          g.lineBetween(x, headY + 10, x - 11, headY + 18)
+          g.lineBetween(x, headY + 10, x + 11, headY + 18)
+          // legs
+          g.lineBetween(x, y, x - 8, y + 14)
+          g.lineBetween(x, y, x + 8, y + 14)
+          // subtle highlight ring
+          if (highlight) {
+            g.lineStyle(1, 0xfde68a, 0.8)
+            g.strokeCircle(x, headY, 9)
+          }
+          this.stickLayer!.add(g)
+        }
+        // Draw player and enemy only with subtle team colors
+        const colorBlue = 0x3b82f6 // blue-500
+        const colorRed = 0xef4444  // red-500
+        drawSimpleStick(this.player.x, this.player.y, colorBlue, true)
+        drawSimpleStick(this.enemy.x, this.enemy.y, colorRed, false)
 
         // Kick mechanic: press K or [3] boot near closest enemy to knockback
         const keyK = this.input.keyboard!.addKey('K')
@@ -1676,114 +1632,25 @@ export const TerritoryWarsPage: React.FC = () => {
         }
         this.checkPowerUpCollection()
         
-        // Weather system
-        this.updateWeather()
 
-        // simple power bar (clean by data tag)
+        // Minimal HUD: remove power bars, angle, and range clutter
         this.children.getAll().forEach(o => {
           const go = o as any
-          if (go.getData && go.getData('tag') === 'power') o.destroy()
-          if (go.getData && go.getData('tag') === 'angle') o.destroy()
-          if (go.getData && go.getData('tag') === 'stick') o.destroy()
-          if (go.getData && go.getData('tag') === 'range') o.destroy()
+          if (go.getData && ['power','angle','range'].includes(go.getData('tag'))) o.destroy()
         })
-        this.add.rectangle(this.player.x, this.player.y - 40, 60, 6, 0x2a364a)
-          .setOrigin(0.5)
-          .setData('tag', 'power')
-        this.add.rectangle(this.player.x - 30 + (this.power/100)*60/2, this.player.y - 40, (this.power/100)*60, 6, 0xfbbf24)
-          .setOrigin(0,0.5)
-          .setData('tag', 'power')
-        // angle readout (moved above HP)
-        this.add.text(this.player.x - 20, this.player.y - 72, `${Math.round(angleRef.current)}°`, { color: '#9ca3af' })
-          .setData('tag', 'angle')
         
         // Draw weapon range indicator when charging
         if (this.charging) {
           this.drawWeaponRange()
         }
 
-        // Simple health bars (per unit)
-        const hpBar = (x:number, y:number, w:number, hp:number, color:number) => {
-          // border/back
-          this.add.rectangle(x, y, w+2, 7, 0x101823).setOrigin(0.5).setData('tag','hp')
-          this.add.rectangle(x, y, w, 5, 0x2a364a).setOrigin(0.5).setData('tag','hp')
-          // fill
-          this.add.rectangle(x - w/2, y, Math.max(0, w * (hp/100)), 5, color).setOrigin(0,0.5).setData('tag','hp')
-        }
-        // Clear previous hp
+        // Minimal HUD: remove HP bars entirely
         this.children.getAll().forEach(o => { const go=o as any; if (go.getData && go.getData('tag')==='hp') o.destroy() })
-        // Active unit bars
-        hpBar(this.player.x, this.player.y - 58, 36, this.playerHP, 0x22c55e)
-        hpBar(this.enemy.x, this.enemy.y - 58, 36, this.enemyHP, 0xef4444)
-        // Team bars (passive indicators)
-        this.teamA.forEach((u, idx) => {
-          hpBar(u.x, u.y - 58, 28, this.teamAHP[idx], 0x22c55e)
-        })
-        this.teamB.forEach((u, idx) => {
-          hpBar(u.x, u.y - 58, 28, this.teamBHP[idx], 0xef4444)
-        })
 
         // HUD handled by React overlay
         
-        // Draw stick figures with walking animation
-        const drawStick = (x:number, y:number, color:number, facing: number, name:string, highlight:boolean, isWalking:boolean = false) => {
-          const g = this.add.graphics().setData('tag','stick').setDepth(1000).setAlpha(1)
-          // drop shadow under feet
-          g.fillStyle(0x000000, 0.25).fillEllipse(x, y + 18, 18, 6)
-          // head (filled + outline)
-          const headY = y - 30
-          g.fillStyle(0x000000, 1).fillCircle(x, headY, 7)
-          g.lineStyle(3, color, 1).strokeCircle(x, headY, 7)
-          if (highlight) {
-            g.lineStyle(2, 0x22c55e, 0.9).strokeCircle(x, headY, 10)
-          }
-          // face (eyes)
-          g.lineStyle(2, 0xffffff, 0.9)
-          g.strokePoints([{x:x-3,y:headY-1},{x:x-1,y:headY-1}], false)
-          g.strokePoints([{x:x+3,y:headY-1},{x:x+1,y:headY-1}], false)
-          // torso (thicker by double line)
-          g.lineStyle(4, color, 1)
-          const torsoTopY = headY + 6
-          const torsoBottomY = y
-          g.lineBetween(x, torsoTopY, x, torsoBottomY)
-          g.lineStyle(2, color, 1).lineBetween(x, torsoTopY, x, torsoBottomY)
-          
-          // Walking animation for arms and legs
-          const walkCycle = this.time.now * 0.01 // walking cycle speed
-          const armSwing = isWalking ? Math.sin(walkCycle) * 3 : 0
-          const legSwing = isWalking ? Math.sin(walkCycle + Math.PI) * 4 : 0
-          
-          // arms with walking animation
-          g.lineStyle(3, color, 1)
-          g.lineBetween(x, headY + 10, x - 12 * facing + armSwing * facing, headY + 18)
-          g.lineBetween(x, headY + 10, x + 14 * facing - armSwing * facing, headY + 18)
-          
-          // legs with walking animation
-          g.lineBetween(x, torsoBottomY, x - 9 + legSwing * facing, y + 16)
-          g.lineBetween(x, torsoBottomY, x + 9 - legSwing * facing, y + 16)
-          
-          // name label with stroke and better spacing
-          const label = this.add.text(x, headY - 18, name, { 
-            color: '#ffffff', 
-            fontStyle: 'bold',
-            fontSize: '12px',
-            stroke: '#000000',
-            strokeThickness: 3,
-            shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
-          }).setOrigin(0.5).setData('tag','stick').setDepth(1001).setAlpha(1)
-        }
-        // Draw all units (ensure visible even if Phaser placeholders)
-        this.teamA.forEach((u, idx) => {
-          if (this.teamAHP[idx] <= 0) return
-          const isSel = this.player === u
-          const walking = (u as any).getData ? !!(u as any).getData('walking') : false
-          drawStick(u.x, u.y, 0x111111, +1, `P${idx+1}`, isSel, walking)
-        })
-        this.teamB.forEach((u, idx) => {
-          if (this.teamBHP[idx] <= 0) return
-          const walking = (u as any).getData ? !!(u as any).getData('walking') : false
-          drawStick(u.x, u.y, 0x111111, -1, `CPU${idx+1}`, false, walking)
-        })
+        // Remove non-playable stick figures: do not render any overlay figures
+        // Intentionally skip creating stick layers and drawing any units here
 
         // Update active timer text position/value
         if (this.activeTimerText) {
@@ -1908,7 +1775,7 @@ export const TerritoryWarsPage: React.FC = () => {
         } catch (error) {
           // Report errors to bug system
           if (typeof addBugReport === 'function') {
-            addBugReport(`Update error: ${error instanceof Error ? error.message : String(error)}`, 'high')
+            addBugReport(`Update error: ${error instanceof Error ? error.message : String(error)}`, 'high', 'gameplay', error instanceof Error ? error.stack : undefined)
           }
           console.error('Update error:', error)
         }
@@ -1917,49 +1784,49 @@ export const TerritoryWarsPage: React.FC = () => {
         try {
           // Check for invalid game states
           if (this.playerIdx < 0 || this.playerIdx >= this.teamA.length) {
-            addBugReport(`Invalid player index: ${this.playerIdx}`, 'high')
+            addBugReport(`Invalid player index: ${this.playerIdx}`, 'high', 'gameplay')
           }
           
           if (this.enemyIdx < 0 || this.enemyIdx >= this.teamB.length) {
-            addBugReport(`Invalid enemy index: ${this.enemyIdx}`, 'high')
+            addBugReport(`Invalid enemy index: ${this.enemyIdx}`, 'high', 'gameplay')
           }
           
           // Check for NaN values
           if (isNaN(this.player.x) || isNaN(this.player.y)) {
-            addBugReport(`Player position is NaN: x=${this.player.x}, y=${this.player.y}`, 'critical')
+            addBugReport(`Player position is NaN: x=${this.player.x}, y=${this.player.y}`, 'critical', 'gameplay')
           }
           
           if (isNaN(this.enemy.x) || isNaN(this.enemy.y)) {
-            addBugReport(`Enemy position is NaN: x=${this.enemy.x}, y=${this.enemy.y}`, 'critical')
+            addBugReport(`Enemy position is NaN: x=${this.enemy.x}, y=${this.enemy.y}`, 'critical', 'gameplay')
           }
           
           // Check for infinite values
           if (!isFinite(this.player.x) || !isFinite(this.player.y)) {
-            addBugReport(`Player position is infinite: x=${this.player.x}, y=${this.player.y}`, 'critical')
+            addBugReport(`Player position is infinite: x=${this.player.x}, y=${this.player.y}`, 'critical', 'gameplay')
           }
           
           // Check for null/undefined units
           if (!this.player) {
-            addBugReport('Player unit is null/undefined', 'critical')
+            addBugReport('Player unit is null/undefined', 'critical', 'gameplay')
           }
           
           if (!this.enemy) {
-            addBugReport('Enemy unit is null/undefined', 'critical')
+            addBugReport('Enemy unit is null/undefined', 'critical', 'gameplay')
           }
           
           // Check for invalid weapon states
           if (this.weapon && !['grenade', 'rifle', 'bazooka'].includes(this.weapon)) {
-            addBugReport(`Invalid weapon: ${this.weapon}`, 'medium')
+            addBugReport(`Invalid weapon: ${this.weapon}`, 'medium', 'gameplay')
           }
           
           // Check for invalid game state
           if (this.gameState && !['playing', 'gameOver', 'playerWins', 'cpuWins'].includes(this.gameState)) {
-            addBugReport(`Invalid game state: ${this.gameState}`, 'medium')
+            addBugReport(`Invalid game state: ${this.gameState}`, 'medium', 'gameplay')
           }
           
         } catch (detectionError) {
           if (typeof addBugReport === 'function') {
-            addBugReport(`Error detection failed: ${detectionError}`, 'low')
+            addBugReport(`Error detection failed: ${detectionError}`, 'low', 'system')
           }
         }
       }
@@ -2062,13 +1929,6 @@ export const TerritoryWarsPage: React.FC = () => {
               }
             }
             
-            // simple visual terrain deformation
-            if (this.terrainRT) {
-              const eraser = this.add.graphics()
-              eraser.fillStyle(0x000000, 1).fillCircle(ex, Math.max(ey, this.scale.height-80), 24)
-              this.terrainRT.erase(eraser)
-              eraser.destroy()
-            }
           }})
           this.physics.add.existing(circ)
           const body = (circ.body) as Phaser.Physics.Arcade.Body
@@ -2081,8 +1941,7 @@ export const TerritoryWarsPage: React.FC = () => {
           // rifle: fast projectile with wind/accuracy
           const vel = 650
           const windEffect = wind * 0.3 // Wind affects rifle less than grenades
-          const weatherModifier = this.getWeatherAccuracyModifier()
-          const accuracy = (0.95 + (Math.random() - 0.5) * 0.1) * weatherModifier // Weather affects accuracy
+          const accuracy = 0.95 + (Math.random() - 0.5) * 0.1 // Base accuracy
           
           const bullet = this.add.rectangle(this.player.x, this.player.y - 30, 10, 2, 0xffffff) as any
           this.physics.add.existing(bullet)
@@ -2219,11 +2078,8 @@ export const TerritoryWarsPage: React.FC = () => {
         if (scene.roundNumber !== undefined) {
           setRoundNumber(scene.roundNumber)
         }
-        if (scene.weatherType !== undefined) {
-          setWeatherType(scene.weatherType)
-        }
       }
-    }, 100)
+    }, 50) // Increased frequency for better sync
     return () => {
       clearInterval(sync)
       clearInterval(stepsSync)
@@ -2316,18 +2172,6 @@ export const TerritoryWarsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-hilo-black text-white p-6 relative">
-
-      {/* Units overlay fixed to viewport, above background */}
-      <div className="pointer-events-none fixed inset-0 z-30" aria-label="UnitsLayer-Container-Classic">
-        <UnitsLayer
-          units={units}
-          width={viewport.width}
-          height={viewport.height}
-          playerColor="#00ff88"
-          cpuColor="#ff4444"
-          showDebug={showUnitsDebug}
-        />
-      </div>
 
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
@@ -2426,22 +2270,21 @@ export const TerritoryWarsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Weather Display - Top Left */}
-              <div className="absolute top-4 left-4 z-20 pointer-events-auto">
-                <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-xl px-4 py-3 border border-gray-600/50 shadow-lg backdrop-blur-sm">
-                  <div className="text-sm font-bold text-white text-center mb-1">Weather</div>
-                  <div className="text-xs text-center">
-                    {weatherType === 'clear' && '☀️ Clear'}
-                    {weatherType === 'rain' && '🌧️ Rain'}
-                    {weatherType === 'fog' && '🌫️ Fog'}
-                    {weatherType === 'storm' && '⛈️ Storm'}
-                  </div>
-                </div>
-              </div>
 
-              {/* Help Button - Top Right */}
+              {/* Control Buttons - Top Right */}
               <div className="absolute top-4 right-4 z-20 pointer-events-auto">
                 <div className="flex gap-2">
+                  <button
+                    onClick={toggleFullscreen}
+                    className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:scale-105 ${
+                      isFullscreen 
+                        ? 'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600' 
+                        : 'bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600'
+                    } text-white`}
+                    title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                  >
+                    {isFullscreen ? '⛶ Exit FS' : '⛶ Fullscreen'}
+                  </button>
                   <button
                     onClick={() => setShowTutorial(true)}
                     className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:scale-105"
@@ -2457,12 +2300,6 @@ export const TerritoryWarsPage: React.FC = () => {
                     } text-white`}
                   >
                     🐛 Bugs ({bugReports.length}) {errorCount > 0 && `⚠️ ${errorCount}`}
-                  </button>
-                  <button
-                    onClick={() => setShowMapSelector(true)}
-                    className="bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:scale-105"
-                  >
-                    🗺️ Maps
                   </button>
                 </div>
               </div>
@@ -2531,7 +2368,7 @@ export const TerritoryWarsPage: React.FC = () => {
                         </div>
                         <span className="text-blue-400 text-lg">⚡</span>
                       </div>
-                      <div className="w-52 h-3 rounded-full bg-gray-800 border border-gray-600">
+                      <div className="w-52 h-3 rounded-full bg-gray-800 border border-gray-600 overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all duration-500 ease-out ${
                             stepsRemaining <= 0 
@@ -2540,7 +2377,7 @@ export const TerritoryWarsPage: React.FC = () => {
                               ? 'bg-gradient-to-r from-yellow-500 via-orange-400 to-yellow-600'
                               : 'bg-gradient-to-r from-green-500 via-emerald-400 to-green-600'
                           }`}
-                          style={{ width: `${(stepsRemaining / maxSteps) * 100}%` }}
+                          style={{ width: `${Math.min((stepsRemaining / maxSteps) * 100, 100)}%` }}
                         ></div>
                       </div>
                       <div className="text-xs text-gray-300 mt-2 text-center font-mono">
@@ -2558,21 +2395,6 @@ export const TerritoryWarsPage: React.FC = () => {
                       )}
                     </div>
                     
-                    {/* Unit Selection Button */}
-                    {gameState === 'playing' && isPlayerTurn && (
-                      <button
-                        onClick={() => {
-                          if (phaserGameRef.current?.scene?.scenes[0]) {
-                            const scene = phaserGameRef.current.scene.scenes[0] as any
-                            scene.showUnitSelectionMenu()
-                          }
-                        }}
-                        className="bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white px-4 py-2 rounded-xl border border-green-500/50 shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                      >
-                        <div className="text-sm font-bold">Select Unit</div>
-                        <div className="text-xs opacity-80">Press T</div>
-                      </button>
-                    )}
 
                     {/* End Turn Button */}
                     {gameState === 'playing' && isPlayerTurn && (
@@ -2674,56 +2496,6 @@ export const TerritoryWarsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Map Selector Modal */}
-        {showMapSelector && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-600/50 shadow-2xl max-w-4xl mx-4 text-center">
-              <div className="text-2xl font-bold text-white mb-6">🗺️ Select Map</div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                {['classic', 'canyon', 'islands', 'urban'].map((mapType, index) => (
-                  <button
-                    key={mapType}
-                    onClick={() => {
-                      setCurrentMap(index)
-                      if (phaserGameRef.current?.scene?.scenes[0]) {
-                        const scene = phaserGameRef.current.scene.scenes[0] as any
-                        scene.currentMap = index
-                        scene.generateMap(mapType)
-                      }
-                      setShowMapSelector(false)
-                    }}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-                      currentMap === index
-                        ? 'border-blue-500 bg-blue-600/20'
-                        : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="text-lg font-bold text-white capitalize mb-2">
-                      {mapType === 'classic' && '🏔️ Classic'}
-                      {mapType === 'canyon' && '🏜️ Canyon'}
-                      {mapType === 'islands' && '🏝️ Islands'}
-                      {mapType === 'urban' && '🏙️ Urban'}
-                    </div>
-                    <div className="text-sm text-gray-300">
-                      {mapType === 'classic' && 'Original balanced layout'}
-                      {mapType === 'canyon' && 'Narrow passages, high walls'}
-                      {mapType === 'islands' && 'Multiple small platforms'}
-                      {mapType === 'urban' && 'Urban ruins with buildings'}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              
-              <button
-                onClick={() => setShowMapSelector(false)}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg transition-all duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Tutorial Modal */}
         {showTutorial && (
@@ -2771,9 +2543,8 @@ export const TerritoryWarsPage: React.FC = () => {
               
               {tutorialStep === 3 && (
                 <div className="space-y-4">
-                  <div className="text-lg text-gray-300">Weather & Strategy</div>
+                  <div className="text-lg text-gray-300">Strategy & Power-ups</div>
                   <div className="text-sm text-gray-400 text-left space-y-2">
-                    <p>• <strong>Weather:</strong> Affects weapon accuracy and visibility</p>
                     <p>• <strong>Power-ups:</strong> Collect health packs and ammo crates</p>
                     <p>• <strong>Terrain:</strong> Use platforms for cover and positioning</p>
                     <p>• <strong>Line of Sight:</strong> Can't shoot through obstacles</p>
@@ -2795,6 +2566,11 @@ export const TerritoryWarsPage: React.FC = () => {
                     if (tutorialStep < 3) {
                       setTutorialStep(tutorialStep + 1)
                     } else {
+                      // Require wallet before starting gameplay
+                      try {
+                        const evt = new CustomEvent('request-wallet-for-feature', { detail: { feature: 'starting Territory Wars' } })
+                        window.dispatchEvent(evt)
+                      } catch {}
                       setShowTutorial(false)
                       setTutorialStep(0)
                     }
@@ -2854,25 +2630,17 @@ export const TerritoryWarsPage: React.FC = () => {
               }
             }}
           >
-            <div className="bg-gray-900 rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-gray-900 rounded-xl p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-white">🐛 Bug Reports & Diagnostics</h3>
+                  <h3 className="text-xl font-bold text-white">🐛 Enhanced Bug Reports & Diagnostics</h3>
                   <div className="text-sm text-gray-300 mt-1">
-                    Total Errors: <span className="text-red-400 font-bold">{errorCount}</span>
+                    Total: <span className="text-blue-400 font-bold">{getAnalyticsData().total}</span>
+                    | Unresolved: <span className="text-red-400 font-bold">{getAnalyticsData().unresolved}</span>
                     {lastErrorTime && (
                       <span className="ml-4">
                         Last Error: <span className="text-yellow-400">{lastErrorTime.toLocaleTimeString()}</span>
                       </span>
-                    )}
-                    {bugReports.length > 0 && (
-                      <button
-                        onClick={() => copyIndividualBug(bugReports[0])}
-                        className="ml-4 bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs transition-colors"
-                        title="Copy the most recent bug report"
-                      >
-                        📋 Copy Latest
-                      </button>
                     )}
                   </div>
                 </div>
@@ -2883,22 +2651,103 @@ export const TerritoryWarsPage: React.FC = () => {
                   ×
                 </button>
               </div>
+
+              {/* Analytics Dashboard */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <div className="text-xs text-gray-400">Critical</div>
+                  <div className="text-lg font-bold text-red-400">{getAnalyticsData().bySeverity.critical}</div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <div className="text-xs text-gray-400">High</div>
+                  <div className="text-lg font-bold text-orange-400">{getAnalyticsData().bySeverity.high}</div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <div className="text-xs text-gray-400">Medium</div>
+                  <div className="text-lg font-bold text-yellow-400">{getAnalyticsData().bySeverity.medium}</div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <div className="text-xs text-gray-400">Low</div>
+                  <div className="text-lg font-bold text-blue-400">{getAnalyticsData().bySeverity.low}</div>
+                </div>
+              </div>
+
+              {/* Filters and Search */}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-300">Severity:</label>
+                  <select 
+                    value={filterSeverity} 
+                    onChange={(e) => setFilterSeverity(e.target.value as any)}
+                    className="bg-gray-700 text-white rounded px-2 py-1 text-sm"
+                  >
+                    <option value="all">All</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-300">Category:</label>
+                  <select 
+                    value={filterCategory} 
+                    onChange={(e) => setFilterCategory(e.target.value as any)}
+                    className="bg-gray-700 text-white rounded px-2 py-1 text-sm"
+                  >
+                    <option value="all">All</option>
+                    <option value="ui">UI</option>
+                    <option value="gameplay">Gameplay</option>
+                    <option value="performance">Performance</option>
+                    <option value="network">Network</option>
+                    <option value="system">System</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search bugs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-gray-700 text-white rounded px-2 py-1 text-sm w-40"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-300">Show resolved:</label>
+                  <input
+                    type="checkbox"
+                    checked={showResolved}
+                    onChange={(e) => setShowResolved(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+              </div>
               
               {/* Bug Reports List */}
               <div className="space-y-2 mb-6">
-                <h4 className="text-lg font-semibold text-white mb-3">Current Issues ({bugReports.length})</h4>
-                {bugReports.length === 0 ? (
-                  <p className="text-gray-400 text-center py-4">No bug reports yet</p>
+                <h4 className="text-lg font-semibold text-white mb-3">
+                  Issues ({filteredBugReports.length})
+                </h4>
+                {filteredBugReports.length === 0 ? (
+                  <p className="text-gray-400 text-center py-4">No bug reports match your filters</p>
                 ) : (
-                  bugReports.map((report) => (
-                    <div key={report.id} className={`p-3 rounded-lg border-l-4 ${
+                  filteredBugReports.map((report) => (
+                    <div key={report.id} className={`p-4 rounded-lg border-l-4 ${
                       report.severity === 'critical' ? 'bg-red-900/20 border-red-500' :
                       report.severity === 'high' ? 'bg-orange-900/20 border-orange-500' :
                       report.severity === 'medium' ? 'bg-yellow-900/20 border-yellow-500' :
                       'bg-blue-900/20 border-blue-500'
-                    }`}>
+                    } ${report.resolved ? 'opacity-60' : ''}`}>
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-white text-sm flex-1 mr-2">{report.message}</p>
+                        <div className="flex-1 mr-2">
+                          <p className="text-white text-sm mb-1">{report.message}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <span className="capitalize">{report.category}</span>
+                            <span>•</span>
+                            <span>{new Date(report.timestamp).toLocaleString()}</span>
+                            {report.resolved && <span className="text-green-400">✓ Resolved</span>}
+                          </div>
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className={`text-xs px-2 py-1 rounded ${
                             report.severity === 'critical' ? 'bg-red-600 text-white' :
@@ -2909,22 +2758,40 @@ export const TerritoryWarsPage: React.FC = () => {
                             {report.severity.toUpperCase()}
                           </span>
                           <button
+                            onClick={() => {
+                              setBugReports(prev => {
+                                const updated = prev.map(r => 
+                                  r.id === report.id ? { ...r, resolved: !r.resolved } : r
+                                )
+                                saveBugReportsToStorage(updated)
+                                return updated
+                              })
+                            }}
+                            className={`px-2 py-1 rounded text-xs transition-colors ${
+                              report.resolved 
+                                ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                                : 'bg-green-600 hover:bg-green-500 text-white'
+                            }`}
+                          >
+                            {report.resolved ? 'Unresolve' : 'Resolve'}
+                          </button>
+                          <button
                             onClick={() => copyIndividualBug(report)}
                             className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs transition-colors"
-                            title="Copy this individual bug report"
                           >
                             📋 Copy
                           </button>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <p className="text-gray-400 text-xs">
-                          {new Date(report.timestamp).toLocaleTimeString()}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          ID: {report.id.slice(-6)}
-                        </p>
-                      </div>
+                      {report.context.screenshot && (
+                        <div className="mt-2">
+                          <img 
+                            src={report.context.screenshot} 
+                            alt="Error screenshot" 
+                            className="max-w-xs rounded border border-gray-600"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -2959,39 +2826,12 @@ export const TerritoryWarsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    // Generate various test errors to demonstrate the system
-                    addBugReport('Manual test: Simulated error', 'medium')
-                    
-                    // Test different error types
-                    setTimeout(() => {
-                      addBugReport('Test: Simulated game state error', 'high')
-                    }, 1000)
-                    
-                    setTimeout(() => {
-                      addBugReport('Test: Simulated performance warning', 'low')
-                    }, 2000)
-                    
-                    setTimeout(() => {
-                      addBugReport('Test: Simulated critical error', 'critical')
-                    }, 3000)
-                    
-                    // Test console error
-                    console.error('Test console error for bug reporting')
-                    
-                    // Test unhandled promise rejection
-                    Promise.reject('Test unhandled promise rejection')
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                >
-                  🧪 Test Error Detection
-                </button>
-                <button
-                  onClick={() => {
                     setBugReports([])
                     setErrorCount(0)
                     setLastErrorTime(null)
+                    localStorage.removeItem('territoryWars_bugReports')
                   }}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
                 >
                   🗑️ Clear All
                 </button>

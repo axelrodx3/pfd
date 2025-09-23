@@ -65,6 +65,10 @@ export interface GameState {
   soundEnabled: boolean
   selectedDiceSkin: 'classic' | 'neon' | 'gold'
   muted: boolean
+  animationsEnabled: boolean
+  hapticsEnabled: boolean
+  autoSaveEnabled: boolean
+  masterVolume: number // 0-100
 
   // Game history
   gameHistory: Array<{
@@ -146,6 +150,11 @@ export interface GameActions {
   toggleSound: () => void
   setDiceSkin: (skin: 'classic' | 'neon' | 'gold') => void
   toggleMute: () => void
+  toggleAnimations: () => void
+  toggleHaptics: () => void
+  toggleAutoSave: () => void
+  setMasterVolume: (value: number) => void
+  resetEverything: () => void
 
   // Provably fair actions
   generateNewSeeds: () => void
@@ -238,6 +247,10 @@ const initialState: GameState = {
   soundEnabled: true,
   selectedDiceSkin: 'classic',
   muted: false,
+  animationsEnabled: true,
+  hapticsEnabled: false,
+  autoSaveEnabled: true,
+  masterVolume: 75,
 
   // Game history
   gameHistory: [],
@@ -682,6 +695,104 @@ export const useGameStore = create<GameState & GameActions>()(
         set(state => ({ muted: !state.muted }))
       },
 
+      toggleAnimations: () => {
+        set(state => ({ animationsEnabled: !state.animationsEnabled }))
+      },
+
+      toggleHaptics: () => {
+        set(state => ({ hapticsEnabled: !state.hapticsEnabled }))
+      },
+
+      toggleAutoSave: () => {
+        set(state => ({ autoSaveEnabled: !state.autoSaveEnabled }))
+      },
+
+      setMasterVolume: (value: number) => {
+        const clamped = Math.max(0, Math.min(100, Math.floor(value)))
+        set({ masterVolume: clamped })
+      },
+
+      resetEverything: () => {
+        set(() => ({
+          // Wallet & Balance
+          balance: 1000,
+          hiloTokens: 10000,
+          lastFaucetClaim: null,
+
+          // Game state
+          currentBet: 10,
+          selectedSide: null,
+          isRolling: false,
+          lastRoll: null,
+          lastResult: null,
+          lastWin: null,
+
+          // Streaks & Stats
+          currentWinStreak: 0,
+          currentLossStreak: 0,
+          maxWinStreak: 0,
+          maxLossStreak: 0,
+          totalWagered: 0,
+          totalWon: 0,
+          totalGames: 0,
+
+          // Auto-roll
+          autoRollEnabled: false,
+          autoRollCount: 0,
+          autoRollMax: 10,
+          autoRollStopOnWin: false,
+          autoRollStopOnLoss: false,
+
+          // Provably fair
+          serverSeed: generateServerSeed(),
+          clientSeed: generateClientSeed(),
+          nonce: 0,
+
+          // User progression
+          xp: 0,
+          level: 1,
+          vipTier: 'Bronze',
+          dailyChallenges: [
+            {
+              id: 'win-3-highs',
+              title: 'High Roller',
+              description: 'Win 3 high bets today',
+              reward: 100,
+              completed: false,
+              progress: 0,
+              maxProgress: 3,
+            },
+            {
+              id: 'streak-5',
+              title: 'Hot Streak',
+              description: 'Get a 5-game win streak',
+              reward: 250,
+              completed: false,
+              progress: 0,
+              maxProgress: 5,
+            },
+            {
+              id: 'wager-1000',
+              title: 'Big Spender',
+              description: 'Wager 1000 HILO tokens',
+              reward: 500,
+              completed: false,
+              progress: 0,
+              maxProgress: 1000,
+            },
+          ],
+
+          // History and feed
+          gameHistory: [],
+          recentWins: [],
+
+          // Leaderboard & Pools
+          leaderboard: [],
+          weeklyPrizePool: 50000,
+          monthlyPrizePool: 200000,
+        }))
+      },
+
       // Provably fair actions
       generateNewSeeds: () => {
         set({
@@ -866,6 +977,10 @@ export const useGameStore = create<GameState & GameActions>()(
         soundEnabled: state.soundEnabled,
         selectedDiceSkin: state.selectedDiceSkin,
         muted: state.muted,
+        animationsEnabled: state.animationsEnabled,
+        hapticsEnabled: state.hapticsEnabled,
+        autoSaveEnabled: state.autoSaveEnabled,
+        masterVolume: state.masterVolume,
         lastFaucetClaim: state.lastFaucetClaim,
       }),
     }

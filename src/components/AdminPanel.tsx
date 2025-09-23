@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { walletMappingManager } from '../lib/walletMapping'
@@ -44,6 +44,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [selectedMapping, setSelectedMapping] = useState<WalletMapping | null>(null)
   const [throttleDuration, setThrottleDuration] = useState(24) // hours
   const [isLoading, setIsLoading] = useState(false)
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
 
   // Check if user is admin
   if (!userProfile?.isAdmin) {
@@ -203,7 +213,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -219,6 +229,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-6xl h-[80vh] bg-hilo-gray border border-hilo-gray-light rounded-2xl shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-hilo-gray-light">

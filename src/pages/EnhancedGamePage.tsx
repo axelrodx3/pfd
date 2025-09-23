@@ -10,6 +10,8 @@ import { SettingsModal } from '../components/SettingsModal'
 import { AdvancedStats } from '../components/AdvancedStats'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { Settings, HelpCircle, BarChart3, Download, X, Menu } from 'lucide-react'
+import { useWalletContext } from '../contexts/WalletContextWrapper'
+import { WalletRequiredModal } from '../components/WalletRequiredModal'
 
 /**
  * Enhanced Game Page Component
@@ -83,6 +85,8 @@ export const EnhancedGamePage: React.FC = () => {
   const [autorollDelay, setAutorollDelay] = useState(false)
   const [showGameMenu, setShowGameMenu] = useState(false)
   const gameMenuRef = useRef<HTMLDivElement>(null)
+  const { connected } = useWalletContext() as any
+  const [showWalletRequired, setShowWalletRequired] = useState(false)
 
   const { success, error, warning, info } = useToast()
 
@@ -110,6 +114,10 @@ export const EnhancedGamePage: React.FC = () => {
 
   // Enhanced roll dice with loading and feedback
   const handleRollDice = useCallback(async () => {
+    if (!connected) {
+      setShowWalletRequired(true)
+      return
+    }
     if (isRolling || !selectedSide || currentBet > hiloTokens) {
       if (currentBet > hiloTokens) {
         error(
@@ -146,6 +154,10 @@ export const EnhancedGamePage: React.FC = () => {
   ])
 
   const handleRoll = () => {
+    if (!connected) {
+      setShowWalletRequired(true)
+      return
+    }
     if (!isRolling && selectedSide && currentBet <= hiloTokens) {
       handleRollDice()
     }
@@ -247,7 +259,7 @@ export const EnhancedGamePage: React.FC = () => {
   // Enhanced keyboard shortcuts
   useKeyboardShortcuts({
     onRollDice: () => {
-      if (!isRolling && selectedSide && currentBet <= hiloTokens) {
+      if (connected && !isRolling && selectedSide && currentBet <= hiloTokens) {
         handleRollDice()
       }
     },
@@ -505,11 +517,11 @@ export const EnhancedGamePage: React.FC = () => {
                 <button
                   onClick={handleRoll}
                   disabled={
-                    isRolling || !selectedSide || currentBet > hiloTokens
+                    !connected || isRolling || !selectedSide || currentBet > hiloTokens
                   }
                   className="flex-1 max-w-2xl py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
                 >
-                  {isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
+                  {!connected ? 'Connect Wallet to Play' : isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
                 </button>
 
                 {/* Apple-style Auto-Roll Toggle */}
@@ -887,6 +899,12 @@ export const EnhancedGamePage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      <WalletRequiredModal
+        isOpen={showWalletRequired}
+        onClose={() => setShowWalletRequired(false)}
+        featureName="playing the Dice game"
+      />
     </div>
   )
 }

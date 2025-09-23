@@ -223,6 +223,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({ className = '' }) => {
           winnings={lastWin ? currentBet * 1.98 : 0}
           soundEnabled={soundEnabled}
           muted={muted}
+          skin={selectedDiceSkin as any}
           className=""
         />
       </div>

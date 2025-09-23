@@ -211,6 +211,11 @@ const WalletContextInner: React.FC<{
 
   // Initialize game wallet when connected wallet changes
   useEffect(() => {
+    try {
+      ;(window as any).__HILO_WALLET_CONNECTED__ = connected === true
+    } catch {}
+  }, [connected])
+  useEffect(() => {
     let isMounted = true
 
     const initializeGameWallet = async () => {

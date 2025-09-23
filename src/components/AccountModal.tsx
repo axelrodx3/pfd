@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, User, Copy, RefreshCw, ExternalLink, Edit } from 'lucide-react'
+import Modal from './Modal'
+import { X, User, Copy, RefreshCw, ExternalLink, Edit, Share2 } from 'lucide-react'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { useToast } from './Toast'
 import { EditProfileModal } from './EditProfileModal'
@@ -21,6 +22,16 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
   const { success, error } = useToast()
   const [showEditProfile, setShowEditProfile] = useState(false)
 
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -34,36 +45,11 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
   const profilePicture = userProfile?.profilePicture
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="bg-hilo-gray border border-hilo-gray-light rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" title="Account">
+        <div className="max-h-[70vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-hilo-gray-light">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <User className="w-5 h-5 text-hilo-gold" />
-                Account
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-hilo-gray-light transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <div className="hidden" />
 
             {/* Content */}
             <div className="p-6 space-y-6">
@@ -89,13 +75,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                         {userProfile?.vipTier || 'Bronze'} • {userProfile?.xp || 0} XP
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowEditProfile(true)}
-                      className="px-3 py-2 bg-hilo-gold text-hilo-black rounded-lg hover:bg-hilo-gold-dark transition-colors flex items-center gap-2 text-sm font-medium"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Edit
-                    </button>
+                    {/* Removed inline Edit button to focus on the main Edit Profile action below */}
                   </div>
                   
                   {/* Stats */}
@@ -155,8 +135,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    // In a real app, this would navigate to profile edit
-                    alert('Profile editing would open here')
+                    setShowEditProfile(true)
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-hilo-gold text-hilo-black rounded-lg hover:bg-hilo-gold-dark transition-colors"
                 >
@@ -165,12 +144,31 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                 </button>
                 
                 <button
-                  onClick={() => {
-                    window.open(`https://solscan.io/account/${gameWalletAddress}`, '_blank')
+                  onClick={async () => {
+                    try {
+                      const shareUrl = gameWalletAddress
+                        ? `https://solscan.io/account/${gameWalletAddress}`
+                        : window.location.origin
+                      const shareData = {
+                        title: 'HILO Casino',
+                        text: 'Check out my game wallet on HILO Casino',
+                        url: shareUrl,
+                      } as any
+                      if (navigator.share && typeof navigator.share === 'function') {
+                        await navigator.share(shareData)
+                        success('Shared', 'Share sheet opened')
+                      } else {
+                        await navigator.clipboard.writeText(shareUrl)
+                        success('Link Copied', 'Wallet link copied to clipboard')
+                      }
+                    } catch (e) {
+                      error('Share Failed', 'Unable to share at the moment')
+                    }
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-hilo-gray-light text-white rounded-lg hover:bg-hilo-gray transition-colors"
+                  title="Share wallet link"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <Share2 className="w-4 h-4" />
                 </button>
               </div>
 
@@ -181,16 +179,15 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                 </div>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-      
+        </div>
+      </Modal>
+
       {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={showEditProfile}
         onClose={() => setShowEditProfile(false)}
       />
-    </AnimatePresence>
+    </>
   )
 }
 
