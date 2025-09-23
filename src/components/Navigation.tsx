@@ -319,6 +319,21 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Account</span>
                         </button>
 
+                        {/* Wallet moved under Account */}
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Wallet')) {
+                              setIsDropdownOpen(false)
+                              // Navigate to wallet page
+                              window.location.href = '/wallet'
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <ArrowUpDown className="w-4 h-4" />
+                          <span>Wallet</span>
+                        </button>
+
                         <button
                           onClick={() => {
                             if (handleWalletRequiredFeature('Settings')) {
@@ -343,20 +358,6 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         >
                           <HelpCircle className="w-4 h-4" />
                           <span>Support</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (handleWalletRequiredFeature('Wallet')) {
-                              setIsDropdownOpen(false)
-                              // Navigate to wallet page
-                              window.location.href = '/wallet'
-                            }
-                          }}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <ArrowUpDown className="w-4 h-4" />
-                          <span>Wallet</span>
                         </button>
                       </div>
                     </motion.div>
@@ -494,6 +495,15 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <span className="text-sm text-gray-300">Account</span>
                 </button>
                 
+                <Link
+                  to="/wallet"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <ArrowUpDown className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Wallet</span>
+                </Link>
+                
                 <button
                   onClick={() => {
                     setShowSettings(true)
@@ -515,15 +525,6 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <HelpCircle className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Support</span>
                 </button>
-                
-                <Link
-                  to="/wallet"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
-                >
-                  <ArrowUpDown className="w-4 h-4 text-gray-300" />
-                  <span className="text-sm text-gray-300">Wallet</span>
-                </Link>
                 
                 <Link
                   to="/leaderboard"
