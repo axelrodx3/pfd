@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { DiceRoller } from '../components/DiceRoller'
@@ -87,6 +88,8 @@ export const EnhancedGamePage: React.FC = () => {
   const gameMenuRef = useRef<HTMLDivElement>(null)
   const { connected } = useWalletContext() as any
   const [showWalletRequired, setShowWalletRequired] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const { success, error, warning, info } = useToast()
 
@@ -103,6 +106,22 @@ export const EnhancedGamePage: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  // Open context-specific modals based on query params from the header menu
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const open = params.get('open')
+    if (open === 'challenges') {
+      setShowChallenges(true)
+      setShowGameMenu(false)
+      // Clean URL
+      navigate('/game', { replace: true })
+    } else if (open === 'daily-wheel') {
+      setShowDailyWheel(true)
+      setShowGameMenu(false)
+      navigate('/game', { replace: true })
+    }
+  }, [location.search, navigate])
 
   const handleBetChange = (amount: number) => {
     setBet(Math.max(1, Math.min(amount, hiloTokens)))
@@ -350,27 +369,6 @@ export const EnhancedGamePage: React.FC = () => {
                         >
                           <BarChart3 className="w-4 h-4" />
                           <span>Stats</span>
-                        </button>
-                        <div className="border-t border-hilo-gray-light my-1" />
-                        <button
-                          onClick={() => {
-                            setShowChallenges(true)
-                            setShowGameMenu(false)
-                          }}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <span>🎯</span>
-                          <span>Challenges</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowDailyWheel(true)
-                            setShowGameMenu(false)
-                          }}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <span>🎡</span>
-                          <span>Daily Wheel</span>
                         </button>
                         <div className="border-t border-hilo-gray-light my-1" />
                         <button

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, Settings, HelpCircle, ArrowUpDown, Home, Gamepad2, ShieldCheck, Info, Trophy } from 'lucide-react'
+import { Menu, X, User, Settings, HelpCircle, ArrowUpDown, Home, Gamepad2, ShieldCheck, Info, Trophy, Target, RefreshCw } from 'lucide-react'
 import { HiloLogo } from './HiloLogo'
 import { RealWalletButton } from './RealWalletButton'
 import { AdminPanel } from './AdminPanel'
@@ -276,6 +276,28 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         {/* Separator */}
                         <div className="border-t border-hilo-gray-light my-2"></div>
 
+                        {/* Game Actions moved from in-game menu */}
+                        <Link
+                          to="/game?open=challenges"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Target className="w-4 h-4" />
+                          <span>Challenges</span>
+                        </Link>
+
+                        <Link
+                          to="/game?open=daily-wheel"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          <span>Daily Wheel</span>
+                        </Link>
+
+                        {/* Separator */}
+                        <div className="border-t border-hilo-gray-light my-2"></div>
+
                         <button
                           onClick={() => {
                             if (handleWalletRequiredFeature('Account')) {
@@ -426,6 +448,24 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
               
               {/* Mobile Menu Options */}
               <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/game?open=challenges"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <Target className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Challenges</span>
+                </Link>
+
+                <Link
+                  to="/game?open=daily-wheel"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Daily Wheel</span>
+                </Link>
+
                 <button
                   onClick={() => {
                     setShowAccount(true)
