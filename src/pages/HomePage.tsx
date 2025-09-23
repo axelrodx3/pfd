@@ -138,17 +138,7 @@ export const HomePage: React.FC = () => {
             </Link>
           </motion.div>
 
-          {/* Warning */}
-          <motion.div
-            className="mt-12 p-4 bg-hilo-red/10 border border-hilo-red/30 rounded-lg max-w-md mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
-          >
-            <p className="text-hilo-red text-sm font-semibold">
-              ⚠️ This is a mock gambling site for demonstration purposes only
-            </p>
-          </motion.div>
+          {/* Warning removed for cleaner landing page */}
         </div>
       </section>
 
