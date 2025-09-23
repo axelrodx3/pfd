@@ -115,24 +115,13 @@ export const HomePage: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <span className="bg-gradient-to-r from-hilo-gold via-hilo-red to-hilo-green bg-clip-text text-transparent animate-gradient-x">
-              Bet High. Bet Low. Win Big.
+              HIGH OR LOW?
             </span>
           </motion.h1>
 
-          {/* Description */}
-          <motion.p
-            className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-          >
-            Experience the thrill of dice gaming with our provably fair system.
-            No tricks, no gimmicks - just pure, transparent gameplay.
-          </motion.p>
-
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <motion.div
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            className="flex justify-center items-center"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
@@ -147,22 +136,6 @@ export const HomePage: React.FC = () => {
                 <span>Start Playing</span>
               </motion.button>
             </Link>
-
-            <motion.button
-              onClick={() => {
-                // Trigger wallet connection
-                const walletButton = document.querySelector('[data-wallet-button]') as HTMLButtonElement;
-                if (walletButton) {
-                  walletButton.click();
-                }
-              }}
-              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold text-lg shadow-lg hover:glow-purple transition-all duration-300"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="text-xl">🔗</span>
-              <span>Connect Wallet</span>
-            </motion.button>
           </motion.div>
 
           {/* Warning */}

@@ -153,3 +153,4 @@ export const reportNetworkError = (error: Error, context?: Record<string, any>) 
 
 export const reportWalletError = (error: Error, context?: Record<string, any>) =>
   errorReporter.reportWalletError(error, context)
+

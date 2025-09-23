@@ -9,6 +9,8 @@ import { SettingsModal } from './SettingsModal'
 import { SupportModal } from './SupportModal'
 import { AccountModal } from './AccountModal'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
+import { useTheme } from '../contexts/ThemeContext'
+import { WalletRequiredModal } from './WalletRequiredModal'
 
 interface NavigationProps {
   className?: string
@@ -27,7 +29,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
   const [showAccount, setShowAccount] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
-  const { userProfile, gameWalletBalance } = useWalletContext()
+  const [showWalletRequired, setShowWalletRequired] = useState(false)
+  const [walletRequiredFeature, setWalletRequiredFeature] = useState('')
+  const { userProfile, gameWalletBalance, connected } = useWalletContext()
+  const { theme, toggleTheme } = useTheme()
   const location = useLocation()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -59,6 +64,16 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
     return location.pathname.startsWith(path)
   }
 
+  const handleWalletRequiredFeature = (featureName: string) => {
+    if (!connected) {
+      setWalletRequiredFeature(featureName)
+      setShowWalletRequired(true)
+      setIsDropdownOpen(false)
+      return false
+    }
+    return true
+  }
+
   return (
     <motion.nav
       className={`
@@ -77,28 +92,8 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
             <HiloLogo size="md" animated={false} />
           </Link>
 
-                  {/* Desktop Navigation */}
-                  <div className="hidden md:flex items-center justify-center flex-1 space-x-6">
-                    {navItems.map(item => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`
-                          flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
-                          relative overflow-hidden group
-                          ${
-                            isActive(item.path)
-                              ? 'text-hilo-gold bg-hilo-gold/10 shadow-hilo-glow'
-                              : 'text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/5'
-                          }
-                        `}
-                      >
-                        <span className="text-lg">{item.icon}</span>
-                        <span>{item.label}</span>
-                        {/* Hover underline effect */}
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-hilo-gold transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                    ))}
+                  {/* Desktop Navigation - Empty space for logo centering */}
+                  <div className="hidden md:flex items-center justify-center flex-1">
                   </div>
 
           {/* Wallet and SOL Balance */}
@@ -127,6 +122,15 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
             {/* Wallet Connect Button */}
             <RealWalletButton />
             
+            {/* Dark/Light Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            
             {/* Hamburger Menu Button */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -147,10 +151,28 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                     className="absolute top-full right-0 mt-2 w-48 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
                   >
                     <div className="py-2">
+                      {/* Navigation Items */}
+                      {navItems.map(item => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <span className="text-lg">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
+                      
+                      {/* Separator */}
+                      <div className="border-t border-hilo-gray-light my-2"></div>
+                      
                       <button
                         onClick={() => {
-                          setShowAccount(true)
-                          setIsDropdownOpen(false)
+                          if (handleWalletRequiredFeature('Account')) {
+                            setShowAccount(true)
+                            setIsDropdownOpen(false)
+                          }
                         }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                       >
@@ -160,8 +182,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                       
                       <button
                         onClick={() => {
-                          setShowSettings(true)
-                          setIsDropdownOpen(false)
+                          if (handleWalletRequiredFeature('Settings')) {
+                            setShowSettings(true)
+                            setIsDropdownOpen(false)
+                          }
                         }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                       >
@@ -171,8 +195,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                       
                       <button
                         onClick={() => {
-                          setShowSupport(true)
-                          setIsDropdownOpen(false)
+                          if (handleWalletRequiredFeature('Support')) {
+                            setShowSupport(true)
+                            setIsDropdownOpen(false)
+                          }
                         }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                       >
@@ -180,22 +206,32 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         <span>Support</span>
                       </button>
                       
-                      <Link
-                        to="/wallet"
-                        onClick={() => setIsDropdownOpen(false)}
+                      <button
+                        onClick={() => {
+                          if (handleWalletRequiredFeature('Wallet')) {
+                            setIsDropdownOpen(false)
+                            // Navigate to wallet page
+                            window.location.href = '/wallet'
+                          }
+                        }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                       >
                         <ArrowUpDown className="w-4 h-4" />
                         <span>Wallet</span>
-                      </Link>
+                      </button>
                       
-                      <Link
-                        to="/leaderboard"
-                        onClick={() => setIsDropdownOpen(false)}
+                      <button
+                        onClick={() => {
+                          if (handleWalletRequiredFeature('Leaderboard')) {
+                            setIsDropdownOpen(false)
+                            // Navigate to leaderboard page
+                            window.location.href = '/leaderboard'
+                          }
+                        }}
                         className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                       >
                         <span>Leaderboard</span>
-                      </Link>
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -372,6 +408,13 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
       <SupportModal
         isOpen={showSupport}
         onClose={() => setShowSupport(false)}
+      />
+
+      {/* Wallet Required Modal */}
+      <WalletRequiredModal
+        isOpen={showWalletRequired}
+        onClose={() => setShowWalletRequired(false)}
+        featureName={walletRequiredFeature}
       />
     </motion.nav>
   )

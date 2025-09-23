@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, User, Copy, RefreshCw, ExternalLink } from 'lucide-react'
+import { X, User, Copy, RefreshCw, ExternalLink, Edit } from 'lucide-react'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { useToast } from './Toast'
+import { EditProfileModal } from './EditProfileModal'
 
 interface AccountModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
     isInitializing 
   } = useWalletContext()
   const { success, error } = useToast()
+  const [showEditProfile, setShowEditProfile] = useState(false)
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -87,6 +89,13 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                         {userProfile?.vipTier || 'Bronze'} • {userProfile?.xp || 0} XP
                       </div>
                     </div>
+                    <button
+                      onClick={() => setShowEditProfile(true)}
+                      className="px-3 py-2 bg-hilo-gold text-hilo-black rounded-lg hover:bg-hilo-gold-dark transition-colors flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit
+                    </button>
                   </div>
                   
                   {/* Stats */}
@@ -175,6 +184,12 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
           </motion.div>
         </motion.div>
       )}
+      
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+      />
     </AnimatePresence>
   )
 }

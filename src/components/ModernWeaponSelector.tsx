@@ -143,7 +143,7 @@ export const ModernWeaponSelector: React.FC<ModernWeaponSelectorProps> = ({
         </motion.button>
       </motion.div>
 
-      <style jsx>{`
+      <style>{`
         .modern-weapon-selector {
           position: fixed;
           bottom: 20px;
@@ -341,3 +341,4 @@ export const ModernWeaponSelector: React.FC<ModernWeaponSelectorProps> = ({
 }
 
 export default ModernWeaponSelector
+

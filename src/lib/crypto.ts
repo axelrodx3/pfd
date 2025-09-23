@@ -74,7 +74,7 @@ export function encryptData(data: string): { encrypted: string; iv: string; tag:
     
     return {
       encrypted,
-      iv: iv.toString('hex'),
+      iv: Buffer.from(iv).toString('hex'),
       tag: tag.toString('hex')
     }
   } catch (error) {
@@ -117,13 +117,14 @@ export function decryptData(encryptedData: { encrypted: string; iv: string; tag:
     
     return decrypted
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Decryption error details:', {
-      error: error.message,
+      error: errorMessage,
       iv: encryptedData?.iv,
       tag: encryptedData?.tag,
       encryptedLength: encryptedData?.encrypted?.length
     })
-    throw new Error(`Decryption failed: ${error.message}`)
+    throw new Error(`Decryption failed: ${errorMessage}`)
   }
 }
 
@@ -191,7 +192,8 @@ export function restoreGameWallet(encryptedSecret: { encrypted: string; iv: stri
       migratedData = migrateEncryptedData(encryptedSecret)
       console.log('Data migration successful')
     } catch (migrationError) {
-      console.log('No migration needed or migration failed, using original data:', migrationError.message)
+      const errorMessage = migrationError instanceof Error ? migrationError.message : 'Unknown error'
+      console.log('No migration needed or migration failed, using original data:', errorMessage)
     }
     
     const secretKeyHex = decryptData(migratedData)

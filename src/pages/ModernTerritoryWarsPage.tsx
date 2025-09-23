@@ -325,3 +325,4 @@ export const ModernTerritoryWarsPage: React.FC = () => {
 }
 
 export default ModernTerritoryWarsPage
+

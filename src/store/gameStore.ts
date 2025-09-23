@@ -140,6 +140,7 @@ export interface GameActions {
   updateVIPTier: () => void
   completeChallenge: (challengeId: string) => void
   spinDailyWheel: () => void
+  updateChallenges: (won: boolean, betAmount: number) => void
 
   // Settings actions
   toggleSound: () => void

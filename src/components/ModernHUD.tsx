@@ -304,7 +304,7 @@ export const ModernHUD: React.FC<ModernHUDProps> = ({
         )}
       </AnimatePresence>
 
-      <style jsx>{`
+      <style>{`
         .modern-hud {
           position: fixed;
           top: 0;
@@ -699,3 +699,4 @@ export const ModernHUD: React.FC<ModernHUDProps> = ({
 }
 
 export default ModernHUD
+

@@ -16,12 +16,15 @@ export const WalletTransferModal: React.FC<WalletTransferModalProps> = ({
 }) => {
   const { 
     gameWalletBalance, 
-    depositToGame, 
-    withdrawFromGame, 
-    isDepositing, 
-    isWithdrawing,
     refreshGameBalance 
   } = useWalletContext()
+  
+  // Check if transfer methods are available (they might not be in safe context)
+  const context = useWalletContext() as any
+  const depositToGame = context.depositToGame
+  const withdrawFromGame = context.withdrawFromGame
+  const isDepositing = context.isDepositing || false
+  const isWithdrawing = context.isWithdrawing || false
   
   const [transferType, setTransferType] = useState<TransferType>('deposit')
   const [amount, setAmount] = useState('')
@@ -46,9 +49,19 @@ export const WalletTransferModal: React.FC<WalletTransferModalProps> = ({
 
     try {
       if (transferType === 'deposit') {
-        await depositToGame(numAmount)
+        if (depositToGame) {
+          await depositToGame(numAmount)
+        } else {
+          setError('Deposit functionality not available in demo mode')
+          return
+        }
       } else {
-        await withdrawFromGame(numAmount)
+        if (withdrawFromGame) {
+          await withdrawFromGame(numAmount)
+        } else {
+          setError('Withdrawal functionality not available in demo mode')
+          return
+        }
       }
       
       setAmount('')

@@ -19,6 +19,7 @@ interface SafeWalletContextType {
   refreshGameBalance: () => Promise<void>
   walletMapping: any
   userProfile: any
+  updateProfile: (updates: any) => Promise<void>
   isInitializing: boolean
 }
 
@@ -61,6 +62,12 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setGameWalletBalance(1.5)
   }, [])
 
+  const updateProfile = useCallback(async (updates: any) => {
+    // Mock implementation - in a real app, this would update the user profile
+    console.log('Updating profile with:', updates)
+    await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API call
+  }, [])
+
   const contextValue: SafeWalletContextType = {
     publicKey: null,
     connected,
@@ -74,6 +81,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     refreshGameBalance,
     walletMapping: null,
     userProfile: null,
+    updateProfile,
     isInitializing,
   }
 

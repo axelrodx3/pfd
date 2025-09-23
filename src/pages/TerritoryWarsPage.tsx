@@ -200,8 +200,8 @@ export const TerritoryWarsPage: React.FC = () => {
 
     // Performance monitoring
     const performanceMonitor = setInterval(() => {
-      if (performance.memory) {
-        const memoryUsage = performance.memory.usedJSHeapSize / 1024 / 1024 // MB
+      if ((performance as any).memory) {
+        const memoryUsage = (performance as any).memory.usedJSHeapSize / 1024 / 1024 // MB
         if (memoryUsage > 100) {
           addBugReport(`High memory usage: ${memoryUsage.toFixed(2)}MB`, 'low')
         }

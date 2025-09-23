@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { DiceRoller } from '../components/DiceRoller'
@@ -9,7 +9,7 @@ import { GameRulesModal } from '../components/GameRulesModal'
 import { SettingsModal } from '../components/SettingsModal'
 import { AdvancedStats } from '../components/AdvancedStats'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
-import { Settings, HelpCircle, BarChart3, Download, X } from 'lucide-react'
+import { Settings, HelpCircle, BarChart3, Download, X, Menu } from 'lucide-react'
 
 /**
  * Enhanced Game Page Component
@@ -65,6 +65,8 @@ export const EnhancedGamePage: React.FC = () => {
     toggleMute,
     completeChallenge,
     spinDailyWheel,
+    validateGameState,
+    recoverGameState,
   } = useGameStore()
 
   const [showSettings, setShowSettings] = useState(false)
@@ -79,8 +81,24 @@ export const EnhancedGamePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [autorollDelay, setAutorollDelay] = useState(false)
+  const [showGameMenu, setShowGameMenu] = useState(false)
+  const gameMenuRef = useRef<HTMLDivElement>(null)
 
   const { success, error, warning, info } = useToast()
+
+  // Close game menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (gameMenuRef.current && !gameMenuRef.current.contains(event.target as Node)) {
+        setShowGameMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleBetChange = (amount: number) => {
     setBet(Math.max(1, Math.min(amount, hiloTokens)))
@@ -133,6 +151,15 @@ export const EnhancedGamePage: React.FC = () => {
     }
   }
 
+  // Game state validation and recovery
+  useEffect(() => {
+    const isValid = validateGameState()
+    if (!isValid) {
+      console.warn('🚨 Invalid game state detected, attempting recovery...')
+      recoverGameState()
+    }
+  }, [validateGameState, recoverGameState])
+
   // Auto-roll logic - Continue automatically regardless of win/loss
   useEffect(() => {
     if (
@@ -156,7 +183,13 @@ export const EnhancedGamePage: React.FC = () => {
 
     const timer = setTimeout(() => {
       setAutorollDelay(false)
-      handleRollDice()
+      try {
+        handleRollDice()
+      } catch (error) {
+        console.error('🚨 Error in auto-roll:', error)
+        // Disable auto-roll on error to prevent infinite loops
+        toggleAutoRoll()
+      }
     }, delay)
 
     return () => {
@@ -173,6 +206,7 @@ export const EnhancedGamePage: React.FC = () => {
     autoRollCount,
     autoRollMax,
     lastWin,
+    toggleAutoRoll,
   ])
 
   // Stop autoroll when max count reached
@@ -236,9 +270,6 @@ export const EnhancedGamePage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <div className="text-center lg:text-left">
-            <h1 className="text-4xl font-bold text-hilo-gold mb-2">
-              HILO Casino
-            </h1>
             <div className="flex items-center justify-center lg:justify-start gap-4">
               <div
                 className={`px-3 py-1 rounded-full bg-gradient-to-r ${getVIPTierColor(vipTier)} text-white text-sm font-bold`}
@@ -288,7 +319,86 @@ export const EnhancedGamePage: React.FC = () => {
 
         <div className="max-w-6xl mx-auto">
           {/* Game Area */}
-          <div className="bg-gray-900 rounded-lg p-12 mb-8">
+          <div className="bg-gray-900 rounded-lg p-12 mb-8 relative">
+            {/* Hamburger Menu Button */}
+            <div className="absolute top-4 right-4" ref={gameMenuRef}>
+              <button
+                onClick={() => setShowGameMenu(!showGameMenu)}
+                className="p-2 rounded-lg text-gray-300 hover:text-hilo-gold hover:bg-hilo-gold/10 transition-all duration-300"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              
+              {/* Game Menu Dropdown */}
+              <AnimatePresence>
+                {showGameMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50"
+                  >
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          setShowRules(true)
+                          setShowGameMenu(false)
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                      >
+                        <HelpCircle className="w-4 h-4" />
+                        <span>Rules</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowAdvancedStats(true)
+                          setShowGameMenu(false)
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span>Stats</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowChallenges(true)
+                          setShowGameMenu(false)
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                      >
+                        <span>🎯</span>
+                        <span>Challenges</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowDailyWheel(true)
+                          setShowGameMenu(false)
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                      >
+                        <span>🎡</span>
+                        <span>Daily Wheel</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowSettings(true)
+                          setShowGameMenu(false)
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             {/* Balance & Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
               <div className="text-center">

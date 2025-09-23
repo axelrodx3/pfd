@@ -91,27 +91,9 @@ export const SolanaWalletDetector: React.FC<SolanaWalletDetectorProps> = ({ chil
     )
   }
 
-  // No Solana wallet detected - show warning but allow app to continue
+  // No Solana wallet detected - show app normally without warning banner
   if (!hasSolanaWallet) {
-    return (
-      <div className="relative">
-        {/* Warning Banner */}
-        <div className="bg-yellow-900/50 border-b border-yellow-500/50 p-3 text-center">
-          <div className="flex items-center justify-center gap-2 text-yellow-300">
-            <span>⚠️</span>
-            <span className="text-sm">
-              No Solana wallet detected. 
-              <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-200 ml-1">
-                Install Phantom
-              </a>
-              {' '}to connect your wallet.
-            </span>
-          </div>
-        </div>
-        {/* App Content */}
-        {children}
-      </div>
-    )
+    return <>{children}</>
   }
 
   // Wallet detected, show app normally
