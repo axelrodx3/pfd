@@ -8,10 +8,12 @@ import { EnhancedGamePage } from './pages/EnhancedGamePage'
 import GamesPage from './pages/GamesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
-import TerritoryWarsPage from './pages/TerritoryWarsPage'
-import ModernTerritoryWarsPage from './pages/ModernTerritoryWarsPage'
 import AboutPage from './pages/AboutPage'
 import WalletPage from './pages/WalletPage'
+
+// Lazy-load heavy Territory Wars pages to reduce initial bundle
+const TerritoryWarsPage = React.lazy(() => import('./pages/TerritoryWarsPage'))
+const ModernTerritoryWarsPage = React.lazy(() => import('./pages/ModernTerritoryWarsPage'))
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 import { SolanaWalletDetector } from './components/SolanaWalletDetector'
@@ -100,12 +102,13 @@ function AppContent() {
 
           {/* Main Content */}
           <main className="pt-16">
+            <React.Suspense fallback={<div style={{ padding: 20 }}>Loading…</div>}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/games" element={<GamesPage />} />
               <Route path="/game" element={<EnhancedGamePage />} />
               <Route path="/territory-wars" element={<TerritoryWarsPage />} />
-            <Route path="/modern-territory-wars" element={<ModernTerritoryWarsPage />} />
+              <Route path="/modern-territory-wars" element={<ModernTerritoryWarsPage />} />
               <Route path="/classic" element={<GamePage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route
@@ -115,6 +118,7 @@ function AppContent() {
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/about" element={<AboutPage />} />
             </Routes>
+            </React.Suspense>
           </main>
 
           {/* Footer */}

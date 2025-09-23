@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useToast } from '../components/Toast'
 import { useGameStore } from '../store/gameStore'
 import Phaser from 'phaser'
+import UnitsLayer, { Unit } from '../components/UnitsLayer'
 
 /**
  * Territory Wars (prototype)
@@ -47,6 +48,33 @@ export const TerritoryWarsPage: React.FC = () => {
   const [lastErrorTime, setLastErrorTime] = useState<Date | null>(null)
   const [currentMap, setCurrentMap] = useState(0)
   const [showMapSelector, setShowMapSelector] = useState(false)
+
+  // Units overlay (ensure visibility on classic page too)
+  const [viewport, setViewport] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    height: typeof window !== 'undefined' ? window.innerHeight : 720,
+  }))
+  const [units, setUnits] = useState<Unit[]>(() => {
+    if (typeof window === 'undefined') return []
+    const w = window.innerWidth
+    const h = window.innerHeight
+    return [
+      { id: 'p1', team: 'player', x: w * 0.25, y: h * 0.75, facing: 'right' },
+      { id: 'p2', team: 'player', x: w * 0.30, y: h * 0.75, facing: 'right' },
+      { id: 'p3', team: 'player', x: w * 0.35, y: h * 0.75, facing: 'right' },
+      { id: 'c1', team: 'cpu', x: w * 0.65, y: h * 0.75, facing: 'left' },
+      { id: 'c2', team: 'cpu', x: w * 0.70, y: h * 0.75, facing: 'left' },
+      { id: 'c3', team: 'cpu', x: w * 0.75, y: h * 0.75, facing: 'left' },
+    ]
+  })
+  const showUnitsDebug = (import.meta as any).env?.VITE_TW_DEBUG === 'true'
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // Bug reporting system
   const addBugReport = (message: string, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
@@ -1693,7 +1721,7 @@ export const TerritoryWarsPage: React.FC = () => {
         })
 
         // HUD handled by React overlay
-
+        
         // Draw stick figures with walking animation
         const drawStick = (x:number, y:number, color:number, facing: number, name:string, highlight:boolean, isWalking:boolean = false) => {
           const g = this.add.graphics().setData('tag','stick')
@@ -1741,8 +1769,18 @@ export const TerritoryWarsPage: React.FC = () => {
             shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
           }).setOrigin(0.5).setData('tag','stick')
         }
-        // Draw all units
-        // Units are now drawn in the main update loop above
+        // Draw all units (ensure visible even if Phaser placeholders)
+        this.teamA.forEach((u, idx) => {
+          if (this.teamAHP[idx] <= 0) return
+          const isSel = this.player === u
+          const walking = (u as any).getData ? !!(u as any).getData('walking') : false
+          drawStick(u.x, u.y, 0x111111, +1, `P${idx+1}`, isSel, walking)
+        })
+        this.teamB.forEach((u, idx) => {
+          if (this.teamBHP[idx] <= 0) return
+          const walking = (u as any).getData ? !!(u as any).getData('walking') : false
+          drawStick(u.x, u.y, 0x111111, -1, `CPU${idx+1}`, false, walking)
+        })
 
         // Update active timer text position/value
         if (this.activeTimerText) {
@@ -2274,7 +2312,19 @@ export const TerritoryWarsPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-hilo-black text-white p-6">
+    <div className="min-h-screen bg-hilo-black text-white p-6 relative">
+
+      {/* Units overlay fixed to viewport, above background */}
+      <div className="pointer-events-none fixed inset-0 z-30" aria-label="UnitsLayer-Container-Classic">
+        <UnitsLayer
+          units={units}
+          width={viewport.width}
+          height={viewport.height}
+          playerColor="#00ff88"
+          cpuColor="#ff4444"
+          showDebug={showUnitsDebug}
+        />
+      </div>
 
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">

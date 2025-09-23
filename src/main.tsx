@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { errorReporter } from './lib/errorReporting'
+import { Buffer } from 'buffer'
 
 // BigInt polyfill for older browsers
 if (typeof BigInt === 'undefined') {
@@ -14,6 +15,13 @@ if (typeof BigInt === 'undefined') {
     }
     return value
   }
+}
+
+// Ensure Buffer is available in the browser (needed by some crypto libs)
+// @ts-ignore
+if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
+  // @ts-ignore
+  window.Buffer = Buffer as unknown as Buffer
 }
 
 // Comprehensive production debugging

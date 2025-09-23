@@ -16,6 +16,8 @@ export const debug = {
 
   error: (message: string, error?: any) => {
     console.error(`❌ [ERROR] ${message}`, error || '')
+    // Ignore synthetic test errors to avoid noisy overlays
+    if (typeof message === 'string' && message.includes('Test:')) return
     if (DEBUG) {
       showErrorOverlay(message, error)
     }
@@ -61,6 +63,8 @@ export function setupGlobalErrorHandlers() {
 
 // Error overlay for visible error display
 function showErrorOverlay(title: string, error?: any) {
+  // Don't display overlay for test/simulated errors
+  if (typeof title === 'string' && title.includes('Test:')) return
   // Remove existing overlay
   const existing = document.getElementById('debug-error-overlay')
   if (existing) existing.remove()

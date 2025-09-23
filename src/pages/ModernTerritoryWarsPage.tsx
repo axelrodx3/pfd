@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore'
 import ModernHUD from '../components/ModernHUD'
 import ModernWeaponSelector from '../components/ModernWeaponSelector'
 import ParticleEffects from '../components/ParticleEffects'
+import UnitsLayer, { Unit } from '../components/UnitsLayer'
 
 /**
  * Modern Territory Wars - Completely Revamped
@@ -24,6 +25,26 @@ export const ModernTerritoryWarsPage: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [selectedWeapon, setSelectedWeapon] = useState<string | null>(null)
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null)
+
+  // Units state (visible stick figures)
+  const [units, setUnits] = useState<Unit[]>(() => {
+    if (typeof window === 'undefined') return []
+    const w = window.innerWidth
+    const h = window.innerHeight
+    return [
+      { id: 'p_main', team: 'player', x: w * 0.20, y: h * 0.75, facing: 'right' },
+      { id: 'p2', team: 'player', x: w * 0.30, y: h * 0.75, facing: 'right' },
+      { id: 'p3', team: 'player', x: w * 0.35, y: h * 0.75, facing: 'right' },
+      { id: 'c1', team: 'cpu', x: w * 0.65, y: h * 0.75, facing: 'left' },
+      { id: 'c2', team: 'cpu', x: w * 0.70, y: h * 0.75, facing: 'left' },
+      { id: 'c3', team: 'cpu', x: w * 0.75, y: h * 0.75, facing: 'left' },
+    ]
+  })
+  const [viewport, setViewport] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    height: typeof window !== 'undefined' ? window.innerHeight : 720,
+  }))
+  const showUnitsDebug = (import.meta as any).env?.VITE_TW_DEBUG === 'true'
 
   // Particle Effects
   const [particleEffects, setParticleEffects] = useState<Array<{
@@ -80,6 +101,16 @@ export const ModernTerritoryWarsPage: React.FC = () => {
     }, 30000) // Change weather every 30 seconds
 
     return () => clearInterval(weatherInterval)
+  }, [])
+
+  // Resize handling for UnitsLayer
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight })
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   // Event Handlers
@@ -158,6 +189,9 @@ export const ModernTerritoryWarsPage: React.FC = () => {
     success(`Selected unit ${unitId}`)
   }
 
+  // Ensure controlled player is always visible and highlighted
+  const highlightedUnitId = selectedUnit || 'p_main'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
       {/* Background Effects */}
@@ -206,6 +240,20 @@ export const ModernTerritoryWarsPage: React.FC = () => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Units Layer sits behind HUD and above background */}
+      <div className="absolute inset-0 z-30" aria-label="UnitsLayer-Container">
+        <UnitsLayer
+          units={units}
+          width={viewport.width}
+          height={viewport.height}
+          playerColor="#00ff88"
+          cpuColor="#ff4444"
+          showDebug={showUnitsDebug}
+          onUnitClick={handleUnitSelect}
+          highlightUnitId={highlightedUnitId}
+        />
       </div>
 
       {/* Modern HUD */}

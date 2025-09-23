@@ -57,13 +57,18 @@ export default defineConfig({
       compress: {
         drop_console: false,
         drop_debugger: false,
-        // pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        passes: 2,
-        unsafe: true,
-        unsafe_comps: true,
-        unsafe_math: true,
-        unsafe_proto: true,
-        unsafe_regexp: true
+        // Avoid transforms that can break BigInt / crypto libs
+        ecma: 2020,
+        passes: 1,
+        comparisons: false,
+        inline: 1,
+        typeofs: false,
+        unsafe: false,
+        unsafe_comps: false,
+        unsafe_math: false,
+        unsafe_proto: false,
+        unsafe_regexp: false,
+        keep_infinity: true
       },
       mangle: {
         safari10: true
