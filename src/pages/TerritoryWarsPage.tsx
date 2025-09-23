@@ -1328,9 +1328,12 @@ export const TerritoryWarsPage: React.FC = () => {
         this.generateMap(this.availableMaps[this.currentMap])
         // Create teams (3 per side) - Make them visible
         // Create simple invisible placeholder units with required methods
+        const marginX = 120
+        const groundY = h - 100
+        const spacing = 80
         this.teamA = [
           { 
-            x: 160, y: h-100, 
+            x: marginX, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1342,7 +1345,7 @@ export const TerritoryWarsPage: React.FC = () => {
             setInteractive: () => null as any
           },
           { 
-            x: 220, y: h-170, 
+            x: marginX + spacing, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1354,7 +1357,7 @@ export const TerritoryWarsPage: React.FC = () => {
             setInteractive: () => null as any
           },
           { 
-            x: 300, y: h-135, 
+            x: marginX + spacing * 2, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1368,7 +1371,7 @@ export const TerritoryWarsPage: React.FC = () => {
         ]
         this.teamB = [
           { 
-            x: w-220, y: h-210, 
+            x: w - marginX - spacing * 2, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1380,7 +1383,7 @@ export const TerritoryWarsPage: React.FC = () => {
             setInteractive: () => null as any
           },
           { 
-            x: w-300, y: h-135, 
+            x: w - marginX - spacing, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1392,7 +1395,7 @@ export const TerritoryWarsPage: React.FC = () => {
             setInteractive: () => null as any
           },
           { 
-            x: w-160, y: h-100, 
+            x: w - marginX, y: groundY, 
             getData: () => null, 
             setData: () => null as any,
             setFillStyle: () => null as any,
@@ -1724,7 +1727,7 @@ export const TerritoryWarsPage: React.FC = () => {
         
         // Draw stick figures with walking animation
         const drawStick = (x:number, y:number, color:number, facing: number, name:string, highlight:boolean, isWalking:boolean = false) => {
-          const g = this.add.graphics().setData('tag','stick')
+          const g = this.add.graphics().setData('tag','stick').setDepth(1000).setAlpha(1)
           // drop shadow under feet
           g.fillStyle(0x000000, 0.25).fillEllipse(x, y + 18, 18, 6)
           // head (filled + outline)
@@ -1767,7 +1770,7 @@ export const TerritoryWarsPage: React.FC = () => {
             stroke: '#000000',
             strokeThickness: 3,
             shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
-          }).setOrigin(0.5).setData('tag','stick')
+          }).setOrigin(0.5).setData('tag','stick').setDepth(1001).setAlpha(1)
         }
         // Draw all units (ensure visible even if Phaser placeholders)
         this.teamA.forEach((u, idx) => {
