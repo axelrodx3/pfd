@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 import Modal from './Modal'
-import { X, MessageCircle, Mail, Phone, HelpCircle, ExternalLink } from 'lucide-react'
+import { Mail, HelpCircle } from 'lucide-react'
 
 interface SupportModalProps {
   isOpen: boolean
@@ -10,15 +10,6 @@ interface SupportModalProps {
 
 export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
   const supportOptions = [
-    {
-      title: 'Live Chat',
-      description: 'Get instant help from our support team',
-      icon: MessageCircle,
-      action: () => {
-        // In a real app, this would open a chat widget
-        alert('Live chat would open here')
-      }
-    },
     {
       title: 'Email Support',
       description: 'Send us an email and we\'ll respond within 24 hours',
@@ -32,16 +23,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
       description: 'Find answers to common questions',
       icon: HelpCircle,
       action: () => {
-        // In a real app, this would navigate to FAQ page
-        alert('FAQ page would open here')
-      }
-    },
-    {
-      title: 'Discord Community',
-      description: 'Join our Discord for community support',
-      icon: ExternalLink,
-      action: () => {
-        window.open('https://discord.gg/hilocasino', '_blank')
+        window.location.href = '/faq'
       }
     }
   ]
@@ -86,9 +68,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
             <div className="text-blue-300 text-sm">
               <strong>Response Times:</strong>
               <ul className="mt-2 space-y-1 text-xs">
-                <li>• Live Chat: Instant</li>
                 <li>• Email: Within 24 hours</li>
-                <li>• Discord: Community support</li>
+                <li>• FAQ: Instant answers for common questions</li>
               </ul>
             </div>
           </div>

@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import Modal from './Modal'
 import {
-  X,
   Settings,
   Volume2,
-  VolumeX,
   Palette,
-  Keyboard,
   Download,
   Trash2,
-  Save,
   RotateCcw,
 } from 'lucide-react'
 import { useGameStore } from '../store/gameStore'
@@ -27,13 +22,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  // Ensure Escape closes
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
   const { success, error } = useToast()
   const {
     soundEnabled,
@@ -55,31 +43,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     resetEverything,
   } = useGameStore()
 
-  const [activeTab, setActiveTab] = useState<
-    'general' | 'audio' | 'appearance' | 'data'
-  >('general')
   const [isExporting, setIsExporting] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [resetConfirmText, setResetConfirmText] = useState('')
 
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
-
-  const tabs = [
-    { id: 'general', label: 'General', icon: Settings },
-    { id: 'audio', label: 'Audio', icon: Volume2 },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'data', label: 'Data', icon: Download },
-  ] as const
+  // Modal handles ESC and focus trapping
 
   const diceSkins = [
     { id: 'classic', name: 'Classic', description: 'Traditional casino style' },
@@ -162,268 +132,171 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <>
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="xl" panelClassName="md:max-w-3xl no-scrollbar">
-      <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-700">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-hilo-gold" />
-            Settings
-          </h2>
-          {/* Close handled by Modal's X button */}
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" title="Settings">
+      <div className="p-0">
+        <div className="p-6 space-y-6">
+          {/* Appearance Block */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">Appearance</h3>
+            <div className="bg-hilo-black/50 rounded-lg p-4 border border-hilo-gray-light space-y-6">
+              <div>
+                <h4 className="font-medium text-white mb-3">Theme & Colors</h4>
+                <ThemeSelector />
+              </div>
 
-        <div className="flex">
-          {/* Sidebar */}
-          <div className="w-64 border-r border-gray-700 bg-gray-800/50">
-            <nav className="p-4 space-y-2">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                    ${
-                      activeTab === tab.id
-                        ? 'bg-hilo-gold/20 text-hilo-gold border border-hilo-gold/30'
-                        : 'text-gray-300 hover:bg-gray-700/50'
-                    }
-                  `}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
+              <div>
+                <h4 className="font-medium text-white mb-3">Dice Skin</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {diceSkins.map(skin => (
+                    <button
+                      key={skin.id}
+                      onClick={() => setDiceSkin(skin.id)}
+                      className={`
+                        p-4 rounded-lg border transition-all duration-200 text-left
+                        ${
+                          selectedDiceSkin === skin.id
+                            ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
+                            : 'border-hilo-gray-light bg-hilo-black/50 text-gray-300 hover:bg-hilo-gold/10 hover:border-hilo-gold/30'
+                        }
+                      `}
+                    >
+                      <div className="font-medium">{skin.name}</div>
+                      <div className="text-sm opacity-75">{skin.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 p-6 overflow-y-auto no-scrollbar">
-            {activeTab === 'general' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  General Settings
-                </h3>
+          {/* General Block */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">General</h3>
+            <div className="bg-hilo-black/50 rounded-lg p-4 border border-hilo-gray-light space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Auto-save Game State</h4>
+                  <p className="text-sm text-gray-400">Automatically save your progress</p>
+                </div>
+                <button
+                  onClick={toggleAutoSave}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${autoSaveEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${autoSaveEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">
-                        Auto-save Game State
-                      </h4>
-                      <p className="text-sm text-gray-400">
-                        Automatically save your progress
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleAutoSave}
-                      className={`w-12 h-6 rounded-full relative transition-colors ${autoSaveEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
-                    >
-                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${autoSaveEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                    </button>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Show Animations</h4>
+                  <p className="text-sm text-gray-400">Enable visual effects and transitions</p>
+                </div>
+                <button
+                  onClick={toggleAnimations}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${animationsEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${animationsEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">
-                        Show Animations
-                      </h4>
-                      <p className="text-sm text-gray-400">
-                        Enable visual effects and transitions
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleAnimations}
-                      className={`w-12 h-6 rounded-full relative transition-colors ${animationsEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
-                    >
-                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${animationsEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                    </button>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Haptic Feedback</h4>
+                  <p className="text-sm text-gray-400">Vibration on mobile devices</p>
+                </div>
+                <button
+                  onClick={toggleHaptics}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${hapticsEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${hapticsEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+            </div>
+          </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">
-                        Haptic Feedback
-                      </h4>
-                      <p className="text-sm text-gray-400">
-                        Vibration on mobile devices
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleHaptics}
-                      className={`w-12 h-6 rounded-full relative transition-colors ${hapticsEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
-                    >
-                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${hapticsEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                    </button>
-                  </div>
+          {/* Audio Block */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">Audio</h3>
+            <div className="bg-hilo-black/50 rounded-lg p-4 border border-hilo-gray-light space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Sound Effects</h4>
+                  <p className="text-sm text-gray-400">Play sounds for game actions</p>
+                </div>
+                <button
+                  onClick={toggleSound}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${soundEnabled ? 'bg-hilo-gold' : 'bg-gray-600'}`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${soundEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Mute All</h4>
+                  <p className="text-sm text-gray-400">Disable all audio</p>
+                </div>
+                <button
+                  onClick={toggleMute}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${muted ? 'bg-red-500' : 'bg-gray-600'}`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${muted ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-white font-medium">Master Volume</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={masterVolume}
+                  onChange={(e) => setMasterVolume(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Data Block */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">Data</h3>
+            <div className="bg-hilo-black/50 rounded-lg p-4 border border-hilo-gray-light space-y-4">
+              <div>
+                <h4 className="font-medium text-white mb-2">Game History</h4>
+                <p className="text-sm text-gray-400 mb-4">{gameHistory.length} games recorded</p>
+                <div className="flex gap-3">
+                  <LoadingButton
+                    loading={isExporting}
+                    loadingText="Exporting..."
+                    onClick={handleExportHistory}
+                    className="bg-hilo-gold text-hilo-black hover:bg-hilo-gold-dark"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export CSV
+                  </LoadingButton>
+
+                  <LoadingButton
+                    loading={isClearing}
+                    loadingText="Clearing..."
+                    onClick={handleClearHistory}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear History
+                  </LoadingButton>
                 </div>
               </div>
-            )}
 
-            {activeTab === 'audio' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  Audio Settings
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">
-                        Sound Effects
-                      </h4>
-                      <p className="text-sm text-gray-400">
-                        Play sounds for game actions
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleSound}
-                      className={`w-12 h-6 rounded-full relative transition-colors ${
-                        soundEnabled ? 'bg-hilo-gold' : 'bg-gray-600'
-                      }`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
-                          soundEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">Mute All</h4>
-                      <p className="text-sm text-gray-400">
-                        Disable all audio
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleMute}
-                      className={`w-12 h-6 rounded-full relative transition-colors ${
-                        muted ? 'bg-red-500' : 'bg-gray-600'
-                      }`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
-                          muted ? 'translate-x-6' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-white font-medium">
-                      Master Volume
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={masterVolume}
-                      onChange={(e) => setMasterVolume(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                  </div>
-                </div>
+              <div>
+                <h4 className="font-medium text-white mb-2">Reset Game</h4>
+                <p className="text-sm text-gray-400 mb-4">Reset all progress and start fresh</p>
+                <button onClick={handleResetEverything} disabled={isResetting} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <RotateCcw className="w-4 h-4" />
+                  {isResetting ? 'Resetting...' : 'Reset Everything'}
+                </button>
               </div>
-            )}
-
-            {activeTab === 'appearance' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  Appearance Settings
-                </h3>
-
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-medium text-white mb-3">
-                      Theme & Colors
-                    </h4>
-                    <ThemeSelector />
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-white mb-3">
-                      Dice Skin
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {diceSkins.map(skin => (
-                        <button
-                          key={skin.id}
-                          onClick={() => setDiceSkin(skin.id)}
-                          className={`
-                            p-4 rounded-lg border transition-all duration-200 text-left
-                            ${
-                              selectedDiceSkin === skin.id
-                                ? 'border-hilo-gold bg-hilo-gold/20 text-hilo-gold'
-                                : 'border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500'
-                            }
-                          `}
-                        >
-                          <div className="font-medium">{skin.name}</div>
-                          <div className="text-sm opacity-75">
-                            {skin.description}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'data' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  Data Management
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <h4 className="font-medium text-white mb-2">
-                      Game History
-                    </h4>
-                    <p className="text-sm text-gray-400 mb-4">
-                      {gameHistory.length} games recorded
-                    </p>
-                    <div className="flex gap-3">
-                      <LoadingButton
-                        loading={isExporting}
-                        loadingText="Exporting..."
-                        onClick={handleExportHistory}
-                        className="bg-hilo-gold text-hilo-black hover:bg-hilo-gold/90"
-                      >
-                        <Download className="w-4 h-4" />
-                        Export CSV
-                      </LoadingButton>
-
-                      <LoadingButton
-                        loading={isClearing}
-                        loadingText="Clearing..."
-                        onClick={handleClearHistory}
-                        className="bg-red-600 text-white hover:bg-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Clear History
-                      </LoadingButton>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <h4 className="font-medium text-white mb-2">
-                      Reset Game
-                    </h4>
-                    <p className="text-sm text-gray-400 mb-4">
-                      Reset all progress and start fresh
-                    </p>
-                    <button onClick={handleResetEverything} disabled={isResetting} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                      <RotateCcw className="w-4 h-4" />
-                      {isResetting ? 'Resetting...' : 'Reset Everything'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

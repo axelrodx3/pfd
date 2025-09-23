@@ -7,6 +7,7 @@ import { RealWalletButton } from './RealWalletButton'
 import { AdminPanel } from './AdminPanel'
 import { SettingsModal } from './SettingsModal'
 import { SupportModal } from './SupportModal'
+import DailyWheelModal from './DailyWheelModal'
 import { AccountModal } from './AccountModal'
 import { useWalletContext } from '../contexts/WalletContextWrapper'
 import { useGameStore } from '../store/gameStore'
@@ -41,6 +42,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
   const [showAccount, setShowAccount] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
+  const [showDailyWheelModal, setShowDailyWheelModal] = useState(false)
   const [showWalletRequired, setShowWalletRequired] = useState(false)
   const [walletRequiredFeature, setWalletRequiredFeature] = useState('')
   const { userProfile, gameWalletBalance, connected } = useWalletContext()
@@ -294,14 +296,22 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Leaderboard</span>
                         </Link>
 
-                        <Link
-                          to="/game?open=daily-wheel"
-                          onClick={() => setIsDropdownOpen(false)}
+                        <button
+                          onClick={() => {
+                            if (!connected) {
+                              setWalletRequiredFeature('Daily Wheel')
+                              setShowWalletRequired(true)
+                              setIsDropdownOpen(false)
+                              return
+                            }
+                            setShowDailyWheelModal(true)
+                            setIsDropdownOpen(false)
+                          }}
                           className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
                         >
                           <RefreshCw className="w-4 h-4" />
                           <span>Daily Wheel</span>
-                        </Link>
+                        </button>
 
                         {/* Separator */}
                         <div className="border-t border-hilo-gray-light my-2"></div>
@@ -475,14 +485,22 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <span className="text-sm text-gray-300">Leaderboard</span>
                 </Link>
 
-                <Link
-                  to="/game?open=daily-wheel"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    if (!connected) {
+                      setWalletRequiredFeature('Daily Wheel')
+                      setShowWalletRequired(true)
+                      setIsMobileMenuOpen(false)
+                      return
+                    }
+                    setShowDailyWheelModal(true)
+                    setIsMobileMenuOpen(false)
+                  }}
                   className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
                 >
                   <RefreshCw className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Daily Wheel</span>
-                </Link>
+                </button>
 
                 <button
                   onClick={() => {
@@ -570,6 +588,12 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
         isOpen={showWalletRequired}
         onClose={() => setShowWalletRequired(false)}
         featureName={walletRequiredFeature}
+      />
+
+      {/* Global Daily Wheel Modal */}
+      <DailyWheelModal
+        isOpen={showDailyWheelModal}
+        onClose={() => setShowDailyWheelModal(false)}
       />
     </motion.nav>
   )

@@ -16,6 +16,7 @@ interface Dice3DProps {
   soundEnabled?: boolean
   muted?: boolean
   skin?: 'classic' | 'neon' | 'gold'
+  masterVolume?: number
 }
 
 /**
@@ -35,6 +36,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
   soundEnabled = true,
   muted = false,
   skin = 'classic',
+  masterVolume = 100,
 }) => {
   const [currentFace, setCurrentFace] = useState(1)
   const [showResult, setShowResult] = useState(false)
@@ -57,6 +59,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
 
+      // Scale all gains by master volume (0-100)
+      const volumeScale = Math.max(0, Math.min(1, masterVolume / 100))
+
       switch (sound) {
         case 'roll':
           oscillator.frequency.setValueAtTime(200, audioContext.currentTime)
@@ -64,9 +69,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             400,
             audioContext.currentTime + 0.1
           )
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+          gainNode.gain.setValueAtTime(0.1 * volumeScale, audioContext.currentTime)
           gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
+            0.01 * volumeScale,
             audioContext.currentTime + 0.1
           )
           oscillator.start()
@@ -87,9 +92,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             1047,
             audioContext.currentTime + 0.3
           ) // C6
-          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
+          gainNode.gain.setValueAtTime(0.2 * volumeScale, audioContext.currentTime)
           gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
+            0.01 * volumeScale,
             audioContext.currentTime + 0.4
           )
           oscillator.start()
@@ -102,9 +107,9 @@ export const Dice3D: React.FC<Dice3DProps> = ({
             80,
             audioContext.currentTime + 0.3
           )
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+          gainNode.gain.setValueAtTime(0.1 * volumeScale, audioContext.currentTime)
           gainNode.gain.exponentialRampToValueAtTime(
-            0.01,
+            0.01 * volumeScale,
             audioContext.currentTime + 0.3
           )
           oscillator.start()
@@ -117,7 +122,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         console.warn('Audio playback failed:', error)
       }
     }
-  }, [soundEnabled, muted])
+  }, [soundEnabled, muted, masterVolume])
 
   // Simple dice face display
 

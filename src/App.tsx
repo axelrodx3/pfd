@@ -9,6 +9,7 @@ import GamesPage from './pages/GamesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
 import AboutPage from './pages/AboutPage'
+import FAQPage from './pages/FAQPage'
 import WalletPage from './pages/WalletPage'
 
 // Lazy-load heavy Territory Wars pages to reduce initial bundle
@@ -115,6 +116,7 @@ function AppContent() {
               />
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/faq" element={<FAQPage />} />
             </Routes>
             </React.Suspense>
           </main>

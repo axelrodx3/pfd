@@ -8,6 +8,7 @@ import { useToast } from '../components/Toast'
 import { LoadingSpinner, LoadingButton } from '../components/LoadingSpinner'
 import { GameRulesModal } from '../components/GameRulesModal'
 import { SettingsModal } from '../components/SettingsModal'
+import DailyWheel, { DailyWheelHandle } from '../components/DailyWheel'
 import { AdvancedStats } from '../components/AdvancedStats'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { Settings, HelpCircle, BarChart3, Download, X, Menu } from 'lucide-react'
@@ -77,6 +78,7 @@ export const EnhancedGamePage: React.FC = () => {
   const [showDailyWheel, setShowDailyWheel] = useState(false)
   const [wheelSpinning, setWheelSpinning] = useState(false)
   const [wheelResult, setWheelResult] = useState<number | null>(null)
+  const wheelRef = useRef<DailyWheelHandle | null>(null)
 
   // New enhanced features state
   const [showRules, setShowRules] = useState(false)
@@ -254,6 +256,10 @@ export const EnhancedGamePage: React.FC = () => {
     try {
       const result = await mockAPI.spinDailyWheel()
       setWheelResult(result.reward)
+      // Map reward to a segment index; placeholder deterministic mapping by value
+      const rewards = [50, 100, 250, 500, 1000, 2000]
+      const index = Math.max(0, rewards.indexOf(result.reward))
+      wheelRef.current?.spinToIndex(index === -1 ? Math.floor(Math.random() * 6) : index)
       spinDailyWheel()
     } catch (error) {
       console.error('Failed to spin wheel:', error)
@@ -750,7 +756,7 @@ export const EnhancedGamePage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Daily Wheel Modal */}
+          {/* Daily Wheel Modal (kept for in-game access if triggered internally) */}
           {showDailyWheel && (
             <motion.div
               className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
@@ -760,33 +766,35 @@ export const EnhancedGamePage: React.FC = () => {
               onClick={() => setShowDailyWheel(false)}
             >
               <motion.div
-                className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 text-center"
+                className="bg-hilo-gray border border-hilo-gray-light rounded-2xl p-6 max-w-md w-full mx-4 text-center"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={e => e.stopPropagation()}
               >
-                <h2 className="text-2xl font-bold text-hilo-gold mb-4">
+                <h2 className="text-2xl font-bold text-white mb-4">
                   Daily Wheel
                 </h2>
 
-                <div className="mb-6">
-                  <motion.div
-                    className="w-32 h-32 mx-auto bg-gradient-to-br from-hilo-gold to-hilo-red rounded-full flex items-center justify-center text-4xl"
-                    animate={wheelSpinning ? { rotate: 360 } : {}}
-                    transition={
-                      wheelSpinning
-                        ? { duration: 2, repeat: Infinity, ease: 'linear' }
-                        : {}
-                    }
-                  >
-                    🎡
-                  </motion.div>
+                {/* 3D Wheel */}
+                <div className="mb-6 flex justify-center">
+                  <DailyWheel
+                    ref={wheelRef as any}
+                    segments={[
+                      { label: '50', value: 50, color: '#F59E0B' },
+                      { label: '100', value: 100, color: '#10B981' },
+                      { label: '250', value: 250, color: '#3B82F6' },
+                      { label: '500', value: 500, color: '#A855F7' },
+                      { label: '1000', value: 1000, color: '#EF4444' },
+                      { label: '2000', value: 2000, color: '#EAB308' },
+                    ]}
+                    size={300}
+                  />
                 </div>
 
                 {wheelResult && (
                   <motion.div
-                    className="mb-4 p-4 bg-hilo-green rounded-lg"
+                    className="mb-4 p-4 bg-hilo-green/20 border border-emerald-500/30 rounded-lg"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
@@ -797,6 +805,7 @@ export const EnhancedGamePage: React.FC = () => {
                   </motion.div>
                 )}
 
+                {/* CTA row */}
                 <button
                   onClick={handleDailyWheel}
                   disabled={wheelSpinning}
@@ -811,6 +820,25 @@ export const EnhancedGamePage: React.FC = () => {
                 >
                   Close
                 </button>
+
+                {/* Placeholders: streak bonus, countdown, recent winners */}
+                <div className="mt-6 grid gap-3 text-left">
+                  <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-500/30">
+                    <div className="text-sm text-blue-300">
+                      Streak Bonus: +10% after 3 consecutive daily spins
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-purple-900/20 border border-purple-500/30">
+                    <div className="text-sm text-purple-300">
+                      Next Free Spin Countdown: 23h 59m (placeholder)
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-500/30">
+                    <div className="text-sm text-amber-300">
+                      Recent Rewards: 250 • 50 • 1000 • 100 (placeholder)
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
           )}
