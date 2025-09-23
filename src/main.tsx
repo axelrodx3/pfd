@@ -4,6 +4,18 @@ import App from './App.tsx'
 import './index.css'
 import { errorReporter } from './lib/errorReporting'
 
+// BigInt polyfill for older browsers
+if (typeof BigInt === 'undefined') {
+  console.warn('BigInt not supported, adding polyfill')
+  // @ts-ignore
+  window.BigInt = function(value: any) {
+    if (typeof value === 'string') {
+      return parseInt(value, 10)
+    }
+    return value
+  }
+}
+
 // Comprehensive production debugging
 console.log('🚀 HILO Casino - Main.tsx loaded')
 console.log('Environment:', {
@@ -118,8 +130,9 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 })
 
-// Register service worker for PWA functionality (disabled in development)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register service worker only if explicitly enabled
+// To enable on Vercel, set VITE_ENABLE_SW=true
+if ('serviceWorker' in navigator && import.meta.env.PROD && import.meta.env.VITE_ENABLE_SW === 'true') {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
@@ -131,7 +144,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       })
   })
 } else {
-  console.log('Service worker disabled in development mode')
+  console.log('Service worker disabled (either dev mode or VITE_ENABLE_SW not true)')
   // Unregister any existing service workers in development
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {

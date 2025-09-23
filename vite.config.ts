@@ -13,9 +13,16 @@ export default defineConfig({
       buffer: 'buffer',
     },
   },
+  esbuild: {
+    target: 'es2022',
+    supported: {
+      'bigint': true
+    }
+  },
   define: {
     global: 'globalThis',
     'process.env': {},
+    'BigInt': 'BigInt',
   },
   optimizeDeps: {
     include: [
@@ -43,7 +50,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    chunkSizeWarningLimit: 1000,
+    // Suppress large chunk warnings for wallet bundles
+    chunkSizeWarningLimit: 3000,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -63,7 +71,7 @@ export default defineConfig({
     },
     cssCodeSplit: true,
     reportCompressedSize: false,
-    target: 'es2020',
+    target: 'es2022',
     rollupOptions: {
       external: [],
       output: {
