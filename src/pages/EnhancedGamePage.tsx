@@ -292,41 +292,6 @@ export const EnhancedGamePage: React.FC = () => {
               <div className="text-gray-400">XP: {xp}</div>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-4 w-full lg:w-auto">
-            <button
-              onClick={() => setShowRules(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <HelpCircle className="w-4 h-4" />
-              Rules
-            </button>
-            <button
-              onClick={() => setShowAdvancedStats(true)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Stats
-            </button>
-            <button
-              onClick={() => setShowChallenges(true)}
-              className="px-4 py-2 bg-hilo-green text-white rounded-lg hover:bg-hilo-green/80 transition-colors"
-            >
-              🎯 Challenges
-            </button>
-            <button
-              onClick={() => setShowDailyWheel(true)}
-              className="px-4 py-2 bg-hilo-gold text-black rounded-lg hover:bg-hilo-gold/80 transition-colors"
-            >
-              🎡 Daily Wheel
-            </button>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              ⚙️ Settings
-            </button>
-          </div>
         </div>
 
         <div className="max-w-6xl mx-auto">
@@ -341,7 +306,7 @@ export const EnhancedGamePage: React.FC = () => {
                 <Menu className="w-6 h-6" />
               </button>
               
-              {/* Game Menu Dropdown */}
+              {/* Game Menu Dropdown - restyled to match modal aesthetic */}
               <AnimatePresence>
                 {showGameMenu && (
                   <motion.div
@@ -349,63 +314,76 @@ export const EnhancedGamePage: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50"
+                    className="absolute top-full right-0 mt-2 z-50"
                   >
-                    <div className="py-2">
-                      <button
-                        onClick={() => {
-                          setShowRules(true)
-                          setShowGameMenu(false)
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        <span>Rules</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setShowAdvancedStats(true)
-                          setShowGameMenu(false)
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <span>Stats</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setShowChallenges(true)
-                          setShowGameMenu(false)
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <span>🎯</span>
-                        <span>Challenges</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setShowDailyWheel(true)
-                          setShowGameMenu(false)
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <span>🎡</span>
-                        <span>Daily Wheel</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setShowSettings(true)
-                          setShowGameMenu(false)
-                        }}
-                        className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Settings</span>
-                      </button>
+                    <div className="relative w-64 rounded-2xl border border-hilo-gray-light bg-hilo-gray/95 backdrop-blur-xl shadow-2xl">
+                      {/* arrow */}
+                      <div className="absolute -top-2 right-6 w-4 h-4 bg-hilo-gray/95 border-l border-t border-hilo-gray-light rotate-45" />
+                      <div className="px-4 pt-3 pb-2 border-b border-hilo-gray-light rounded-t-2xl">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold text-gray-200">Game Menu</div>
+                          <button
+                            onClick={() => setShowGameMenu(false)}
+                            className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-hilo-gold/10"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            setShowRules(true)
+                            setShowGameMenu(false)
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                          <span>Rules</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAdvancedStats(true)
+                            setShowGameMenu(false)
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span>Stats</span>
+                        </button>
+                        <div className="border-t border-hilo-gray-light my-1" />
+                        <button
+                          onClick={() => {
+                            setShowChallenges(true)
+                            setShowGameMenu(false)
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <span>🎯</span>
+                          <span>Challenges</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowDailyWheel(true)
+                            setShowGameMenu(false)
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <span>🎡</span>
+                          <span>Daily Wheel</span>
+                        </button>
+                        <div className="border-t border-hilo-gray-light my-1" />
+                        <button
+                          onClick={() => {
+                            setShowSettings(true)
+                            setShowGameMenu(false)
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Settings</span>
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
