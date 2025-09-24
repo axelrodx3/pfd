@@ -19,7 +19,6 @@ import {
 } from '@solana/web3.js'
 import { useToast } from '../components/Toast'
 import { ProfileCreationModal } from '../components/ProfileCreationModal'
-import { walletMappingManager } from '../lib/walletMapping'
 import { productionLogger } from '../lib/productionLogger'
 // Wallet mapping and profile interfaces
 interface WalletMapping {
@@ -127,10 +126,14 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Initialize Solana wallet adapters with Phantom as priority
-      const walletAdapters = [
-        new PhantomWalletAdapter(), // Priority wallet
-        new SolflareWalletAdapter()
-      ]
+      const phantom = new PhantomWalletAdapter()
+      const solflare = new SolflareWalletAdapter()
+
+      // Domain binding: prevent unsolicited requests across domains
+      ;(phantom as any).supportedTransactionVersions = new Set(['legacy'])
+      ;(solflare as any).supportedTransactionVersions = new Set(['legacy'])
+
+      const walletAdapters = [phantom, solflare]
       
       console.log('🔗 Solana wallet adapters initialized successfully:', walletAdapters.length)
       productionLogger.logWalletInit(true, undefined, 'PhantomWalletAdapter, SolflareWalletAdapter')
@@ -233,45 +236,52 @@ const WalletContextInner: React.FC<{
       setIsInitializing(true)
       try {
         const walletAddress = publicKey.toString()
-        
-        // Get or create game wallet using the wallet manager
-        const { gameWallet, mapping, isNew } = await walletMappingManager.getOrCreateGameWallet(walletAddress)
-        
+
+        // Create an ephemeral in-memory game wallet (no persistence)
+        const ephemeral = Keypair.generate()
+
         if (isMounted) {
-          setGameWallet(gameWallet)
-          setGameWalletAddress(gameWallet.publicKey.toString())
-          setWalletMapping(mapping)
-          
-          // Load or create user profile
-          let profile = walletMappingManager.getProfile(walletAddress)
-          if (!profile) {
-            // Show profile creation modal for new users
-            setShowProfileCreation(true)
-            
-            // Create a temporary profile with default username
-            profile = walletMappingManager.createOrUpdateProfile({
-              connectedWalletAddress: walletAddress,
-              username: `Player${walletAddress.slice(-6)}`,
-              joinDate: Date.now(),
-              xp: 0,
-              badges: [],
-              currentStreak: 0,
-              longestStreak: 0,
-              totalWins: 0,
-              totalLosses: 0,
-              totalWagered: 0,
-              vipTier: 'Bronze',
-              isAdmin: walletAddress === '11111111111111111111111111111112'
-            })
+          setGameWallet(ephemeral)
+          setGameWalletAddress(ephemeral.publicKey.toString())
+
+          // Create an ephemeral, in-memory wallet mapping
+          const mapping: WalletMapping = {
+            id: `user_${Buffer.from(walletAddress).toString('base64').slice(0, 16)}`,
+            connectedWalletAddress: walletAddress,
+            gameWalletAddress: ephemeral.publicKey.toString(),
+            encryptedSecretKey: null,
+            createdAt: Date.now(),
+            lastAccessed: Date.now(),
+            isActive: true,
+            isFrozen: false,
           }
-        setUserProfile(profile)
-        
-        // Fetch REAL balance from the newly created/restored game wallet
-        await refreshGameBalance()
-        
-        if (isNew) {
-          success('Welcome!', 'Your game wallet has been created successfully')
-        }
+          setWalletMapping(mapping)
+
+          // Build an in-memory user profile (no localStorage)
+          const profile: UserProfile = {
+            id: mapping.id,
+            connectedWalletAddress: walletAddress,
+            username: `Player${walletAddress.slice(-6)}`,
+            profilePicture: undefined,
+            profilePictureType: 'default',
+            joinDate: Date.now(),
+            xp: 0,
+            badges: [],
+            currentStreak: 0,
+            longestStreak: 0,
+            totalWins: 0,
+            totalLosses: 0,
+            totalWagered: 0,
+            vipTier: 'Bronze',
+            isAdmin: walletAddress === '11111111111111111111111111111112',
+          }
+          setUserProfile(profile)
+
+          // Optionally ask user to personalize on first connect
+          setShowProfileCreation(true)
+
+          // Fetch real balance for the ephemeral game wallet
+          await refreshGameBalance()
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to initialize game wallet'
@@ -428,19 +438,26 @@ const WalletContextInner: React.FC<{
     if (!publicKey) return false
 
     try {
-      // Check username uniqueness
-      if (!walletMappingManager.isUsernameUnique(username)) {
-        throw new Error('Username is already taken')
-      }
-
-      const profile = walletMappingManager.createOrUpdateProfile({
+      // In-memory update only
+      const updated: UserProfile = {
+        id: userProfile?.id || `user_${Buffer.from(publicKey.toString()).toString('base64').slice(0, 16)}`,
         connectedWalletAddress: publicKey.toString(),
         username,
         profilePicture,
-        profilePictureType: profilePicture ? 'upload' : 'default'
-      })
+        profilePictureType: profilePicture ? 'upload' : 'default',
+        joinDate: userProfile?.joinDate || Date.now(),
+        xp: userProfile?.xp || 0,
+        badges: userProfile?.badges || [],
+        currentStreak: userProfile?.currentStreak || 0,
+        longestStreak: userProfile?.longestStreak || 0,
+        totalWins: userProfile?.totalWins || 0,
+        totalLosses: userProfile?.totalLosses || 0,
+        totalWagered: userProfile?.totalWagered || 0,
+        vipTier: userProfile?.vipTier || 'Bronze',
+        isAdmin: userProfile?.isAdmin || false,
+      }
 
-      setUserProfile(profile)
+      setUserProfile(updated)
       success('Profile Created', `Welcome, ${username}!`)
       return true
     } catch (err) {
@@ -448,29 +465,25 @@ const WalletContextInner: React.FC<{
       error('Profile Creation Failed', errorMessage)
       return false
     }
-  }, [publicKey, success, error])
+  }, [publicKey, userProfile, success, error])
 
   // Update user profile
   const updateProfile = useCallback(async (updates: Partial<UserProfile>): Promise<boolean> => {
     if (!publicKey) return false
 
     try {
-      const success = walletMappingManager.updateProfileStats(publicKey.toString(), updates)
-      if (success) {
-        const updatedProfile = walletMappingManager.getProfile(publicKey.toString())
-        if (updatedProfile) {
-          setUserProfile(updatedProfile)
-          return true
-        }
-      }
-      return false
+      const current = userProfile
+      if (!current) return false
+      const merged: UserProfile = { ...current, ...updates }
+      setUserProfile(merged)
+      return true
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to update profile:', err)
       }
       return false
     }
-  }, [publicKey])
+  }, [publicKey, userProfile])
 
   // Handle profile creation completion
   const handleProfileCreationComplete = useCallback(() => {

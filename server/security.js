@@ -17,8 +17,7 @@ const securityConfig = {
         "'self'",
         // Vite development server (remove in production)
         ...(process.env.NODE_ENV === 'development' ? ["'unsafe-eval'"] : []),
-        // Allow Solana wallet adapters
-        "'unsafe-inline'", // Required for wallet adapters, but we'll minimize this
+        // Remove unsafe-inline; rely on hashed/nonce-based scripts only
         // Trusted CDNs (use SRI in production)
         'https://unpkg.com',
         'https://cdn.jsdelivr.net',
@@ -27,7 +26,7 @@ const securityConfig = {
       // Style sources
       styleSrc: [
         "'self'",
-        "'unsafe-inline'", // Required for Tailwind CSS and wallet adapters
+        // Avoid unsafe-inline; ensure styles are compiled/static
         'https://fonts.googleapis.com',
       ],
 

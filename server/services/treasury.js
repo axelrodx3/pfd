@@ -33,7 +33,10 @@ class TreasuryService {
     this.treasuryKeypair = null
     this.network = process.env.SOLANA_NETWORK || 'devnet'
     this.rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
-    this.allowOnchain = process.env.ALLOW_ONCHAIN === 'true'
+    // Disable onchain by default in production; explicit opt-in required via env
+    const allowFlag = process.env.ALLOW_ONCHAIN === 'true'
+    const isProd = process.env.NODE_ENV === 'production'
+    this.allowOnchain = isProd ? false : allowFlag
     this.kmsEnabled = process.env.KMS_ENABLED === 'true'
     this.kmsKeyId = process.env.KMS_KEY_ID
     this.treasurySecretName = process.env.TREASURY_KEY_SECRET_NAME

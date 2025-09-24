@@ -32,10 +32,10 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
   const { wallets, select } = useWallet()
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Update balance when wallet connects
+  // Update balance when wallet connects (no toast)
   useEffect(() => {
     if (connected && publicKey) {
-      updateBalance()
+      updateBalance(false)
     } else {
       setBalance(0)
     }
@@ -61,16 +61,24 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
     }
   }, [open])
 
-  const updateBalance = async () => {
+  const updateBalance = async (showToast: boolean = false) => {
     try {
       setIsLoading(true)
       const currentBalance = await getBalance()
       setBalance(currentBalance)
       // Also refresh in-app game balance dropdown so values stay in sync
       try { await refreshGameBalance() } catch {}
+      // Notify user of success only when explicitly requested
+      if (showToast) {
+        success('Balance Refreshed', `${formatCurrency(currentBalance)} SOL available`)
+      }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error fetching balance:', error)
+      }
+      // Notify user of failure only when explicitly requested
+      if (showToast) {
+        error('Refresh Failed', 'Unable to fetch your balance. Please try again.')
       }
     } finally {
       setIsLoading(false)
@@ -236,7 +244,7 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
                   </button>
 
                   <button
-                    onClick={updateBalance}
+                    onClick={() => updateBalance(true)}
                     disabled={isLoading}
                     className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors disabled:opacity-50"
                   >

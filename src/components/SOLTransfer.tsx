@@ -87,8 +87,8 @@ const SOLTransfer: React.FC<SOLTransferProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('solana_auth_token')}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           recipient: publicKey.toString(),
           amount: parseFloat(amount),

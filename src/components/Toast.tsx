@@ -98,7 +98,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 space-y-2 flex flex-col items-center">
       <AnimatePresence>
         {toasts.map(toast => (
           <Toast key={toast.id} {...toast} onClose={onClose} />

@@ -235,8 +235,25 @@ const getClientIP = req => {
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization']
-  const token = authHeader && authHeader.split(' ')[1]
+  // Prefer HttpOnly cookie, fallback to Authorization header
+  let token = null
+
+  // Parse cookie manually to avoid extra deps
+  const cookieHeader = req.headers['cookie']
+  if (cookieHeader && typeof cookieHeader === 'string') {
+    const parts = cookieHeader.split(';').map(p => p.trim())
+    for (const part of parts) {
+      if (part.startsWith('auth_token=')) {
+        token = decodeURIComponent(part.substring('auth_token='.length))
+        break
+      }
+    }
+  }
+
+  if (!token) {
+    const authHeader = req.headers['authorization']
+    token = authHeader && authHeader.split(' ')[1]
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' })
@@ -249,6 +266,17 @@ const authenticateToken = (req, res, next) => {
     next()
   } catch (error) {
     return res.status(403).json({ message: 'Invalid or expired token' })
+  }
+}
+
+// In-memory recent rewards buffer (for Daily Wheel and similar features)
+const RECENT_REWARDS_MAX = 50
+const recentRewards = []
+
+function addRecentReward(entry) {
+  recentRewards.unshift(entry)
+  if (recentRewards.length > RECENT_REWARDS_MAX) {
+    recentRewards.length = RECENT_REWARDS_MAX
   }
 }
 
@@ -293,8 +321,17 @@ app.post('/api/auth/verify-signature', async (req, res) => {
       clientIP
     )
 
+    // Set secure HttpOnly session cookie (expires on browser close)
+    const isProduction = process.env.NODE_ENV === 'production'
+    res.cookie('auth_token', result.token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      path: '/',
+      // no maxAge -> session cookie
+    })
+
     res.json({
-      token: result.token,
       message: 'Authentication successful',
       publicKey: result.publicKey,
       expiresIn: result.expiresIn,
@@ -404,12 +441,25 @@ app.post('/api/wallet/withdraw', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Amount must be positive' })
     }
 
+    // Anti-drain: recipient must be the authenticated user
+    if (recipient !== req.user.publicKey) {
+      return res.status(400).json({ message: 'Recipient must match your authenticated wallet' })
+    }
+
     // Validate recipient address
     let recipientPubkey
     try {
       recipientPubkey = new PublicKey(recipient)
     } catch (error) {
       return res.status(400).json({ message: 'Invalid recipient address' })
+    }
+
+    // Anti-abuse checks
+    const user = await User.createOrGet(req.user.publicKey)
+    const amountLamports = Math.floor(amount * 1e9)
+    const abuseCheck = await antiAbuseService.checkWithdrawalAbuse(user.id, amountLamports, req)
+    if (!abuseCheck.allowed) {
+      return res.status(429).json({ message: abuseCheck.reason || 'Withdrawal temporarily blocked for safety' })
     }
 
     // Check treasury balance
@@ -447,6 +497,54 @@ app.post('/api/wallet/withdraw', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error processing withdrawal:', error)
     res.status(500).json({ message: 'Withdrawal failed: ' + error.message })
+  }
+})
+
+// ============================================================================
+// RECENT REWARDS API (Daily Wheel feed)
+// ============================================================================
+
+// Public: get last ~20 recent rewards
+app.get('/api/recent-rewards', async (req, res) => {
+  try {
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit) || 20))
+    const data = recentRewards.slice(0, limit)
+    res.json(data)
+  } catch (error) {
+    console.error('Error fetching recent rewards:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+// Authenticated: report a new reward
+app.post('/api/recent-rewards/report', authenticateToken, async (req, res) => {
+  try {
+    const { amount, username, avatarUrl } = req.body || {}
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid amount' })
+    }
+
+    // Sanitize user display data
+    const displayUsername = typeof username === 'string' && username.trim().length > 0
+      ? username.trim().slice(0, 32)
+      : `Player${req.user.publicKey.slice(0, 6)}`
+    const displayAvatar = typeof avatarUrl === 'string' && avatarUrl.startsWith('http')
+      ? avatarUrl
+      : null
+
+    const entry = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      username: displayUsername,
+      avatarUrl: displayAvatar,
+      amount,
+      publicKey: req.user.publicKey,
+      timestamp: new Date().toISOString(),
+    }
+    addRecentReward(entry)
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error reporting recent reward:', error)
+    res.status(500).json({ message: 'Internal server error' })
   }
 })
 

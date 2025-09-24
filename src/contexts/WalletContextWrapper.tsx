@@ -1,27 +1,18 @@
 import React from 'react'
-import { SafeWalletProvider, useSafeWalletContext } from './SafeWalletContext'
 import WalletContextProvider, { useWalletContext as realUseWalletContext } from './WalletContext'
 
 /**
  * Wallet Context Wrapper - Attempts to load real wallet context, falls back to safe context
  */
 export const WalletContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always provide Safe context as a base, and layer real wallet provider when in browser.
+  // On server, just render children (no wallet ops). On client, use real wallet provider only.
   if (typeof window === 'undefined') {
-    return <SafeWalletProvider>{children}</SafeWalletProvider>
+    return <>{children}</>
   }
-  return (
-    <SafeWalletProvider>
-      <WalletContextProvider>{children}</WalletContextProvider>
-    </SafeWalletProvider>
-  )
+  return <WalletContextProvider>{children}</WalletContextProvider>
 }
 
 // Export a hook that works with either context
 export const useWalletContext = () => {
-  try {
-    return realUseWalletContext()
-  } catch (error) {
-    return useSafeWalletContext()
-  }
+  return realUseWalletContext()
 }

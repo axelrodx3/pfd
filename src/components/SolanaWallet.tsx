@@ -122,22 +122,29 @@ const SolanaWallet: React.FC<SolanaWalletProps> = ({
       setLoading(true)
       setError(null)
 
-      // Generate a nonce for authentication
-      const nonce =
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15)
+      // Request server-generated nonce and message
+      const nonceResp = await fetch('/api/auth/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ publicKey: publicKey.toString() }),
+      })
+      if (!nonceResp.ok) {
+        throw new Error('Failed to initialize authentication')
+      }
+      const { nonce, message } = await nonceResp.json()
 
-      const message = `Please sign this message to authenticate with HILO Casino.\n\nNonce: ${nonce}\nTimestamp: ${Date.now()}\n\nThis signature proves ownership of your wallet and cannot be used to access your funds.`
-
+      // Sign server-provided message
       const signature = await signMessage(message)
       const signatureBase64 = Buffer.from(signature).toString('base64')
 
-      // Send to backend for verification
+      // Verify signature and establish session (HttpOnly cookie)
       const response = await fetch('/api/auth/verify-signature', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           publicKey: publicKey.toString(),
           message,
@@ -149,12 +156,6 @@ const SolanaWallet: React.FC<SolanaWalletProps> = ({
       if (!response.ok) {
         throw new Error('Authentication failed')
       }
-
-      const authData = await response.json()
-
-      // Store auth token
-      localStorage.setItem('solana_auth_token', authData.token)
-      localStorage.setItem('solana_public_key', publicKey.toString())
 
       setAuthStep('authenticated')
       onAuthSuccess?.(publicKey.toString(), signatureBase64)
@@ -169,8 +170,7 @@ const SolanaWallet: React.FC<SolanaWalletProps> = ({
   const handleDisconnect = async () => {
     try {
       await disconnect()
-      localStorage.removeItem('solana_auth_token')
-      localStorage.removeItem('solana_public_key')
+      // Session cookie will expire server-side; no client token storage
       setAuthStep('connect')
     } catch (err: any) {
       setError(err.message || 'Failed to disconnect')
