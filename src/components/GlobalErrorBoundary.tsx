@@ -24,6 +24,17 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // Ignore extension/provider injection errors (e.g., MetaMask/Phantom EVM)
+    const isExtensionInjectionError =
+      typeof error?.message === 'string' && (
+        error.message.includes('Cannot redefine property: ethereum') ||
+        error.message.includes('chrome-extension://')
+      )
+    if (isExtensionInjectionError) {
+      console.warn('⚠️ Ignoring browser extension injection error:', error.message)
+      return { hasError: false, error }
+    }
+
     // Don't show fallback UI for test errors
     if (error.message?.includes('Test:') || error.message?.includes('Simulated')) {
       console.log('✅ Test error detected in getDerivedStateFromError, not showing fallback UI')
@@ -39,6 +50,17 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     console.error('🚨 Global Error Boundary caught an error:', error)
     console.error('🚨 Error Info:', errorInfo)
     
+    // Ignore extension/provider injection errors so app continues running
+    const isExtensionInjectionError =
+      typeof error?.message === 'string' && (
+        error.message.includes('Cannot redefine property: ethereum') ||
+        (error.stack && error.stack.includes('chrome-extension://'))
+      )
+    if (isExtensionInjectionError) {
+      console.warn('⚠️ Suppressed browser extension injection error in boundary')
+      return
+    }
+
     // Handle test errors gracefully
     if (error.message?.includes('Test:') || error.message?.includes('Simulated')) {
       console.log('✅ Test error caught by Global Error Boundary, handling gracefully')
