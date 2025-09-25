@@ -11,6 +11,7 @@ import { EnhancedProvablyFairPage } from './pages/EnhancedProvablyFairPage'
 import AboutPage from './pages/AboutPage'
 import FAQPage from './pages/FAQPage'
 import WalletPage from './pages/WalletPage'
+const MockCommunityHub = React.lazy(() => import('./pages/MockCommunityHub'))
 
 // Lazy-load heavy Territory Wars pages to reduce initial bundle
 const TerritoryWarsPage = React.lazy(() => import('./pages/TerritoryWarsPage'))
@@ -117,6 +118,8 @@ function AppContent() {
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/faq" element={<FAQPage />} />
+              {/* Mock routes (not linked in nav) */}
+              <Route path="/mock/community" element={<MockCommunityHub />} />
             </Routes>
             </React.Suspense>
           </main>

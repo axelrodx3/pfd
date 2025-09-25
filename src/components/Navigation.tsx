@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, Settings, HelpCircle, ArrowUpDown, Home, Gamepad2, ShieldCheck, Info, Trophy, Target, RefreshCw } from 'lucide-react'
+import { Menu, X, User, Settings, HelpCircle, ArrowUpDown, Home, Gamepad2, ShieldCheck, Info, Trophy, Target, RefreshCw, Users } from 'lucide-react'
 import { HiloLogo } from './HiloLogo'
 import { RealWalletButton } from './RealWalletButton'
 import { AdminPanel } from './AdminPanel'
@@ -261,7 +261,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                       className="absolute top-full right-0 mt-2 w-48 bg-hilo-gray border border-hilo-gray-light rounded-xl shadow-2xl z-50"
                     >
                       <div className="py-2">
-                        {/* Navigation Items */}
+                        {/* Primary navigation */}
                         {navItems.map(item => (
                           <Link
                             key={item.path}
@@ -274,10 +274,10 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           </Link>
                         ))}
 
-                        {/* Separator */}
+                        {/* Separator between primary and community/actions */}
                         <div className="border-t border-hilo-gray-light my-2"></div>
 
-                        {/* Game Actions moved from in-game menu */}
+                        {/* Challenges */}
                         <Link
                           to="/game?open=challenges"
                           onClick={() => setIsDropdownOpen(false)}
@@ -287,15 +287,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Challenges</span>
                         </Link>
 
-                        <Link
-                          to="/leaderboard"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <Trophy className="w-4 h-4" />
-                          <span>Leaderboard</span>
-                        </Link>
-
+                        {/* Daily Wheel */}
                         <button
                           onClick={() => {
                             if (!connected) {
@@ -313,9 +305,30 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Daily Wheel</span>
                         </button>
 
-                        {/* Separator */}
+                        {/* Community */}
+                        <Link
+                          to="/mock/community"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Users className="w-4 h-4" />
+                          <span>Community</span>
+                        </Link>
+
+                        {/* Leaderboard */}
+                        <Link
+                          to="/leaderboard"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <Trophy className="w-4 h-4" />
+                          <span>Leaderboard</span>
+                        </Link>
+
+                        {/* Separator between community/actions and account/settings */}
                         <div className="border-t border-hilo-gray-light my-2"></div>
 
+                        {/* Account */}
                         <button
                           onClick={() => {
                             if (handleWalletRequiredFeature('Account')) {
@@ -329,21 +342,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Account</span>
                         </button>
 
-                        {/* Wallet moved under Account */}
-                        <button
-                          onClick={() => {
-                            if (handleWalletRequiredFeature('Wallet')) {
-                              setIsDropdownOpen(false)
-                              // Navigate to wallet page
-                              window.location.href = '/wallet'
-                            }
-                          }}
-                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
-                        >
-                          <ArrowUpDown className="w-4 h-4" />
-                          <span>Wallet</span>
-                        </button>
-
+                        {/* Settings */}
                         <button
                           onClick={() => {
                             if (handleWalletRequiredFeature('Settings')) {
@@ -357,6 +356,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                           <span>Settings</span>
                         </button>
 
+                        {/* Support */}
                         <button
                           onClick={() => {
                             if (handleWalletRequiredFeature('Support')) {
@@ -368,6 +368,21 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                         >
                           <HelpCircle className="w-4 h-4" />
                           <span>Support</span>
+                        </button>
+
+                        {/* Wallet */}
+                        <button
+                          onClick={() => {
+                            if (handleWalletRequiredFeature('Wallet')) {
+                              setIsDropdownOpen(false)
+                              // Navigate to wallet page
+                              window.location.href = '/wallet'
+                            }
+                          }}
+                          className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-hilo-gold/10 transition-colors flex items-center gap-3"
+                        >
+                          <ArrowUpDown className="w-4 h-4" />
+                          <span>Wallet</span>
                         </button>
                       </div>
                     </motion.div>
@@ -467,6 +482,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
               
               {/* Mobile Menu Options */}
               <div className="grid grid-cols-2 gap-2">
+                {/* Challenges */}
                 <Link
                   to="/game?open=challenges"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -476,15 +492,7 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <span className="text-sm text-gray-300">Challenges</span>
                 </Link>
 
-                <Link
-                  to="/leaderboard"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
-                >
-                  <Trophy className="w-4 h-4 text-gray-300" />
-                  <span className="text-sm text-gray-300">Leaderboard</span>
-                </Link>
-
+                {/* Daily Wheel */}
                 <button
                   onClick={() => {
                     if (!connected) {
@@ -502,6 +510,26 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <span className="text-sm text-gray-300">Daily Wheel</span>
                 </button>
 
+                {/* Community */}
+                <Link
+                  to="/mock/community"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <span className="text-sm text-gray-300">Community</span>
+                </Link>
+
+                {/* Leaderboard */}
+                <Link
+                  to="/leaderboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
+                >
+                  <Trophy className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Leaderboard</span>
+                </Link>
+
+                {/* Account */}
                 <button
                   onClick={() => {
                     setShowAccount(true)
@@ -512,16 +540,8 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <User className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Account</span>
                 </button>
-                
-                <Link
-                  to="/wallet"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
-                >
-                  <ArrowUpDown className="w-4 h-4 text-gray-300" />
-                  <span className="text-sm text-gray-300">Wallet</span>
-                </Link>
-                
+
+                {/* Settings */}
                 <button
                   onClick={() => {
                     setShowSettings(true)
@@ -532,7 +552,8 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <Settings className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Settings</span>
                 </button>
-                
+
+                {/* Support */}
                 <button
                   onClick={() => {
                     setShowSupport(true)
@@ -543,16 +564,18 @@ export const Navigation: React.FC<NavigationProps> = ({ className = '' }) => {
                   <HelpCircle className="w-4 h-4 text-gray-300" />
                   <span className="text-sm text-gray-300">Support</span>
                 </button>
-                
+
+                {/* Wallet */}
                 <Link
-                  to="/leaderboard"
+                  to="/wallet"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center justify-center gap-2 px-3 py-2 bg-hilo-gray border border-hilo-gray-light rounded-lg hover:bg-hilo-gold/10 transition-colors"
                 >
-                  <span className="text-sm text-gray-300">Leaderboard</span>
+                  <ArrowUpDown className="w-4 h-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">Wallet</span>
                 </Link>
-                
-                <div className="col-span-2"></div> {/* Empty cell to balance the grid */}
+
+                <div className="col-span-2"></div>
               </div>
             </motion.div>
           </div>

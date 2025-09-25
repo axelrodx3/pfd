@@ -108,6 +108,9 @@ export interface GameState {
   // Prize pools
   weeklyPrizePool: number
   monthlyPrizePool: number
+
+  // Currency selection
+  useSolCurrency: boolean
 }
 
 export interface GameActions {
@@ -120,7 +123,7 @@ export interface GameActions {
   // Game actions
   setBet: (amount: number) => void
   selectSide: (side: 'high' | 'low') => void
-  rollDice: () => Promise<void>
+  rollDice: (server?: { roll?: number; result?: 'high' | 'low'; won?: boolean; multiplier?: number; progression?: { xp: number; level: number } }) => Promise<void>
   resetGame: () => void
   validateGameState: () => boolean
   recoverGameState: () => void
@@ -169,6 +172,9 @@ export interface GameActions {
   // Leaderboard actions
   updateLeaderboard: () => void
   updatePrizePools: () => void
+
+  // Currency selection
+  toggleUseSolCurrency: () => void
 }
 
 const initialState: GameState = {
@@ -264,6 +270,9 @@ const initialState: GameState = {
   // Prize pools
   weeklyPrizePool: 50000,
   monthlyPrizePool: 200000,
+
+  // Currency selection
+  useSolCurrency: false,
 }
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -324,7 +333,7 @@ export const useGameStore = create<GameState & GameActions>()(
         set({ selectedSide: side })
       },
 
-      rollDice: async () => {
+      rollDice: async (server) => {
         const state = get()
         
         // Enhanced validation with detailed logging
@@ -354,13 +363,13 @@ export const useGameStore = create<GameState & GameActions>()(
         try {
           set({ isRolling: true })
 
-          // Generate the roll result immediately (for 3D dice target)
-          const roll = Math.floor(Math.random() * 6) + 1
-          const result = getDiceResult(roll)
+          // Use server-provided outcome when available (authoritative)
+          const roll = server?.roll ?? (Math.floor(Math.random() * 6) + 1)
+          const result = server?.result ?? getDiceResult(roll)
 
           // Player wins if their selected side matches the dice result
           // House edge is built into the 1.98x multiplier (instead of 2x)
-          const won = state.selectedSide === result
+          const won = typeof server?.won === 'boolean' ? server!.won : (state.selectedSide === result)
 
           console.log('🎯 Dice result:', { roll, result, selectedSide: state.selectedSide, won })
 
@@ -374,7 +383,7 @@ export const useGameStore = create<GameState & GameActions>()(
           // Wait for 3D dice animation to complete (2.6 seconds total: 1.8s roll + 0.8s suspense)
           await new Promise(resolve => setTimeout(resolve, 2600))
 
-          const multiplier = won ? 1.98 : 0 // 1.98x multiplier (accounts for house edge)
+          const multiplier = server?.multiplier ?? (won ? 1.98 : 0)
 
           // Generate hash for provably fair
           const hash = generateMockHash(
@@ -410,8 +419,12 @@ export const useGameStore = create<GameState & GameActions>()(
             newBalance: state.hiloTokens + netChange
           })
 
-          // Add XP
-          get().addXP(won ? 10 : 5)
+          // Sync progression from server if returned; otherwise apply local fallback
+          if (server?.progression) {
+            set(prev => ({ xp: server.progression!.xp, level: server.progression!.level }))
+          } else {
+            get().addXP(won ? 10 : 5)
+          }
 
           // Add to history
           get().addToHistory({
@@ -960,6 +973,11 @@ export const useGameStore = create<GameState & GameActions>()(
             state.monthlyPrizePool + Math.floor(Math.random() * 5000),
         }))
       },
+
+      // Currency selection
+      toggleUseSolCurrency: () => {
+        set(state => ({ useSolCurrency: !state.useSolCurrency }))
+      },
     }),
     {
       name: 'hilo-game-storage',
@@ -982,6 +1000,7 @@ export const useGameStore = create<GameState & GameActions>()(
         autoSaveEnabled: state.autoSaveEnabled,
         masterVolume: state.masterVolume,
         lastFaucetClaim: state.lastFaucetClaim,
+        useSolCurrency: state.useSolCurrency,
       }),
     }
   )

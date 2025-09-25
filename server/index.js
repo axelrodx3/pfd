@@ -28,6 +28,7 @@ const DepositMonitorService = require('./services/depositMonitor')
 const GameService = require('./services/gameService')
 const PayoutService = require('./services/payoutService')
 const MonitoringService = require('./services/monitoring')
+const { scheduleNightly } = require('./services/backup')
 const BalanceSyncService = require('./services/balanceSync')
 const ProvablyFair2Service = require('./services/provablyFair2')
 const MockFaucetService = require('./services/mockFaucet')
@@ -44,6 +45,8 @@ const {
   Withdrawal,
   Settings,
   AuditLog,
+  db,
+  Community,
 } = require('./models/database')
 
 // Load environment variables
@@ -83,7 +86,19 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // In development, allow localhost dev ports
+      if (!origin) return callback(null, true)
+      const allowed = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        process.env.FRONTEND_URL
+      ].filter(Boolean)
+      if (allowed.some(a => origin.startsWith(a))) return callback(null, true)
+      return callback(null, true) // relax for internal proxy/dev
+    },
     credentials: true,
   })
 )
@@ -154,6 +169,7 @@ let mockFaucetService
 let userProfileService
 let casinoEconomicsService
 let antiAbuseService
+const ONLINE_TTL_MS = 30 * 1000
 
 async function initializeServices() {
   try {
@@ -179,6 +195,7 @@ async function initializeServices() {
     monitoringService = new MonitoringService()
     await monitoringService.initialize(treasuryService)
     monitoringService.start()
+    try { scheduleNightly(3) } catch {}
 
     // Initialize balance sync service
     const connection = treasuryService.connection
@@ -339,6 +356,23 @@ app.post('/api/auth/verify-signature', async (req, res) => {
   } catch (error) {
     console.error('Error verifying signature:', error)
     res.status(400).json({ message: error.message })
+  }
+})
+
+// Logout endpoint to clear HttpOnly auth cookie (prevents background auth reuse)
+app.post('/api/auth/logout', (req, res) => {
+  try {
+    const isProduction = process.env.NODE_ENV === 'production'
+    res.cookie('auth_token', '', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      path: '/',
+      expires: new Date(0)
+    })
+    res.json({ message: 'Logged out' })
+  } catch (error) {
+    res.status(400).json({ message: 'Logout failed' })
   }
 })
 
@@ -650,6 +684,14 @@ app.get('/api/deposits', authenticateToken, async (req, res) => {
 // Play dice game
 app.post('/api/games/play', authenticateToken, async (req, res) => {
   try {
+    // Simple idempotency to avoid duplicate plays on retry
+    const idem = req.headers['idempotency-key'] || req.headers['Idempotency-Key']
+    if (idem) {
+      if (!global.__idemMap) global.__idemMap = new Map()
+      if (global.__idemMap.has(idem)) {
+        return res.json(global.__idemMap.get(idem))
+      }
+    }
     const { betAmount, selectedSide, clientSeed } = req.body
 
     if (!betAmount || !selectedSide || !clientSeed) {
@@ -669,8 +711,45 @@ app.post('/api/games/play', authenticateToken, async (req, res) => {
       selectedSide,
       clientSeed
     )
+    // Award XP with conservative scaling: +6 XP per win, +20 XP first win of day
+    try {
+      if (result?.won) {
+        const now = new Date()
+        const dayKey = `${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()}`
+        const wasAwardedToday = (global.__firstWinDayByUser || {})[user.id] === dayKey
+        if (!global.__firstWinDayByUser) global.__firstWinDayByUser = {}
+        if (!wasAwardedToday) {
+          await userProfileService.addXP(user.id, 20, 'First win of the day')
+          global.__firstWinDayByUser[user.id] = dayKey
+        } else {
+          await userProfileService.addXP(user.id, 6, 'Game win')
+        }
+      } else {
+        // Small participation XP could be added (commented to keep progression difficult)
+        // await userProfileService.addXP(user.id, 1, 'Game participation')
+      }
+    } catch {}
 
-    res.json(result)
+    // Include current progression and payout meta if available
+    let progression = null
+    try {
+      const profile = await userProfileService.getProfile(user.id)
+      progression = { xp: profile.xp, level: profile.level, levelName: profile.levelName }
+    } catch {}
+    // Build response with meta
+    const response = {
+      ...result,
+      // Optional meta returned by calculation
+      payoutMultiplier: (gameService.calculatePayout(1, true, gameService.houseEdge).multiplier) || undefined,
+      winChance: (gameService.calculatePayout(1, true, gameService.houseEdge).winChance) || undefined,
+      progression
+    }
+    if (idem) {
+      // Store idempotent result for short period
+      global.__idemMap.set(idem, response)
+      setTimeout(() => global.__idemMap && global.__idemMap.delete(idem), 5 * 60 * 1000)
+    }
+    res.json(response)
   } catch (error) {
     console.error('Error playing game:', error)
     res.status(500).json({ message: error.message || 'Internal server error' })
@@ -1055,9 +1134,9 @@ app.get('/api/admin/monitoring/alerts', requireAdmin, async (req, res) => {
 })
 
 // User Profile endpoints
-app.get('/api/profile', async (req, res) => {
+app.get('/api/profile', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findByPublicKey(req.user.publicKey)
+    const user = await User.createOrGet(req.user.publicKey)
     const profile = await userProfileService.getProfile(user.id)
     res.json(profile)
   } catch (error) {
@@ -1065,28 +1144,289 @@ app.get('/api/profile', async (req, res) => {
   }
 })
 
-app.post('/api/profile/update', async (req, res) => {
+// Profile progression details
+app.get('/api/profile/progression', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.createOrGet(req.user.publicKey)
+    const profile = await userProfileService.getProfile(user.id)
+    // Approximate next level threshold using service levels
+    const levels = userProfileService.xpLevels || []
+    const currentXp = profile.xp || 0
+    // Find current level index by xpRequired threshold
+    let currentIdx = 0
+    for (let i = 0; i < levels.length; i++) {
+      if (currentXp >= (levels[i].xpRequired || 0)) currentIdx = i
+    }
+    const currentLevel = levels[currentIdx] || { level: profile.level || 1, xpRequired: 0, name: profile.levelName || 'Level' }
+    const next = levels[currentIdx + 1] || null
+    const floorXp = currentLevel.xpRequired || 0
+    const nextXp = next ? next.xpRequired : null
+    const denom = next ? Math.max(1, (nextXp - floorXp)) : 1
+    const numer = next ? Math.max(0, Math.min(currentXp - floorXp, denom)) : 1
+    const percent = next ? Math.round((numer / denom) * 100) : 100
+    res.json({
+      level: currentLevel.level,
+      levelName: currentLevel.name,
+      xp: currentXp,
+      currentLevelXpRequired: floorXp,
+      nextLevel: next ? next.level : null,
+      nextLevelName: next ? next.name : null,
+      nextLevelXpRequired: nextXp,
+      progressPercent: percent
+    })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// ============================================================================
+// COMMUNITY API ENDPOINTS
+// ============================================================================
+
+// Search users
+app.get('/api/community/search', async (req, res) => {
+  try {
+    const { q = '', limit = 20 } = req.query
+    const query = String(q).trim()
+    if (!query) return res.json([])
+    const safeLimit = Math.min(50, Math.max(1, parseInt(limit)))
+    // Try normal search first
+    let results = await User.searchByUsername(query, safeLimit)
+    // If empty, try a case-insensitive pass (SQLite fallback)
+    if ((!results || results.length === 0) && typeof db?.all === 'function') {
+      results = await new Promise((resolve, reject) => {
+        db.all(
+          `SELECT id, username, avatar_url, public_key FROM users 
+           WHERE username LIKE ? OR username LIKE ? OR username LIKE ? 
+           ORDER BY username ASC LIMIT ?`,
+          [
+            `%${query}%`,
+            `%${query.toLowerCase()}%`,
+            `%${query.toUpperCase()}%`,
+            safeLimit
+          ],
+          (err, rows) => {
+            if (err) return reject(err)
+            resolve(rows)
+          }
+        )
+      })
+    }
+    res.json(results.map(r => ({ id: r.id, username: r.username, avatarUrl: r.avatar_url, publicKey: r.public_key })))
+  } catch (error) {
+    console.error('Search error:', error)
+    res.status(500).json({ error: 'SEARCH_ERROR', message: String(error?.message || error) })
+  }
+})
+
+// List friends
+app.get('/api/community/friends', authenticateToken, async (req, res) => {
+  try {
+    const me = await User.createOrGet(req.user.publicKey)
+    const list = await Community.listFriends(me.id)
+    res.json(list)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Request friend
+app.post('/api/community/friends/request', authenticateToken, async (req, res) => {
+  try {
+    const { targetUserId } = req.body
+    if (!targetUserId) return res.status(400).json({ error: 'targetUserId required' })
+    const me = await User.createOrGet(req.user.publicKey)
+    const result = await Community.requestFriend(me.id, parseInt(targetUserId))
+    res.json({ success: true, requestId: result.id })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Respond to friend request
+app.post('/api/community/friends/respond', authenticateToken, async (req, res) => {
+  try {
+    const { requestId, action } = req.body
+    if (!requestId || !['accept','decline'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid input' })
+    }
+    const me = await User.createOrGet(req.user.publicKey)
+    const result = await Community.respondFriend(me.id, parseInt(requestId), action)
+    res.json({ success: result.changes > 0 })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Unfriend
+app.post('/api/community/friends/unfriend', authenticateToken, async (req, res) => {
+  try {
+    const { targetUserId } = req.body
+    if (!targetUserId) return res.status(400).json({ error: 'targetUserId required' })
+    const me = await User.createOrGet(req.user.publicKey)
+    const result = await Community.unfriend(me.id, parseInt(targetUserId))
+    res.json({ success: result.changes > 0 })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Blocks
+app.get('/api/community/blocks', authenticateToken, async (req, res) => {
+  try {
+    const me = await User.createOrGet(req.user.publicKey)
+    const list = await Community.listBlocks(me.id)
+    res.json(list)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Report a user (safety)
+app.post('/api/community/report', authenticateToken, async (req, res) => {
+  try {
+    const { reportedUserId, reason, details } = req.body || {}
+    if (!reportedUserId) return res.status(400).json({ error: 'reportedUserId required' })
+    const me = await User.createOrGet(req.user.publicKey)
+    const db = require('./models/database').db
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO user_reports (reporter_id, reported_user_id, reason, details) VALUES (?, ?, ?, ?)`,
+        [me.id, parseInt(reportedUserId), (reason||'').toString().slice(0,128), (details||'').toString().slice(0,2000)],
+        function(err){ if (err) return reject(err); resolve(null) }
+      )
+    })
+    res.json({ success: true })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/community/block', authenticateToken, async (req, res) => {
+  try {
+    const { targetUserId } = req.body
+    if (!targetUserId) return res.status(400).json({ error: 'targetUserId required' })
+    const me = await Community.getUserByPublicKey(req.user.publicKey)
+    const result = await Community.block(me.id, parseInt(targetUserId))
+    res.json({ success: !!result.id })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/community/unblock', authenticateToken, async (req, res) => {
+  try {
+    const { targetUserId } = req.body
+    if (!targetUserId) return res.status(400).json({ error: 'targetUserId required' })
+    const me = await Community.getUserByPublicKey(req.user.publicKey)
+    const result = await Community.unblock(me.id, parseInt(targetUserId))
+    res.json({ success: result.changes > 0 })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Chat
+app.get('/api/community/messages', authenticateToken, async (req, res) => {
+  try {
+    const { channel = 'global', afterId, limit = 50, targetUserId } = req.query
+    let channelType = 'global'
+    let channelId = 'global'
+    if (channel === 'dm') {
+      channelType = 'dm'
+      const me = await Community.getUserByPublicKey(req.user.publicKey)
+      const otherId = parseInt(String(targetUserId))
+      const pair = [me.id, otherId].sort((a,b)=>a-b)
+      channelId = `${pair[0]}_${pair[1]}`
+    }
+    const messages = await Community.getMessages(channelType, channelId, Math.min(100, parseInt(limit)), afterId ? parseInt(String(afterId)) : null)
+    res.json(messages)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/community/messages', authenticateToken, async (req, res) => {
+  try {
+    const { channel = 'global', content, targetUserId } = req.body
+    if (!content || typeof content !== 'string' || content.length > 500) {
+      return res.status(400).json({ error: 'Invalid content' })
+    }
+    const me = await Community.getUserByPublicKey(req.user.publicKey)
+    let channelType = 'global'
+    let channelId = 'global'
+    if (channel === 'dm') {
+      channelType = 'dm'
+      const otherId = parseInt(String(targetUserId))
+      const pair = [me.id, otherId].sort((a,b)=>a-b)
+      channelId = `${pair[0]}_${pair[1]}`
+    }
+    const result = await Community.postMessage(me.id, channelType, channelId, content.trim())
+    // Award small XP for participation (non-blocking)
+    try { await userProfileService.addXP(me.id, 5, 'Chat message') } catch {}
+    res.json({ success: true, id: result.id })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+// Presence: ping and friends online
+app.post('/api/community/presence/ping', authenticateToken, async (req, res) => {
+  try {
+    const me = await Community.getUserByPublicKey(req.user.publicKey)
+    const now = Date.now()
+    // simple in-memory map on app instance
+    if (!global.__presence) global.__presence = new Map()
+    global.__presence.set(me.id, now)
+    res.json({ ok: true })
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+
+app.get('/api/community/presence/friends', authenticateToken, async (req, res) => {
+  try {
+    const me = await Community.getUserByPublicKey(req.user.publicKey)
+    const friends = await Community.listFriends(me.id)
+    const map = global.__presence || new Map()
+    const now = Date.now()
+    const withPresence = friends.map(f => ({
+      ...f,
+      online: map.has(f.friend_id) && (now - map.get(f.friend_id)) < ONLINE_TTL_MS
+    }))
+    res.json(withPresence)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+})
+app.post('/api/profile/update', authenticateToken, async (req, res) => {
   try {
     const { username, avatarUrl } = req.body
-    const user = await User.findByPublicKey(req.user.publicKey)
-    
+    const user = await User.createOrGet(req.user.publicKey)
+    // Fetch current profile for safety backup
+    let current = null
+    try { current = await userProfileService.getProfile(user.id) } catch {}
+
     const profile = await userProfileService.createOrUpdateProfile(
       user.id, 
       req.user.publicKey, 
       username, 
       avatarUrl
     )
-    
+    // Write audit log snapshot of prior -> new
+    try {
+      await AuditLog.log(user.id, null, 'PROFILE_UPDATE', JSON.stringify({ before: current, after: profile }), getClientIP(req), req.headers['user-agent'])
+    } catch {}
     res.json(profile)
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
 })
 
-app.post('/api/profile/referral', async (req, res) => {
+app.post('/api/profile/referral', authenticateToken, async (req, res) => {
   try {
     const { referralCode } = req.body
-    const user = await User.findByPublicKey(req.user.publicKey)
+    const user = await User.createOrGet(req.user.publicKey)
     
     // Check for referral abuse
     const abuseCheck = await antiAbuseService.checkReferralAbuse(

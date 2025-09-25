@@ -18,6 +18,12 @@ const db = new sqlite3.Database(DB_PATH, err => {
     console.error('Error opening database:', err.message)
   } else {
     console.log('📊 Connected to SQLite database')
+    // Enforce durability and WAL for resilience
+    db.serialize(() => {
+      db.run(`PRAGMA journal_mode=WAL`)
+      db.run(`PRAGMA synchronous=FULL`)
+      db.run(`PRAGMA foreign_keys=ON`)
+    })
     initializeTables()
   }
 })
@@ -26,6 +32,8 @@ const db = new sqlite3.Database(DB_PATH, err => {
  * Initialize all database tables
  */
 function initializeTables() {
+  // Ensure creation queries run in order
+  db.serialize(() => {
   // Users table (extend existing)
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -59,6 +67,51 @@ function initializeTables() {
       FOREIGN KEY (referred_by) REFERENCES users(id)
     )
   `)
+
+  // Friends table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      friend_id INTEGER NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('pending','accepted','blocked')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, friend_id),
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (friend_id) REFERENCES users(id)
+    )
+  `)
+
+  // Blocks table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS blocks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      blocker_id INTEGER NOT NULL,
+      blocked_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(blocker_id, blocked_id),
+      FOREIGN KEY (blocker_id) REFERENCES users(id),
+      FOREIGN KEY (blocked_id) REFERENCES users(id)
+    )
+  `)
+
+  // Messages table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_type TEXT NOT NULL CHECK (channel_type IN ('global','dm')),
+      channel_id TEXT NOT NULL,
+      sender_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      is_deleted BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (sender_id) REFERENCES users(id)
+    )
+  `)
+
+  // Index for fast channel lookups
+  db.run(`CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_type, channel_id)`) 
 
   // Deposits table
   db.run(`
@@ -102,6 +155,7 @@ function initializeTables() {
   db.run(`
     CREATE TABLE IF NOT EXISTS treasury_ledger (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      integrity_hash TEXT,
       play_id INTEGER,
       type TEXT NOT NULL,
       amount_lamports INTEGER NOT NULL,
@@ -116,6 +170,7 @@ function initializeTables() {
   db.run(`
     CREATE TABLE IF NOT EXISTS game_plays (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      integrity_hash TEXT,
       user_id INTEGER NOT NULL,
       game_type TEXT NOT NULL,
       bet_amount_lamports INTEGER NOT NULL,
@@ -244,6 +299,21 @@ function initializeTables() {
     )
   `)
 
+  // User reports table (safety reports)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reporter_id INTEGER NOT NULL,
+      reported_user_id INTEGER NOT NULL,
+      reason TEXT,
+      details TEXT,
+      status TEXT DEFAULT 'new',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (reporter_id) REFERENCES users(id),
+      FOREIGN KEY (reported_user_id) REFERENCES users(id)
+    )
+  `)
+
   db.run(`
     CREATE TABLE IF NOT EXISTS faucet_usage (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -312,7 +382,27 @@ function initializeTables() {
   `)
 
   console.log('✅ Database tables initialized')
+  })
+  // Healer: ensure messages table exists even in older DBs
+  db.serialize(() => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_type TEXT NOT NULL CHECK (channel_type IN ('global','dm')),
+        channel_id TEXT NOT NULL,
+        sender_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        is_deleted BOOLEAN DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sender_id) REFERENCES users(id)
+      )
+    `)
+    db.run(`CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_type, channel_id)`)
+  })
 }
+
+// Presence memory table (in-memory map, fallback to DB key)
+const presenceMap = new Map()
 
 /**
  * User management functions
@@ -346,6 +436,26 @@ const User = {
           }
         }
       )
+    })
+  },
+
+  // Search users by username (case-insensitive) limited
+  async searchByUsername(query, limit = 20) {
+    return new Promise((resolve, reject) => {
+      try {
+        db.all(
+          `SELECT id, username, avatar_url, public_key FROM users 
+           WHERE username LIKE ? 
+           ORDER BY username ASC LIMIT ?`,
+          [`%${query}%`, limit],
+          (err, rows) => {
+            if (err) return reject(err)
+            resolve(rows)
+          }
+        )
+      } catch (e) {
+        reject(e)
+      }
     })
   },
 
@@ -450,8 +560,16 @@ const User = {
   // Update user profile
   async updateProfile(userId, profileData) {
     return new Promise((resolve, reject) => {
+      // Guard against accidental nulling critical fields
+      const safe = { ...profileData }
+      delete safe.public_key
+      delete safe.balance_lamports
+      delete safe.reserved_balance_lamports
+      delete safe.pending_withdrawal_lamports
+      delete safe.total_wagered_lamports
+      delete safe.total_won_lamports
       const fields = Object.keys(profileData)
-      const values = Object.values(profileData)
+      const values = Object.values(safe)
       const setClause = fields.map(field => `${field} = ?`).join(', ')
       
       db.run(
@@ -557,6 +675,177 @@ const User = {
   // Find user by ID (alias for getById)
   async findById(userId) {
     return this.getById(userId)
+  },
+}
+
+/**
+ * Community helpers: friends, blocks, messages
+ */
+const Community = {
+  async getUserByPublicKey(publicKey) {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE public_key = ?', [publicKey], (err, row) => {
+        if (err) return reject(err)
+        resolve(row)
+      })
+    })
+  },
+
+  async listFriends(userId) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT f.id, f.status, u.id as friend_id, u.username, u.avatar_url, u.public_key
+         FROM friends f 
+         JOIN users u ON (u.id = CASE WHEN f.user_id = ? THEN f.friend_id ELSE f.user_id END)
+         WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status IN ('pending','accepted')
+         ORDER BY f.updated_at DESC`,
+        [userId, userId, userId],
+        (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows)
+        }
+      )
+    })
+  },
+
+  async requestFriend(userId, targetUserId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT OR IGNORE INTO friends (user_id, friend_id, status) VALUES (?, ?, 'pending')`,
+        [userId, targetUserId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: this.lastID })
+        }
+      )
+    })
+  },
+
+  async respondFriend(userId, requestId, action) {
+    return new Promise((resolve, reject) => {
+      const newStatus = action === 'accept' ? 'accepted' : 'blocked'
+      db.run(
+        `UPDATE friends SET status = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ? AND (user_id = ? OR friend_id = ?)`,
+        [newStatus, requestId, userId, userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ changes: this.changes })
+        }
+      )
+    })
+  },
+
+  async unfriend(userId, targetUserId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`,
+        [userId, targetUserId, targetUserId, userId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ changes: this.changes })
+        }
+      )
+    })
+  },
+
+  async listBlocks(userId) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT b.blocked_id as user_id, u.username, u.avatar_url FROM blocks b
+         JOIN users u ON u.id = b.blocked_id
+         WHERE b.blocker_id = ? ORDER BY b.created_at DESC`,
+        [userId],
+        (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows)
+        }
+      )
+    })
+  },
+
+  async block(userId, targetUserId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `INSERT OR IGNORE INTO blocks (blocker_id, blocked_id) VALUES (?, ?)`,
+        [userId, targetUserId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ id: this.lastID })
+        }
+      )
+    })
+  },
+
+  async unblock(userId, targetUserId) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?`,
+        [userId, targetUserId],
+        function(err) {
+          if (err) return reject(err)
+          resolve({ changes: this.changes })
+        }
+      )
+    })
+  },
+
+  async postMessage(senderId, channelType, channelId, content) {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run(`CREATE TABLE IF NOT EXISTS messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          channel_type TEXT NOT NULL CHECK (channel_type IN ('global','dm')),
+          channel_id TEXT NOT NULL,
+          sender_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          is_deleted BOOLEAN DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (sender_id) REFERENCES users(id)
+        )`)
+        db.run(`CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_type, channel_id)`)
+        db.run(
+          `INSERT INTO messages (channel_type, channel_id, sender_id, content) VALUES (?, ?, ?, ?)`,
+          [channelType, channelId, senderId, content],
+          function(err) {
+            if (err) return reject(err)
+            resolve({ id: this.lastID })
+          }
+        )
+      })
+    })
+  },
+
+  async getMessages(channelType, channelId, limit = 50, afterId = null) {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run(`CREATE TABLE IF NOT EXISTS messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          channel_type TEXT NOT NULL CHECK (channel_type IN ('global','dm')),
+          channel_id TEXT NOT NULL,
+          sender_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          is_deleted BOOLEAN DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (sender_id) REFERENCES users(id)
+        )`)
+        db.run(`CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel_type, channel_id)`)
+        const params = [channelType, channelId]
+        let query = `SELECT m.id, m.content, m.created_at, u.username, u.avatar_url
+                     FROM messages m JOIN users u ON u.id = m.sender_id
+                     WHERE m.channel_type = ? AND m.channel_id = ? AND m.is_deleted = 0`
+        if (afterId) {
+          query += ' AND m.id > ?'
+          params.push(afterId)
+        }
+        query += ' ORDER BY m.id DESC LIMIT ?'
+        params.push(limit)
+        db.all(query, params, (err, rows) => {
+          if (err) return reject(err)
+          resolve(rows.reverse())
+        })
+      })
+    })
   },
 }
 
@@ -755,10 +1044,11 @@ const GamePlay = {
     return new Promise((resolve, reject) => {
       db.run(
         `INSERT INTO game_plays (
-          user_id, game_type, bet_amount_lamports, client_seed, server_seed, nonce,
+          integrity_hash, user_id, game_type, bet_amount_lamports, client_seed, server_seed, nonce,
           outcome, won, payout_lamports, house_fee_lamports, balance_before_lamports, balance_after_lamports
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          playData.integrityHash || null,
           playData.userId,
           playData.gameType,
           playData.betAmountLamports,

@@ -18,7 +18,7 @@ interface RealWalletButtonProps {
 export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
   className = '',
 }) => {
-  const { publicKey, connected, connecting, connect, disconnect, getBalance, refreshGameBalance } = useWalletContext()
+  const { publicKey, connected, connecting, connect, disconnect, getBalance, refreshGameBalance, authenticate } = useWalletContext() as any
 
   const [balance, setBalance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -149,17 +149,35 @@ export const RealWalletButton: React.FC<RealWalletButtonProps> = ({
                     onClick={async (e) => {
                       e.stopPropagation()
                       try {
-                        // Prefer direct Phantom connect to reliably trigger extension
+                        // Always clear any server session cookie to prevent background auth
+                        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }) } catch {}
+                        // Force Phantom prompt even if returning user: always open wallet modal first
                         const phantom = wallets?.find(w => w.adapter?.name === 'Phantom')
-                        if (phantom && select) {
-                          select(phantom.adapter.name)
-                          await connect()
-                          // close after the adapter handles focus
-                          setTimeout(() => setOpen(false), 0)
-                          return
+                        if (phantom && select) select(phantom.adapter.name)
+                        // Clear adapter cache to avoid silent auto-connection
+                        try { localStorage.removeItem('walletAdapter') } catch {}
+                        // If Phantom provider believes it's connected from a previous session, disconnect it first
+                        try {
+                          const provider: any = (window as any).solana
+                          if (provider?.isPhantom && provider?.isConnected) {
+                            await provider.disconnect()
+                          }
+                        } catch {}
+                        // Try direct provider connect with prompt enforcement
+                        try {
+                          const provider: any = (window as any).solana
+                          if (provider?.isPhantom) {
+                            await provider.connect({ onlyIfTrusted: false })
+                          }
+                        } catch {
+                          // Fallback to wallet modal
+                          if (setVisible) setVisible(true)
                         }
-                        if (setVisible) setVisible(true)
-                        else await connect()
+                        // Ensure adapter state is synced
+                        await connect()
+                        // After wallet connect, require backend auth signature
+                        await authenticate()
+                        setTimeout(() => setOpen(false), 0)
                       } catch (e) {
                         error('Connection Failed', 'Unable to open wallet. Try Phantom option.')
                       }

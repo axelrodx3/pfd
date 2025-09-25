@@ -20,6 +20,7 @@ import {
 import { useToast } from '../components/Toast'
 import { ProfileCreationModal } from '../components/ProfileCreationModal'
 import { productionLogger } from '../lib/productionLogger'
+import { walletMappingManager } from '../lib/walletMapping'
 // Wallet mapping and profile interfaces
 interface WalletMapping {
   id: string
@@ -83,6 +84,10 @@ interface WalletContextType {
   // Profile operations
   createProfile: (username: string, profilePicture?: string) => Promise<boolean>
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>
+  
+  // Auth operations
+  authenticate: () => Promise<boolean>
+  isAuthenticated: boolean
   
   // Loading states
   isInitializing: boolean
@@ -205,12 +210,74 @@ const WalletContextInner: React.FC<{
   const [gameWalletBalance, setGameWalletBalance] = useState<number>(0)
   const [walletMapping, setWalletMapping] = useState<WalletMapping | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   
   // Loading states
   const [isInitializing, setIsInitializing] = useState(false)
   const [isDepositing, setIsDepositing] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [showProfileCreation, setShowProfileCreation] = useState(false)
+
+  // Authenticate with backend (nonce + signed message) to set session cookie
+  const authenticateServer = useCallback(async (walletAddress: string) => {
+    try {
+      // Get nonce
+      const nonceResp = await fetch('/api/auth/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ publicKey: walletAddress })
+      })
+      if (!nonceResp.ok) return false
+      const { nonce, message } = await nonceResp.json()
+
+      // Sign message with connected wallet
+      if (!walletSignMessage) return false
+      const signature = await walletSignMessage(new TextEncoder().encode(message))
+      const signatureBase64 = Buffer.from(signature).toString('base64')
+
+      // Verify signature to establish session
+      const verifyResp = await fetch('/api/auth/verify-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          publicKey: walletAddress,
+          message,
+          signature: signatureBase64,
+          nonce,
+        })
+      })
+      const ok = verifyResp.ok
+      setIsAuthenticated(ok)
+      return ok
+    } catch {
+      return false
+    }
+  }, [walletSignMessage])
+
+  // Best-effort sync to backend profile (defined after authenticateServer to avoid TDZ)
+  const ensureServerProfile = useCallback(async (p: UserProfile) => {
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username: p.username, avatarUrl: p.profilePicture })
+      })
+      if (res.status === 401 || res.status === 403) {
+        const authed = await authenticateServer(p.connectedWalletAddress)
+        if (authed) {
+          await fetch('/api/profile/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username: p.username, avatarUrl: p.profilePicture })
+          })
+        }
+      }
+    } catch {}
+  }, [authenticateServer])
 
   // Initialize game wallet when connected wallet changes
   useEffect(() => {
@@ -237,50 +304,92 @@ const WalletContextInner: React.FC<{
       try {
         const walletAddress = publicKey.toString()
 
-        // Create an ephemeral in-memory game wallet (no persistence)
-        const ephemeral = Keypair.generate()
+        // Get or create a persistent game wallet mapping per connected wallet
+        const { gameWallet, mapping } = await walletMappingManager.getOrCreateGameWallet(walletAddress)
 
         if (isMounted) {
-          setGameWallet(ephemeral)
-          setGameWalletAddress(ephemeral.publicKey.toString())
-
-          // Create an ephemeral, in-memory wallet mapping
-          const mapping: WalletMapping = {
-            id: `user_${Buffer.from(walletAddress).toString('base64').slice(0, 16)}`,
-            connectedWalletAddress: walletAddress,
-            gameWalletAddress: ephemeral.publicKey.toString(),
-            encryptedSecretKey: null,
-            createdAt: Date.now(),
-            lastAccessed: Date.now(),
-            isActive: true,
-            isFrozen: false,
-          }
-          setWalletMapping(mapping)
-
-          // Build an in-memory user profile (no localStorage)
-          const profile: UserProfile = {
+          setGameWallet(gameWallet)
+          setGameWalletAddress(gameWallet.publicKey.toString())
+          setWalletMapping({
             id: mapping.id,
-            connectedWalletAddress: walletAddress,
-            username: `Player${walletAddress.slice(-6)}`,
-            profilePicture: undefined,
-            profilePictureType: 'default',
-            joinDate: Date.now(),
-            xp: 0,
-            badges: [],
-            currentStreak: 0,
-            longestStreak: 0,
-            totalWins: 0,
-            totalLosses: 0,
-            totalWagered: 0,
-            vipTier: 'Bronze',
-            isAdmin: walletAddress === '11111111111111111111111111111112',
+            connectedWalletAddress: mapping.connectedWalletAddress,
+            gameWalletAddress: mapping.gameWalletAddress,
+            encryptedSecretKey: mapping.encryptedSecretKey as any,
+            createdAt: mapping.createdAt,
+            lastAccessed: mapping.lastAccessed,
+            isActive: mapping.isActive,
+            isFrozen: mapping.isFrozen,
+            withdrawalThrottleUntil: mapping.withdrawalThrottleUntil,
+          })
+
+          // Require authenticated session before considering the user "logged in"
+          let authed = isAuthenticated
+          if (!authed) {
+            authed = await authenticateServer(walletAddress)
           }
-          setUserProfile(profile)
 
-          // Optionally ask user to personalize on first connect
-          setShowProfileCreation(true)
+          if (authed) {
+            // Load existing profile if present; otherwise pull from server before prompting creation
+            let existingProfile = walletMappingManager.getProfile(walletAddress) as unknown as UserProfile | null
+            if (!existingProfile) {
+              try {
+                const resp = await fetch('/api/profile', { credentials: 'include' })
+                if (resp.ok) {
+                  const serverProf = await resp.json()
+                  if (serverProf && serverProf.username) {
+                    existingProfile = {
+                      id: String(serverProf.id ?? walletAddress),
+                      connectedWalletAddress: walletAddress,
+                      username: serverProf.username,
+                      profilePicture: serverProf.avatarUrl || undefined,
+                      profilePictureType: serverProf.avatarUrl ? 'upload' : 'default',
+                      joinDate: Date.now(),
+                      xp: serverProf.xp ?? 0,
+                      badges: Array.isArray(serverProf.badges) ? serverProf.badges : [],
+                      currentStreak: serverProf.streaks?.wins ?? 0,
+                      longestStreak: serverProf.streaks?.best ?? 0,
+                      totalWins: serverProf.total_won_lamports ? 1 : 0,
+                      totalLosses: 0,
+                      totalWagered: 0,
+                      vipTier: (serverProf.vip_tier || 'Bronze') as any,
+                      isAdmin: false,
+                    }
+                    // Persist into local mapping to avoid future prompts
+                    walletMappingManager.createOrUpdateProfile({
+                      connectedWalletAddress: walletAddress,
+                      username: existingProfile.username,
+                      profilePicture: existingProfile.profilePicture,
+                      profilePictureType: existingProfile.profilePictureType,
+                      xp: existingProfile.xp,
+                      badges: existingProfile.badges,
+                      currentStreak: existingProfile.currentStreak,
+                      longestStreak: existingProfile.longestStreak,
+                      totalWins: existingProfile.totalWins,
+                      totalLosses: existingProfile.totalLosses,
+                      totalWagered: existingProfile.totalWagered,
+                      vipTier: existingProfile.vipTier,
+                      isAdmin: existingProfile.isAdmin,
+                    })
+                  }
+                }
+              } catch {}
+            }
 
-          // Fetch real balance for the ephemeral game wallet
+            if (existingProfile) {
+              setUserProfile(existingProfile)
+              setShowProfileCreation(false)
+              success('Logged In', `Welcome back, ${existingProfile.username}`)
+              await ensureServerProfile(existingProfile)
+            } else {
+              setShowProfileCreation(true)
+            }
+          } else {
+            // Not authenticated yet; do not set profile or show create modal
+            setUserProfile(null)
+            setShowProfileCreation(false)
+          }
+
+          // Fetch real balance for the game wallet
           await refreshGameBalance()
         }
       } catch (err) {
@@ -438,26 +547,16 @@ const WalletContextInner: React.FC<{
     if (!publicKey) return false
 
     try {
-      // In-memory update only
-      const updated: UserProfile = {
-        id: userProfile?.id || `user_${Buffer.from(publicKey.toString()).toString('base64').slice(0, 16)}`,
+      const saved = walletMappingManager.createOrUpdateProfile({
         connectedWalletAddress: publicKey.toString(),
         username,
         profilePicture,
         profilePictureType: profilePicture ? 'upload' : 'default',
-        joinDate: userProfile?.joinDate || Date.now(),
-        xp: userProfile?.xp || 0,
-        badges: userProfile?.badges || [],
-        currentStreak: userProfile?.currentStreak || 0,
-        longestStreak: userProfile?.longestStreak || 0,
-        totalWins: userProfile?.totalWins || 0,
-        totalLosses: userProfile?.totalLosses || 0,
-        totalWagered: userProfile?.totalWagered || 0,
-        vipTier: userProfile?.vipTier || 'Bronze',
-        isAdmin: userProfile?.isAdmin || false,
-      }
-
-      setUserProfile(updated)
+      })
+      setUserProfile(saved as unknown as UserProfile)
+      setShowProfileCreation(false)
+      // Sync to server (authenticate only if needed)
+      await ensureServerProfile(saved as unknown as UserProfile)
       success('Profile Created', `Welcome, ${username}!`)
       return true
     } catch (err) {
@@ -475,7 +574,24 @@ const WalletContextInner: React.FC<{
       const current = userProfile
       if (!current) return false
       const merged: UserProfile = { ...current, ...updates }
-      setUserProfile(merged)
+      const saved = walletMappingManager.createOrUpdateProfile({
+        connectedWalletAddress: current.connectedWalletAddress,
+        username: merged.username,
+        profilePicture: merged.profilePicture,
+        profilePictureType: merged.profilePictureType,
+        xp: merged.xp,
+        badges: merged.badges,
+        currentStreak: merged.currentStreak,
+        longestStreak: merged.longestStreak,
+        totalWins: merged.totalWins,
+        totalLosses: merged.totalLosses,
+        totalWagered: merged.totalWagered,
+        vipTier: merged.vipTier,
+        isAdmin: merged.isAdmin,
+      })
+      setUserProfile(saved as unknown as UserProfile)
+      // Sync to server (authenticate only if needed)
+      await ensureServerProfile(saved as unknown as UserProfile)
       return true
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
@@ -700,6 +816,13 @@ const WalletContextInner: React.FC<{
     // Profile operations
     createProfile,
     updateProfile,
+    
+    // Auth operations
+    authenticate: async () => {
+      if (!publicKey) return false
+      return authenticateServer(publicKey.toString())
+    },
+    isAuthenticated,
     
     // Loading states
     isInitializing,

@@ -84,7 +84,27 @@ class GameService {
       const balanceBefore = user.balance_lamports
       const balanceAfter = balanceBefore - betAmountLamports + payoutLamports
 
-      // Record game play in database
+      // Record game play in database with integrity hash (tamper-evident)
+      const integrity = crypto
+        .createHash('sha256')
+        .update(
+          [
+            userId,
+            'dice',
+            betAmountLamports,
+            clientSeed,
+            serverSeed,
+            nonce,
+            outcome,
+            won ? '1' : '0',
+            payoutLamports,
+            houseFeeLamports,
+            balanceBefore,
+            balanceAfter,
+          ].join('|')
+        )
+        .digest('hex')
+
       const playData = {
         userId,
         gameType: 'dice',
@@ -98,6 +118,7 @@ class GameService {
         houseFeeLamports,
         balanceBeforeLamports: balanceBefore,
         balanceAfterLamports: balanceAfter,
+        integrityHash: integrity,
       }
 
       const playRecord = await GamePlay.create(playData)
@@ -106,12 +127,12 @@ class GameService {
       const balanceChange = payoutLamports - betAmountLamports
       await User.updateBalance(userId, balanceChange, 'game_play')
 
-      // Log audit trail
+      // Log audit trail (include integrity hash)
       await AuditLog.log(
         userId,
         null,
         'game_played',
-        `Dice game: bet=${betAmountLamports / 1e9} SOL, side=${selectedSide}, outcome=${outcome}, won=${won}, payout=${payoutLamports / 1e9} SOL`,
+        `Dice game: bet=${betAmountLamports / 1e9} SOL, side=${selectedSide}, outcome=${outcome}, won=${won}, payout=${payoutLamports / 1e9} SOL, integrity=${integrity}`,
         'system',
         'GameService'
       )
@@ -166,20 +187,22 @@ class GameService {
     if (!won) {
       return {
         payoutLamports: 0,
-        houseFeeLamports: betAmountLamports,
+        houseFeeLamports: Math.floor(betAmountLamports * houseEdge),
       }
     }
 
-    // Calculate payout with house edge
-    const winChance = 0.49 // 49% win chance (2% house edge)
+    // Calculate payout with house edge (single application)
+    // High/Low on 1-100 with boundary at 50 -> win chance ~49%
+    const winChance = 0.49
     const multiplier = (1 - houseEdge) / winChance
-    const grossPayout = Math.floor(betAmountLamports * multiplier)
+    const payoutLamports = Math.floor(betAmountLamports * multiplier)
     const houseFeeLamports = Math.floor(betAmountLamports * houseEdge)
-    const payoutLamports = grossPayout - houseFeeLamports
 
     return {
       payoutLamports,
       houseFeeLamports,
+      winChance,
+      multiplier,
     }
   }
 

@@ -46,6 +46,13 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0', // Bind to all interfaces (IPv4 and IPv6)
     open: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     outDir: 'dist',

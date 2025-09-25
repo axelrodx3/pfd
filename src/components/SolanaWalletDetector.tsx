@@ -41,6 +41,9 @@ export const SolanaWalletDetector: React.FC<SolanaWalletDetectorProps> = ({ chil
         wallets.push('Glow')
       }
 
+      // Prevent silent auto-connect leftovers: ensure any provider cached state is cleared between page loads
+      try { localStorage.removeItem('walletAdapter') } catch {}
+
       setDetectedWallets(wallets)
       setHasSolanaWallet(wallets.length > 0)
     }

@@ -360,20 +360,7 @@ export const Dice3D: React.FC<Dice3DProps> = ({
         )}
       </div>
 
-      {/* Simple Win Effects Only */}
-      <AnimatePresence>
-        {showResult && won && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="text-4xl font-bold text-green-500">WIN!</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Removed background WIN overlay to prevent text stacking behind dice */}
     </div>
   )
 }

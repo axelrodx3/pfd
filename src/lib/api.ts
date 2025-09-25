@@ -383,3 +383,100 @@ export class MockAPI {
 
 // Export singleton instance
 export const mockAPI = MockAPI.getInstance()
+
+// Community API (real server)
+export const communityApi = {
+  async searchUsers(query: string, limit = 20) {
+    const res = await fetch(`/api/community/search?q=${encodeURIComponent(query)}&limit=${limit}`, { credentials: 'include' })
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`)
+    }
+    return res.json()
+  },
+  async listFriends() {
+    const res = await fetch('/api/community/friends', { credentials: 'include' })
+    if (!res.ok) throw new Error('Friends fetch failed')
+    return res.json()
+  },
+  async listFriendsWithPresence() {
+    const res = await fetch('/api/community/presence/friends', { credentials: 'include' })
+    if (!res.ok) throw new Error('Friends presence fetch failed')
+    return res.json()
+  },
+  async requestFriend(targetUserId: number) {
+    const res = await fetch('/api/community/friends/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ targetUserId })
+    })
+    if (!res.ok) throw new Error('Friend request failed')
+    return res.json()
+  },
+  async respondFriend(requestId: number, action: 'accept' | 'decline') {
+    const res = await fetch('/api/community/friends/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ requestId, action })
+    })
+    if (!res.ok) throw new Error('Friend respond failed')
+    return res.json()
+  },
+  async unfriend(targetUserId: number) {
+    const res = await fetch('/api/community/friends/unfriend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ targetUserId })
+    })
+    if (!res.ok) throw new Error('Unfriend failed')
+    return res.json()
+  },
+  async listBlocks() {
+    const res = await fetch('/api/community/blocks', { credentials: 'include' })
+    if (!res.ok) throw new Error('Blocks fetch failed')
+    return res.json()
+  },
+  async block(targetUserId: number) {
+    const res = await fetch('/api/community/block', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ targetUserId })
+    })
+    if (!res.ok) throw new Error('Block failed')
+    return res.json()
+  },
+  async unblock(targetUserId: number) {
+    const res = await fetch('/api/community/unblock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ targetUserId })
+    })
+    if (!res.ok) throw new Error('Unblock failed')
+    return res.json()
+  },
+  async getMessages(channel: 'global' | 'dm', targetUserId?: number, afterId?: number, limit = 50) {
+    const params = new URLSearchParams()
+    params.set('channel', channel)
+    if (channel === 'dm' && typeof targetUserId === 'number') params.set('targetUserId', String(targetUserId))
+    if (afterId) params.set('afterId', String(afterId))
+    params.set('limit', String(limit))
+    const res = await fetch(`/api/community/messages?${params.toString()}`, { credentials: 'include' })
+    if (!res.ok) throw new Error('Fetch messages failed')
+    return res.json()
+  },
+  async postMessage(channel: 'global' | 'dm', content: string, targetUserId?: number) {
+    const res = await fetch('/api/community/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ channel, content, targetUserId })
+    })
+    if (!res.ok) throw new Error('Post message failed')
+    return res.json()
+  }
+}

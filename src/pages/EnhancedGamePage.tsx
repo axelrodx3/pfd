@@ -71,6 +71,8 @@ export const EnhancedGamePage: React.FC = () => {
     spinDailyWheel,
     validateGameState,
     recoverGameState,
+    useSolCurrency,
+    toggleUseSolCurrency,
   } = useGameStore()
 
   const [showSettings, setShowSettings] = useState(false)
@@ -88,8 +90,9 @@ export const EnhancedGamePage: React.FC = () => {
   const [autorollDelay, setAutorollDelay] = useState(false)
   const [showGameMenu, setShowGameMenu] = useState(false)
   const gameMenuRef = useRef<HTMLDivElement>(null)
-  const { connected } = useWalletContext() as any
+  const { connected, authenticate, isAuthenticated } = useWalletContext() as any
   const [showWalletRequired, setShowWalletRequired] = useState(false)
+  const prefundedRef = useRef(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -135,10 +138,35 @@ export const EnhancedGamePage: React.FC = () => {
 
   // Enhanced roll dice with loading and feedback
   const handleRollDice = useCallback(async () => {
+    // If playing with HILO (off-chain), skip wallet checks entirely
+    if (!useSolCurrency) {
+      if (isRolling || !selectedSide || currentBet > hiloTokens) {
+        if (currentBet > hiloTokens) {
+          error('Insufficient Funds', 'You need more HILO tokens to place this bet')
+        }
+        return
+      }
+      setIsLoading(true)
+      try {
+        await rollDice()
+        if (lastWin) {
+          success('You Won!', `+${Math.floor(currentBet * 0.98).toLocaleString()} HILO`)
+        } else if (lastWin === false) {
+          warning('You Lost', `-${currentBet.toLocaleString()} HILO`)
+        }
+      } catch {
+        error('Roll Failed', 'Something went wrong. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
+
     if (!connected) {
       setShowWalletRequired(true)
       return
     }
+    // Do not pre-prompt Phantom. We'll authenticate only if server says 401/403.
     if (isRolling || !selectedSide || currentBet > hiloTokens) {
       if (currentBet > hiloTokens) {
         error(
@@ -151,14 +179,83 @@ export const EnhancedGamePage: React.FC = () => {
 
     setIsLoading(true)
     try {
-      await rollDice()
-      if (lastWin) {
-        success('You Won!', `+${(currentBet * 1.98).toLocaleString()} HILO`)
-      } else if (lastWin === false) {
-        warning('You Lost', `-${currentBet.toLocaleString()} HILO`)
+      // Map bet tokens to SOL (dev mapping). Use a conservative, small SOL amount.
+      // Place SOL bets on the backend when SOL currency is selected
+      const betSol = Math.max(0.001, Math.min(0.05, currentBet * 0.00001))
+
+      // Dev convenience: ensure backend balance exists once per session
+      if ((import.meta as any).env?.DEV && !prefundedRef.current) {
+        try {
+          const bal = await fetch('/api/user/balance', { credentials: 'include' }).then(r => r.json()).catch(() => null)
+          const have = typeof bal?.lamports === 'number' ? bal.lamports : 0
+          const need = Math.floor(betSol * 1e9)
+          if (have < need) {
+            await fetch('/api/deposits/simulate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ amount: 2 }) // add 2 SOL for dev plays
+            })
+          }
+          prefundedRef.current = true
+        } catch {}
+      }
+
+      // Call authoritative backend play endpoint
+      const idem = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      let res = await fetch('/api/games/play', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idem },
+        credentials: 'include',
+        body: JSON.stringify({
+          selectedSide,
+          betAmount: betSol,
+          clientSeed: `${Date.now()}`,
+        })
+      })
+      if (res.status === 401 || res.status === 403) {
+        // Attempt on-demand sign-in; only show modal if the user cancels or it fails
+        try {
+          const ok = await authenticate()
+          if (!ok) {
+            setShowWalletRequired(true)
+            throw new Error('Login required')
+          }
+          // Retry once after successful auth
+          res = await fetch('/api/games/play', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idem },
+            credentials: 'include',
+            body: JSON.stringify({ selectedSide, betAmount: currentBet, clientSeed: `${Date.now()}` })
+          })
+        } catch {
+          setShowWalletRequired(true)
+          throw new Error('Login required')
+        }
+      }
+      if (!res.ok) {
+        let msg = 'Play failed'
+        try { const j = await res.json(); if (j?.message) msg = j.message } catch {}
+        throw new Error(msg)
+      }
+      const data = await res.json()
+
+      // Feed server result into game store for visuals/state
+      await rollDice({ won: data.won, multiplier: data.payoutMultiplier ?? (data.won ? 1.98 : 0), progression: data.progression ? { xp: data.progression.xp, level: data.progression.level } : undefined })
+
+      // Toasts based on server data
+      if (data.won) {
+        success('You Won!', 'Nice roll!')
+      } else {
+        warning('You Lost', 'Try again!')
+      }
+
+      // Progress toast uses returned progression
+      if (data.progression) {
+        info('Progress Updated', `Level ${data.progression.level} · XP ${data.progression.xp}`)
       }
     } catch (err) {
-      error('Roll Failed', 'Something went wrong. Please try again.')
+      error('Roll Failed', err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -172,6 +269,8 @@ export const EnhancedGamePage: React.FC = () => {
     success,
     error,
     warning,
+    authenticate,
+    info,
   ])
 
   const handleRoll = () => {
@@ -494,17 +593,36 @@ export const EnhancedGamePage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Roll Button and Auto-Roll Toggle */}
-              <div className="flex justify-center items-center gap-6 pt-8">
-                <button
-                  onClick={handleRoll}
-                  disabled={
-                    !connected || isRolling || !selectedSide || currentBet > hiloTokens
-                  }
-                  className="flex-1 max-w-2xl py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
-                >
-                  {!connected ? 'Connect Wallet to Play' : isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
-                </button>
+              {/* Currency (left) · Roll (center) · Auto-Roll (right) */}
+              <div className="grid grid-cols-3 items-start pt-8 gap-6">
+                {/* Left: Currency Toggle */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-sm text-gray-300 font-medium">Currency</div>
+                  <button
+                    onClick={toggleUseSolCurrency}
+                    className={`relative w-16 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
+                      useSolCurrency ? 'bg-blue-500 focus:ring-blue-500 hover:bg-blue-600' : 'bg-gray-600 focus:ring-gray-500 hover:bg-gray-500'
+                    }`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-lg transition-transform duration-300 ${useSolCurrency ? 'translate-x-8' : 'translate-x-0'}`} />
+                  </button>
+                  <div className="text-xs text-gray-300 font-medium">{useSolCurrency ? 'SOL' : 'HILO'}</div>
+                </div>
+
+                {/* Center: Roll button with odds */}
+                <div className="flex flex-col items-center">
+                  <button
+                    onClick={handleRoll}
+                    disabled={!connected || isRolling || !selectedSide || currentBet > hiloTokens}
+                    className="w-full py-8 px-12 bg-gradient-to-r from-hilo-gold to-hilo-red text-black font-bold text-3xl rounded-xl hover:from-hilo-gold/80 hover:to-hilo-red/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl hover:shadow-hilo-gold/30 hover:scale-105 disabled:hover:scale-100"
+                  >
+                    {!connected ? 'Connect Wallet to Play' : isRolling ? '🎲 Rolling...' : '🎲 ROLL DICE'}
+                  </button>
+                  <div className="mt-2 text-center text-sm text-gray-300">
+                    <div>Win chance ~ 49% · Payout ~ 1.98×</div>
+                    <div className="text-xs text-gray-500">House edge applied once</div>
+                  </div>
+                </div>
 
                 {/* Apple-style Auto-Roll Toggle */}
                 <div className="flex flex-col items-center gap-3">

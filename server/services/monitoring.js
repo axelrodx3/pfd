@@ -41,12 +41,51 @@ class MonitoringService {
     }, 30000) // Check every 30 seconds
     
     console.log('🔍 Monitoring service started')
+
+    // Lightweight periodic database backups (dev convenience)
+    try {
+      const path = require('path')
+      const fs = require('fs')
+      const dbPath = path.join(__dirname, '../data/hilo_casino.db')
+      const backupsDir = path.join(__dirname, '../data/backups')
+      if (!fs.existsSync(backupsDir)) {
+        fs.mkdirSync(backupsDir, { recursive: true })
+      }
+      this.backupTimer = setInterval(() => {
+        try {
+          const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+          const dst = path.join(backupsDir, `backup-${stamp}.db`)
+          fs.copyFile(dbPath, dst, err => {
+            if (err) {
+              console.error('Backup copy failed:', err)
+            } else {
+              // Retain last 10 backups
+              try {
+                const files = fs.readdirSync(backupsDir)
+                  .filter(f => f.startsWith('backup-'))
+                  .map(f => ({ f, t: fs.statSync(path.join(backupsDir, f)).mtime.getTime() }))
+                  .sort((a,b) => b.t - a.t)
+                files.slice(10).forEach(({ f }) => {
+                  try { fs.unlinkSync(path.join(backupsDir, f)) } catch {}
+                })
+              } catch {}
+            }
+          })
+        } catch (e) {
+          // ignore backup errors; monitoring continues
+        }
+      }, 5 * 60 * 1000) // every 5 minutes
+    } catch {}
   }
 
   stop() {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval)
       this.monitoringInterval = null
+    }
+    if (this.backupTimer) {
+      clearInterval(this.backupTimer)
+      this.backupTimer = null
     }
     this.isMonitoring = false
     console.log('🔍 Monitoring service stopped')

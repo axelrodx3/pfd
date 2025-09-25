@@ -96,10 +96,25 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
         <button
           onClick={async () => {
             try {
+              // Prevent silent auth: clear any server session
+              try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }) } catch {}
               // 1) Try programmatic Phantom connect for reliability
               const phantom = wallets?.find(w => w.adapter?.name === 'Phantom')
               if (phantom && select) {
                 select(phantom.adapter.name)
+                try { localStorage.removeItem('walletAdapter') } catch {}
+                try {
+                  const provider: any = (window as any).solana
+                  if (provider?.isPhantom && provider?.isConnected) {
+                    await provider.disconnect()
+                  }
+                } catch {}
+                try {
+                  const provider: any = (window as any).solana
+                  if (provider?.isPhantom) {
+                    await provider.connect({ onlyIfTrusted: false })
+                  }
+                } catch {}
                 await connect()
                 onClose()
                 return

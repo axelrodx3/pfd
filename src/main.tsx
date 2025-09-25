@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { errorReporter } from './lib/errorReporting'
 import { Buffer } from 'buffer'
+import { WalletContextWrapper } from './contexts/WalletContextWrapper'
 
 // BigInt polyfill for older browsers
 if (typeof BigInt === 'undefined') {
@@ -184,7 +185,9 @@ try {
   console.log('Starting React app initialization...')
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <App />
+      <WalletContextWrapper>
+        <App />
+      </WalletContextWrapper>
     </React.StrictMode>
   )
   console.log('React app rendered successfully')
